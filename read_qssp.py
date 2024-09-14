@@ -7,7 +7,7 @@ import pandas as pd
 from scipy.interpolate import LinearNDInterpolator
 
 from pygrnwang.create_qssp import mt_com_list
-from focal_mechanism import convert_mt_axis
+from pygrnwang.focal_mechanism import convert_mt_axis
 
 enz_list = ["ee", "en", "ez", "nn", "nz", "zz"]
 

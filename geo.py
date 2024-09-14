@@ -3,7 +3,7 @@ import warnings
 
 import numpy as np
 
-from others import find_nearest_dichotomy
+from pygrnwang.others import find_nearest_dichotomy
 
 
 def rotate_2d_points(points: np.ndarray, degree: float) -> np.ndarray:

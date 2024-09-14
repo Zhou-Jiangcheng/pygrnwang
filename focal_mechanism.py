@@ -3,9 +3,9 @@ from typing import Tuple, List
 
 import numpy as np
 
-from magnitude import moment_from_moment_tensor
-from geo import cartesian_2_spherical
-from others import cal_kronecker, fibonacci_sphere
+from pygrnwang.magnitude import moment_from_moment_tensor
+from pygrnwang.geo import cartesian_2_spherical
+from pygrnwang.others import cal_kronecker, fibonacci_sphere
 
 
 def check_convert_fm(focal_mechanism) -> List:

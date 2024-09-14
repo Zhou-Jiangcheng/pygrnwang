@@ -1,5 +1,6 @@
 import os
 import struct
+
 from pygrnwang.utils import find_nearest_dichotomy
 
 
@@ -20,7 +21,8 @@ def read_tpts_table(path_greenfunc: str, dist_in_km: float, green_info: dict) ->
     """
     #   {green_function_distance,
     #      {onset [s], takeoff [deg], slowness [s/m]}}
-    dist_green_num = find_nearest_dichotomy(dist_in_km, green_info["dist_list"])[1]
+    dist_green_num = find_nearest_dichotomy(
+        dist_in_km, green_info["dist_list"])[1]
     # print(green_info['dist_list'][dist_green_num])
     start_count = 4 + dist_green_num * 12
 
