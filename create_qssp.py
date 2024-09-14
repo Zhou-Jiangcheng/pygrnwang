@@ -118,7 +118,7 @@ def create_inp(
         with open(path_inp, "r") as fr:
             lines = fr.readlines()
     else:
-        from qssp2020inp import s
+        from pygrnwang.qssp2020inp import s
 
         lines = s.split("\n")
         lines = [line + "\n" for line in lines]

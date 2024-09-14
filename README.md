@@ -11,8 +11,8 @@ Wang, R., Heimann, S., Zhang, Y., Wang, H., & Dahm, T. (2017). Complete syntheti
 1. Install the requirments. (Debian 12, Python 3.11)
 
 ```
-sudo apt install gfortran libopenmpi-dev
-pip install numpy scipy pandas mpi4py
+sudo apt install gfortran
+conda install numpy scipy pandas mpi4py -c conda-forge
 ```
 
 2. Add the folder path containing this Python library to the environment.
