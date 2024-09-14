@@ -8,10 +8,11 @@ Wang, R., Heimann, S., Zhang, Y., Wang, H., & Dahm, T. (2017). Complete syntheti
 
 # Installation
 
-1. Install the requirments. (Python 3.11)
+1. Install the requirments. (Debian 12, Python 3.11)
 
 ```
-pip install numpy scipy pandas
+sudo apt install gfortran libopenmpi-dev
+pip install numpy scipy pandas mpi4py
 ```
 
 2. Add the folder path containing this Python library to the environment.
