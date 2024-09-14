@@ -5,7 +5,6 @@ from mpi4py import MPI
 import numpy as np
 import pandas as pd
 from scipy.interpolate import LinearNDInterpolator
-from obspy.geodetics import kilometers2degrees
 
 from pygrnwang.create_qssp import mt_com_list
 from focal_mechanism import convert_mt_axis

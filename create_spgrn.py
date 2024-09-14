@@ -3,9 +3,8 @@ import shutil
 import subprocess
 import datetime
 
-from obspy.geodetics.base import degrees2kilometers
-
 from pygrnwang.utils import convert_earth_model_nd2inp
+d2km = 111.19492664455873
 
 
 def create_dir(event_depth, path_green):
@@ -61,8 +60,8 @@ def create_inp(
     lines[94] = "%.2f  %.2f\n" % (time_window, sampling_interval)
     lines[95] = "%.1f\n" % -before_tp
     lines[98] = "%.1f  %.1f  %.1f  %.1f\n" % (
-        degrees2kilometers(dist_range[0]),
-        degrees2kilometers(dist_range[1]),
+        dist_range[0]*d2km,
+        dist_range[1]*d2km,
         delta_dist_range[0],
         delta_dist_range[1],
     )
@@ -151,21 +150,4 @@ def create_grnlib(
 
 
 if __name__ == "__main__":
-    path_green_ = "/home/zjc/spgrn2020_lib/ak135fc_0_2"
-    path_bin_ = "/home/zjc/python_works/pygrnwang/spgrn2020.bin"
-    path_nd_ = "/home/zjc/python_works/pygrnwang/ak135.nd"
-    create_grnlib(
-        event_depth=20,
-        path_green=path_green_,
-        path_bin=path_bin_,
-        spec_time_window=2048,
-        time_window=2048,
-        sampling_interval=1,
-        before_tp=120,
-        dist_range=[30, 100],
-        delta_dist_range=[10, 10],
-        max_frequency=0.1,
-        path_nd=None,
-        earth_model_layer_num=None,
-    )
-    # print(degrees2kilometers(30), degrees2kilometers(50))
+    pass

@@ -82,23 +82,4 @@ def create_grnlib_parallel_multi_nodes(path_green):
 
 
 if __name__ == "__main__":
-    path_green_ = "/home/zjc/spgrn2020_lib/ak135fc_0_2"
-    path_bin_ = "/home/zjc/python_works/pygrnwang/spgrn2020.bin"
-
-    pre_process(
-        processes_num=4,
-        event_depth_list=[10 * h for h in range(8, 70)],
-        path_green=path_green_,
-        path_bin=path_bin_,
-        spec_time_window=2048,
-        time_window=2048,
-        sampling_interval=1,
-        before_tp=20,
-        dist_range=[30, 100],
-        delta_dist_range=[10, 10],
-        max_frequency=0.2,
-        path_nd="/home/zjc/python_works/pygrnwang/ak135.nd",
-        earth_model_layer_num=34,
-    )
-    create_grnlib_parallel_single_node(path_green=path_green_)
-    # create_grnlib_parallel_multi_nodes(path_green=path_green_)
+    pass

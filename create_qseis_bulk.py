@@ -106,19 +106,4 @@ def create_grnlib_parallel_multi_nodes(path_green):
 
 
 if __name__ == "__main__":
-    path_green_ = "/e/all_green_lib/qseis_lib0/"
-    pre_process(
-        processes_num=16,
-        event_depth_list=[17, 18],
-        path_green=path_green_,
-        time_window=2047.5,
-        sampling_interval=0.5,
-        dist_range=[20, 100],
-        delta_dist=0.1,
-        time_reduce_slowness=8,
-        isurf=0,
-        rm_down=False,
-        earth_model_layer_num=69,
-        N_each_group=100,
-    )
-    create_grnlib_parallel_single_node(path_green=path_green_)
+    pass

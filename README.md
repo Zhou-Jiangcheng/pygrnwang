@@ -11,7 +11,7 @@ Wang, R., Heimann, S., Zhang, Y., Wang, H., & Dahm, T. (2017). Complete syntheti
 1. Install the requirments. (Python 3.11)
 
 ```
-pip install numpy scipy pandas obspy
+pip install numpy scipy pandas
 ```
 
 2. Add the folder path containing this Python library to the environment.

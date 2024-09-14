@@ -365,33 +365,4 @@ def create_grnlib(
 
 
 if __name__ == "__main__":
-    output_observables_ = [0 for _ in range(11)]
-    output_observables_[5] = 1
-    create_grnlib(
-        event_depth=10,
-        receiver_depth=20,
-        path_green="/e/qssp2020_green_lib_d10",
-        path_bin="/home/zjc/python_works/pygrnwang/qssp2020.bin",
-        spec_time_window=255,
-        time_window=255,
-        time_reduction=-10,
-        dist_range=[0, 320],
-        delta_dist_range=10,
-        sampling_interval=1,
-        max_frequency=0.2,
-        max_slowness=0.4,
-        anti_alias=0.01,
-        turning_point_filter=0,
-        turning_point_d1=0,
-        turning_point_d2=0,
-        free_surface_filter=1,
-        gravity_fc=0,
-        gravity_harmonic=0,
-        cal_sph=1,
-        cal_tor=1,
-        min_harmonic=6000,
-        max_harmonic=6000,
-        output_observables=output_observables_,
-        path_nd="/home/zjc/python_works/pygrnwang/turkey.nd",
-        earth_model_layer_num=7,
-    )
+    pass

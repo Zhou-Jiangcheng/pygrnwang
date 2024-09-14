@@ -2,7 +2,6 @@ import os
 import warnings
 
 import numpy as np
-from obspy.geodetics.base import gps2dist_azimuth, kilometers2degrees
 
 from others import find_nearest_dichotomy
 
@@ -152,21 +151,6 @@ def cartesian_2_spherical(x, y, z):
         else:
             phi = 0
     return r, phi, theta
-
-
-def cal_dist_az_baz(event_lat, event_lon, sta_lat, sta_lon):
-    """
-    :param event_lat:
-    :param event_lon:
-    :param sta_lat:
-    :param sta_lon:
-    :return: dist_in_m, dist_in_deg, az_in_deg, baz_in_deg
-    """
-    [dist_in_m, az_in_deg, baz_in_deg] = gps2dist_azimuth(
-        event_lat, event_lon, sta_lat, sta_lon
-    )
-    dist_in_deg = kilometers2degrees(dist_in_m / 1000)
-    return [dist_in_m, dist_in_deg, az_in_deg, baz_in_deg]
 
 
 def geo_2_r_earth(lat, lon, dep, r0=6371000):

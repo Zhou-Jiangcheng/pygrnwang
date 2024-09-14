@@ -80,5 +80,4 @@ def cal_m0_from_sub_stfs(sub_stfs, srate):
 
 
 if __name__ == "__main__":
-    L_ = fault_length_from_moment_magnitude(8)
-    print(L_)
+    pass

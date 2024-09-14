@@ -2,13 +2,12 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
-from obspy.taup import TauPyModel
-from obspy.geodetics import kilometers2degrees
 
 from pygrnwang.read_green_info import read_green_info_spgrn2020
 from pygrnwang.read_tpts_table import read_tpts_table
 from pygrnwang.utils import *
 from pygrnwang.signal_process import linear_interp, resample
+d2km = 111.19492664455873
 
 
 def find_green_depth_list(path_greenfunc):
@@ -76,85 +75,6 @@ def synthesize(az_in_deg, time_series, focal_mechanism):
     return seismograms
 
 
-def cal_first_p_s(event_depth, dist_in_km, model_name="ak135f_no_mud"):
-    """
-    cal the traveltime of first P and first S
-    :param model_name: default ak135f_no_mud
-    :return: [first P, first S] in seconds
-    """
-    dist_in_deg = kilometers2degrees(dist_in_km)
-    model = TauPyModel(model_name)
-    P_group = model.get_travel_times(
-        source_depth_in_km=event_depth, distance_in_degree=dist_in_deg, phase_list=[
-            "P"]
-    )
-    if len(P_group) != 0:
-        first_P = P_group[0].time
-    else:
-        P_group = model.get_travel_times(
-            source_depth_in_km=event_depth,
-            distance_in_degree=dist_in_deg,
-            phase_list=["Pdiff"],
-        )
-        if len(P_group) != 0:
-            first_P = P_group[0].time
-        else:
-            P_group = model.get_travel_times(
-                source_depth_in_km=event_depth,
-                distance_in_degree=dist_in_deg,
-                phase_list=["PKP", "PKIKP", "PKiKP"],
-            )
-            temp = np.inf
-            for i in range(len(P_group)):
-                if P_group[i].time < temp:
-                    temp = P_group[i].time
-            first_P = temp
-    S_group = model.get_travel_times(
-        source_depth_in_km=event_depth, distance_in_degree=dist_in_deg, phase_list=[
-            "S"]
-    )
-    if len(S_group) != 0:
-        first_S = S_group[0].time
-    else:
-        S_group = model.get_travel_times(
-            source_depth_in_km=event_depth,
-            distance_in_degree=dist_in_deg,
-            phase_list=["SKS", "SKIKS", "SKiKS"],
-        )
-        temp = np.inf
-        for i in range(len(S_group)):
-            if S_group[i].time < temp:
-                temp = S_group[i].time
-        first_S = temp
-    return [first_P, first_S]
-
-
-def shift_green2real_tpts(
-    seismograms,
-    tpts_table,
-    before_p,
-    srate,
-    event_depth_in_km,
-    dist_in_km,
-    model_name="ak135fc",
-):
-    first_p, first_s = cal_first_p_s(
-        event_depth=event_depth_in_km, dist_in_km=dist_in_km, model_name=model_name
-    )
-    p_count = round(before_p * srate)
-    s_count = round(
-        (tpts_table["s_onset"] - tpts_table["p_onset"] + before_p) * srate)
-    p_count_new = round((first_p - tpts_table["p_onset"] + before_p) * srate)
-    s_count_new = round((first_s - tpts_table["p_onset"] + before_p) * srate)
-    for i in range(3):
-        before_p = seismograms[i][:p_count]
-        p_s = linear_interp(
-            seismograms[i][p_count:s_count], s_count_new - p_count_new)
-        after_s = seismograms[i][s_count:]
-        seismograms[i] = np.concatenate([before_p, p_s, after_s])
-    return seismograms, first_p, first_s
-
-
 def read_spgrn(
     path_greenfunc,
     green_depth_in_km=None,
@@ -220,12 +140,8 @@ def seek_spgrn(
     srate=2,
     zero_phase=False,
     rotate=True,
-    before_p=20,
     green_before_p=None,
-    pad_zeros=False,
-    shift=False,
     only_seismograms=True,
-    model_name="ak135fc",
 ):
     """
 
@@ -237,12 +153,7 @@ def seek_spgrn(
     :param srate:
     :param zero_phase:
     :param rotate:
-    :param before_p:
-    :param green_before_p:
-    :param pad_zeros:
-    :param shift:
     :param only_seismograms: only return seismograms
-    :param model_name:
     :return:
     """
     grn_dep_list = find_green_depth_list(
@@ -272,46 +183,6 @@ def seek_spgrn(
         green_info=green_info,
         only_seismograms=False,
     )
-    # for i in range(3):
-    #     seismograms[i][:round((before_p - 5) * srate)] = 0
-    if green_before_p is None:
-        with open(
-            str(os.path.join(str(path_greenfunc), "%.1f.inp" % grn_dep)), "r"
-        ) as fr:
-            lines = fr.readlines()
-        green_before_p = get_number_in_line(lines[95])[0]
-    if shift:
-        seismograms, first_p, first_s = shift_green2real_tpts(
-            seismograms=seismograms,
-            tpts_table=tpts_table,
-            srate=srate,
-            before_p=green_before_p,
-            event_depth_in_km=event_depth_in_km,
-            dist_in_km=dist_in_km,
-            model_name=model_name,
-        )
-    else:
-        first_p, first_s = tpts_table["p_onset"], tpts_table["s_onset"]
-    if pad_zeros:
-        for i in range(3):
-            seismograms[i] = np.concatenate(
-                [np.zeros(round((first_p - green_before_p) * srate)),
-                 seismograms[i]]
-            )
-    else:
-        if before_p < green_before_p:
-            for i in range(3):
-                seismograms[i] = seismograms[i][
-                    round((green_before_p - before_p) * srate):
-                ]
-        else:
-            for i in range(3):
-                seismograms[i] = np.concatenate(
-                    [
-                        np.zeros(round((before_p - green_before_p) * srate)),
-                        seismograms[i],
-                    ]
-                )
     if only_seismograms:
         return seismograms
     else:
