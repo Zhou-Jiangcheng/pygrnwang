@@ -44,7 +44,7 @@ def create_inp(
         with open(path_inp, "r") as fr:
             lines = fr.readlines()
     else:
-        from spgrn2020inp import s
+        from pygrnwang.spgrn2020inp import s
 
         lines = s.split("\n")
         lines = [line + "\n" for line in lines]
