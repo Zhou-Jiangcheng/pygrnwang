@@ -114,8 +114,7 @@ def read_stress_tensor(
                     nearest4_points, stress_n4, point_sta
                 )
         else:
-            nearest_indice, nearest_point = find_nearest(
-                point_sta, points_green_geo)
+            nearest_indice, nearest_point = find_nearest(point_sta, points_green_geo)
             stress_inerp_1mt_com = np.zeros((N_T, 6))
             for i_stress in range(6):
                 stress_inerp_1mt_com[:, i_stress] = stress_all_1mt_com[i_stress][
@@ -186,8 +185,8 @@ def convert_pd2np_mpi(path_green):
         if processes_num != len(group_list_func[0]):
             raise ValueError(
                 "processes_num is %d, item num in group is %d. \n"
-                "Pleasse check the process num!" % (
-                    processes_num, len(group_list_func[0]))
+                "Pleasse check the process num!"
+                % (processes_num, len(group_list_func[0]))
             )
         print("ind_group:%d rank:%d" % (ind_group, rank))
         if ind_group * len(group_list_func[0]) + rank < N_all:

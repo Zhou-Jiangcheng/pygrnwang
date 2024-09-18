@@ -19,8 +19,7 @@ def rotate_2d_points(points: np.ndarray, degree: float) -> np.ndarray:
 
     # Rotation matrix for counterclockwise rotation
     rotation_matrix = np.array(
-        [[np.cos(radians), -np.sin(radians)],
-         [np.sin(radians), np.cos(radians)]]
+        [[np.cos(radians), -np.sin(radians)], [np.sin(radians), np.cos(radians)]]
     ).T
 
     # Rotated point
@@ -209,11 +208,9 @@ def convert_axis_delta_geo2ned(lat0, lon0, dep0, lat1, lon1, dep1):
     lon0 = np.deg2rad(lon0)
     A = np.array(
         [
-            [-np.sin(lat0) * np.cos(lon0), -np.sin(lat0)
-             * np.sin(lon0), np.cos(lat0)],
+            [-np.sin(lat0) * np.cos(lon0), -np.sin(lat0) * np.sin(lon0), np.cos(lat0)],
             [-np.sin(lon0), np.cos(lon0), 0],
-            [-np.cos(lat0) * np.cos(lon0), -np.cos(lat0)
-             * np.sin(lon0), -np.sin(lat0)],
+            [-np.cos(lat0) * np.cos(lon0), -np.cos(lat0) * np.sin(lon0), -np.sin(lat0)],
         ]
     )
     delta_r_ned = np.dot(A, delta_r_earth).flatten()
@@ -234,11 +231,9 @@ def convert_axis_delta_ned2geo(lat0, lon0, dep0, r_ned):
     lat0, lon0 = np.deg2rad(lat0), np.deg2rad(lon0)
     A = np.array(
         [
-            [-np.sin(lat0) * np.cos(lon0), -np.sin(lat0)
-             * np.sin(lon0), np.cos(lat0)],
+            [-np.sin(lat0) * np.cos(lon0), -np.sin(lat0) * np.sin(lon0), np.cos(lat0)],
             [-np.sin(lon0), np.cos(lon0), 0],
-            [-np.cos(lat0) * np.cos(lon0), -np.cos(lat0)
-             * np.sin(lon0), -np.sin(lat0)],
+            [-np.cos(lat0) * np.cos(lon0), -np.cos(lat0) * np.sin(lon0), -np.sin(lat0)],
         ]
     )
     delta_r_earth = np.dot(A.T, r_ned).flatten()

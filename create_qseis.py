@@ -36,8 +36,7 @@ def create_greeninfo(
     lines = ""
     lines += "event_depth: %f\n" % event_depth
     lines += "time_window: %f\n" % time_window
-    sampling_num = 2 ** (math.ceil(math.log(time_window /
-                         sampling_interval, 2)))
+    sampling_num = 2 ** (math.ceil(math.log(time_window / sampling_interval, 2)))
     lines += "sampling_num: %d\n" % sampling_num
     lines += "sampling_interval: %f\n" % sampling_interval
     lines += "dist_range: %f %f\n" % (dist_range[0], dist_range[1])
@@ -89,8 +88,7 @@ def create_inp(
             dist_range[0] + n * N_each_group * delta_dist,
             dist_range[0] + ((n + 1) * N_each_group - 1) * delta_dist,
         )
-        path_inp = os.path.join(
-            sub_sub_dirs[n], "%.1f_%d.inp" % (event_depth, n))
+        path_inp = os.path.join(sub_sub_dirs[n], "%.1f_%d.inp" % (event_depth, n))
         with open(path_inp, "w") as fw:
             fw.writelines(lines)
     else:
@@ -108,11 +106,9 @@ def create_inp(
 
 
 def call_qseis(event_depth, n_group, path_green):
-    sub_sub_dir = str(os.path.join(path_green, "%.1f" %
-                      event_depth, "%d" % n_group))
+    sub_sub_dir = str(os.path.join(path_green, "%.1f" % event_depth, "%d" % n_group))
     os.chdir(sub_sub_dir)
-    path_inp = str(os.path.join(sub_sub_dir, "%.1f_%d.inp" %
-                   (event_depth, n_group)))
+    path_inp = str(os.path.join(sub_sub_dir, "%.1f_%d.inp" % (event_depth, n_group)))
     qssp_process = subprocess.Popen(
         [os.path.join(path_green, "qseis06.bin")],
         stdin=subprocess.PIPE,

@@ -73,12 +73,10 @@ def create_grnlib_parallel_multi_nodes(path_green):
         if processes_num != len(group_list[0]):
             raise ValueError(
                 "processes_num is %d, item num in group is %d. \n"
-                "Pleasse check the process num!" % (
-                    processes_num, len(group_list[0]))
+                "Pleasse check the process num!" % (processes_num, len(group_list[0]))
             )
         print("ind_group:%d rank:%d" % (ind_group, rank))
-        call_spgrn(event_depth=group_list[ind_group]
-                   [rank], path_green=path_green)
+        call_spgrn(event_depth=group_list[ind_group][rank], path_green=path_green)
 
 
 if __name__ == "__main__":

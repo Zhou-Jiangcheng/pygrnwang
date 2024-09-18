@@ -7,6 +7,7 @@ from pygrnwang.read_green_info import read_green_info_spgrn2020
 from pygrnwang.read_tpts_table import read_tpts_table
 from pygrnwang.utils import *
 from pygrnwang.signal_process import linear_interp, resample
+
 d2km = 111.19492664455873
 
 
@@ -40,8 +41,7 @@ def read_time_series(path_grn_data, dist_in_km, green_info):
 
 
 def synthesize(az_in_deg, time_series, focal_mechanism):
-    [M11, M12, M13, M22, M23, M33] = check_convert_fm(
-        focal_mechanism=focal_mechanism)
+    [M11, M12, M13, M22, M23, M33] = check_convert_fm(focal_mechanism=focal_mechanism)
     # expl.,strike-slip,dip-slip,clvd
     exp = (M11 + M22 + M33) / 3
     clvd = M33 - exp
@@ -54,8 +54,7 @@ def synthesize(az_in_deg, time_series, focal_mechanism):
     # az = np.deg2rad(az_in_deg)
     sin_az, cos_az = np.sin(az), np.cos(az)
     sin_2az, cos_2az = np.sin(2 * az), np.cos(2 * az)
-    m1 = [exp, ss1 * sin_2az + ss2 * cos_2az,
-          ds1 * cos_az + ds2 * sin_az, clvd]
+    m1 = [exp, ss1 * sin_2az + ss2 * cos_2az, ds1 * cos_az + ds2 * sin_az, clvd]
     m2 = [ss1 * cos_2az - ss2 * sin_2az, ds1 * sin_az - ds2 * cos_az]
     z = (
         time_series[0] * m1[0]
@@ -105,8 +104,7 @@ def read_spgrn(
         green_info = read_green_info_spgrn2020(
             path_greenfunc=path_greenfunc, green_depth=green_depth_in_km
         )
-    path_grn_data = os.path.join(
-        path_greenfunc, "grn_d%.1f" % green_depth_in_km)
+    path_grn_data = os.path.join(path_greenfunc, "grn_d%.1f" % green_depth_in_km)
     time_series, green_dist = read_time_series(
         path_grn_data=path_grn_data, dist_in_km=dist_in_km, green_info=green_info
     )
@@ -162,8 +160,7 @@ def seek_spgrn(
     grn_dep = find_nearest_dichotomy(value=event_depth_in_km, value_list=grn_dep_list)[
         0
     ]
-    path_greenfunc = str(os.path.join(
-        path_green_lib, "GreenFunc", "%.1f" % grn_dep))
+    path_greenfunc = str(os.path.join(path_green_lib, "GreenFunc", "%.1f" % grn_dep))
 
     green_info = read_green_info_spgrn2020(
         path_greenfunc=path_greenfunc, green_depth=grn_dep

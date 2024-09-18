@@ -91,8 +91,7 @@ def create_grnlib_parallel_multi_nodes(path_green):
     if processes_num != len(group_list[0]):
         raise ValueError(
             "processes_num is %d, item num in group is %d. \n"
-            "Pleasse check the process num!" % (
-                processes_num, len(group_list[0]))
+            "Pleasse check the process num!" % (processes_num, len(group_list[0]))
         )
     rank = comm.Get_rank()
     ind_group = rank // processes_num

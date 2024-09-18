@@ -4,6 +4,7 @@ import subprocess
 import datetime
 
 from pygrnwang.utils import convert_earth_model_nd2inp
+
 d2km = 111.19492664455873
 
 
@@ -35,10 +36,8 @@ def create_inp(
     path_nd=None,
     earth_model_layer_num=None,
 ):
-    path_func = str(os.path.join(
-        path_green, "GreenFunc", "%.1f" % event_depth, ""))
-    path_spec = str(os.path.join(
-        path_green, "GreenSpec", "%.1f" % event_depth, ""))
+    path_func = str(os.path.join(path_green, "GreenFunc", "%.1f" % event_depth, ""))
+    path_spec = str(os.path.join(path_green, "GreenSpec", "%.1f" % event_depth, ""))
     path_inp = os.path.join(path_green, "spgrn2020.inp")
     if os.path.exists(path_inp):
         with open(path_inp, "r") as fr:
@@ -60,8 +59,8 @@ def create_inp(
     lines[94] = "%.2f  %.2f\n" % (time_window, sampling_interval)
     lines[95] = "%.1f\n" % -before_tp
     lines[98] = "%.1f  %.1f  %.1f  %.1f\n" % (
-        dist_range[0]*d2km,
-        dist_range[1]*d2km,
+        dist_range[0] * d2km,
+        dist_range[1] * d2km,
         delta_dist_range[0],
         delta_dist_range[1],
     )

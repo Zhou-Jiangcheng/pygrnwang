@@ -20,8 +20,7 @@ def read_green_info_spgrn2020(path_greenfunc: str, green_depth: float) -> dict:
         os.path.join(path_greenfunc, "GreenInfo%.1f.dat" % green_depth), "r"
     ) as fr:
         lines = fr.readlines()
-    [time_window, sampling_interval,
-        samples_num] = get_number_in_line(lines[6])
+    [time_window, sampling_interval, samples_num] = get_number_in_line(lines[6])
     number_of_distance = get_number_in_line(lines[9])[0]
     dist_list = []
     for i in range(int(np.ceil(number_of_distance / 5))):

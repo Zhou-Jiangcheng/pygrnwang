@@ -15,8 +15,7 @@ def check_convert_fm(focal_mechanism) -> List:
     :return: [M11, M12, M13, M22, M23, M33]
     """
     if len(focal_mechanism) == 3:
-        mt = plane2mt(1, focal_mechanism[0],
-                      focal_mechanism[1], focal_mechanism[2])
+        mt = plane2mt(1, focal_mechanism[0], focal_mechanism[1], focal_mechanism[2])
         [M11, M12, M13, M22, M23, M33] = list(mt)
     elif len(focal_mechanism) == 4:
         mt = plane2mt(
@@ -218,8 +217,7 @@ def plane2mt(M0, strike, dip, rake) -> np.ndarray:
         sin_dip * cos_lambda * sin_2strike + sin_2dip * sin_lambda * sin_strike**2
     )  # Mtt
     M12 = M0 * (
-        sin_dip * cos_lambda * cos_2strike + 1 /
-        2 * sin_2dip * sin_lambda * sin_2strike
+        sin_dip * cos_lambda * cos_2strike + 1 / 2 * sin_2dip * sin_lambda * sin_2strike
     )  # -Mtp
     M13 = -M0 * (
         cos_dip * cos_lambda * cos_strike + cos_2dip * sin_lambda * sin_strike
@@ -345,8 +343,7 @@ def cal_A_FS_mt(mt, az, takeoff):
         for p in range(3):
             for q in range(3):
                 pattern_n[k] = (
-                    pattern_n[k] - (n[k] * n[p] -
-                                    cal_kronecker(k, p)) * n[q] * M[p, q]
+                    pattern_n[k] - (n[k] * n[p] - cal_kronecker(k, p)) * n[q] * M[p, q]
                 )
     pattern = np.linalg.norm(np.array(pattern_n))
     return pattern
@@ -369,8 +366,7 @@ def convert_axis_ned2source(mt, az, takeoff):
     theta = takeoff * np.pi / 180
     phi = az * np.pi / 180
     r_ned = np.array(
-        [np.sin(theta) * np.cos(phi), np.sin(theta)
-         * np.sin(phi), np.cos(theta)]
+        [np.sin(theta) * np.cos(phi), np.sin(theta) * np.sin(phi), np.cos(theta)]
     )
     r_source = np.dot(np.linalg.inv(A), r_ned)
     if (r_source[1] >= 0) and (r_source[0] >= 0):
@@ -508,8 +504,7 @@ def convert_vr_surf2vr_fault_n(az_vr, vr_surf, strike, dip, rake):
     """
     n_vr_fault = create_vr_fault_n(az_vr, 1, strike, dip, rake)
     vr_fault_n = (
-        vr_surf / (np.sqrt(n_vr_fault[0] ** 2 +
-                   n_vr_fault[1] ** 2)) * n_vr_fault
+        vr_surf / (np.sqrt(n_vr_fault[0] ** 2 + n_vr_fault[1] ** 2)) * n_vr_fault
     )
     return vr_fault_n
 
@@ -742,8 +737,7 @@ def cal_rescaled_FP(cf, ray, sta_info):
             FP_rescale = FP
     else:
         raise ValueError(
-            "rescale_rp_type is %s, rescale_rp_type wrong!" % str(
-                cf.rescale_rp_type)
+            "rescale_rp_type is %s, rescale_rp_type wrong!" % str(cf.rescale_rp_type)
         )
     return FP, FP_rescale
 

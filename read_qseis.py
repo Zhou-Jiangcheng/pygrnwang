@@ -5,6 +5,7 @@ from pygrnwang.read_green_info import read_green_info_qseis06
 from pygrnwang.read_spgrn import cal_first_p_s, shift_green2real_tpts
 from pygrnwang.utils import find_nearest_dichotomy, check_convert_fm
 from pygrnwang.signal_process import linear_interp, resample
+
 d2km = 111.19492664455873
 
 
@@ -49,8 +50,7 @@ def synthesize(az_in_deg, time_series, focal_mechanism):
     z upward, t north-east, r source-station
     return [z,t,r]
     """
-    [M11, M12, M13, M22, M23, M33] = check_convert_fm(
-        focal_mechanism=focal_mechanism)
+    [M11, M12, M13, M22, M23, M33] = check_convert_fm(focal_mechanism=focal_mechanism)
     exp = (M11 + M22 + M33) / 3
     clvd = (-0.5 * M11 - 0.5 * M22 + M33) / 2
     ss1 = M12
@@ -61,8 +61,7 @@ def synthesize(az_in_deg, time_series, focal_mechanism):
     az = np.deg2rad(az_in_deg)
     sin_az, cos_az = np.sin(az), np.cos(az)
     sin_2az, cos_2az = np.sin(2 * az), np.cos(2 * az)
-    m1 = [exp, ss1 * sin_2az + ss2 * cos_2az,
-          ds1 * cos_az + ds2 * sin_az, clvd]
+    m1 = [exp, ss1 * sin_2az + ss2 * cos_2az, ds1 * cos_az + ds2 * sin_az, clvd]
     m2 = [ss1 * cos_2az - ss2 * sin_2az, ds1 * sin_az - ds2 * cos_az]
     z = (
         time_series[0] * m1[0]
@@ -112,7 +111,7 @@ def seek_qseis(
         path_greenfunc=path_greenfunc, green_depth=grn_dep
     )
     ind, ind_group, green_dist, start_count, sampling_num = find_ind(
-        dist_in_deg=dist_in_km/d2km,
+        dist_in_deg=dist_in_km / d2km,
         greeninfo=green_info,
         num_each_group=green_info["N_each_group"],
     )
@@ -141,7 +140,7 @@ def seek_qseis(
     if (before_p is not None) or shift or pad_zeros:
         first_p, first_s = cal_first_p_s(
             event_depth=event_depth_in_km,
-            dist_in_km=green_dist*d2km,
+            dist_in_km=green_dist * d2km,
             model_name=model_name,
         )
         tpts_table = {"p_onset": first_p, "s_onset": first_s}
@@ -157,8 +156,7 @@ def seek_qseis(
                 seismograms[i] = seismograms[i][ts_count:]
         else:
             for i in range(3):
-                seismograms[i] = np.concatenate(
-                    [np.zeros(-ts_count), seismograms[i]])
+                seismograms[i] = np.concatenate([np.zeros(-ts_count), seismograms[i]])
 
     if shift:
         seismograms, first_p, first_s = shift_green2real_tpts(

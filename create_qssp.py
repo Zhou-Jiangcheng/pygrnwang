@@ -50,7 +50,7 @@ def create_points(dist_range, delta_dist):
             points.append([i * d, j * d])
     points = np.array(points)
     points = points - rmax
-    r_points = np.sqrt(np.sum(points ** 2, axis=1))
+    r_points = np.sqrt(np.sum(points**2, axis=1))
     points = points[(r_points <= rmax) & (r_points >= rmin)]
     points = points * 1e3 * m2d
     return points
@@ -59,40 +59,39 @@ def create_points(dist_range, delta_dist):
 def create_locs(points, time_reduction):
     lines_locs = []
     for i in range(len(points)):
-        loc = "%f %f 'Loc%d' %f\n" % (
-            points[i, 0], points[i, 1], i, time_reduction)
+        loc = "%f %f 'Loc%d' %f\n" % (points[i, 0], points[i, 1], i, time_reduction)
         lines_locs.append(loc)
     return lines_locs
 
 
 def create_inp(
-        mt_com,
-        event_depth,
-        receiver_depth,
-        path_green,
-        spec_time_window,
-        time_window,
-        time_reduction,
-        dist_range,
-        delta_dist_range,
-        sampling_interval,
-        max_frequency,
-        max_slowness,
-        anti_alias,
-        turning_point_filter,
-        turning_point_d1,
-        turning_point_d2,
-        free_surface_filter,
-        gravity_fc,
-        gravity_harmonic,
-        cal_sph,
-        cal_tor,
-        min_harmonic,
-        max_harmonic,
-        cal_gf,
-        output_observables: list,
-        path_nd=None,
-        earth_model_layer_num=None,
+    mt_com,
+    event_depth,
+    receiver_depth,
+    path_green,
+    spec_time_window,
+    time_window,
+    time_reduction,
+    dist_range,
+    delta_dist_range,
+    sampling_interval,
+    max_frequency,
+    max_slowness,
+    anti_alias,
+    turning_point_filter,
+    turning_point_d1,
+    turning_point_d2,
+    free_surface_filter,
+    gravity_fc,
+    gravity_harmonic,
+    cal_sph,
+    cal_tor,
+    min_harmonic,
+    max_harmonic,
+    cal_gf,
+    output_observables: list,
+    path_nd=None,
+    earth_model_layer_num=None,
 ):
     path_func = str(
         os.path.join(
@@ -142,8 +141,7 @@ def create_inp(
 
     lines[65] = "%f %d\n" % (gravity_fc, gravity_harmonic)
 
-    lines[75] = "%d %d %d %d\n" % (
-        cal_sph, cal_tor, min_harmonic, max_harmonic)
+    lines[75] = "%d %d %d %d\n" % (cal_sph, cal_tor, min_harmonic, max_harmonic)
 
     lines[86] = "1 0.0 '%s'\n" % path_spec
     lines[87] = "%.1f 'Green_%.1fkm' %d\n" % (event_depth, event_depth, cal_gf)
@@ -203,8 +201,7 @@ def create_inp(
         ind_mt = mt_com_list.index(mt_com)
         path_inp = os.path.join(
             path_func,
-            "%.1f_%.1f_%s.inp" % (
-                event_depth, receiver_depth, mt_com_list[ind_mt]),
+            "%.1f_%.1f_%s.inp" % (event_depth, receiver_depth, mt_com_list[ind_mt]),
         )
     else:
         return ValueError("mt_com wrong!!!")
@@ -264,32 +261,32 @@ def call_qssp2020(event_depth, receiver_depth, mt_com, path_green):
 
 
 def create_grnlib(
-        event_depth,
-        receiver_depth,
-        path_green,
-        path_bin,
-        spec_time_window,
-        time_window,
-        time_reduction,
-        dist_range,
-        delta_dist_range,
-        sampling_interval,
-        max_frequency,
-        max_slowness,
-        anti_alias,
-        turning_point_filter,
-        turning_point_d1,
-        turning_point_d2,
-        free_surface_filter,
-        gravity_fc,
-        gravity_harmonic,
-        cal_sph,
-        cal_tor,
-        min_harmonic,
-        max_harmonic,
-        output_observables: list,
-        path_nd=None,
-        earth_model_layer_num=None,
+    event_depth,
+    receiver_depth,
+    path_green,
+    path_bin,
+    spec_time_window,
+    time_window,
+    time_reduction,
+    dist_range,
+    delta_dist_range,
+    sampling_interval,
+    max_frequency,
+    max_slowness,
+    anti_alias,
+    turning_point_filter,
+    turning_point_d1,
+    turning_point_d2,
+    free_surface_filter,
+    gravity_fc,
+    gravity_harmonic,
+    cal_sph,
+    cal_tor,
+    min_harmonic,
+    max_harmonic,
+    output_observables: list,
+    path_nd=None,
+    earth_model_layer_num=None,
 ):
     print("creating green func lib recv_depth=%d" % event_depth)
     s = datetime.datetime.now()

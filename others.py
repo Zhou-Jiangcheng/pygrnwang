@@ -55,7 +55,7 @@ def create_conv_mat(vector):
     N = len(vector)
     A = np.zeros([2 * N - 1, N])
     for n in range(N):
-        A[n: N + n, n] = vector
+        A[n : N + n, n] = vector
     return A
 
 
@@ -99,8 +99,7 @@ def find_nearest_dichotomy(value, value_list):
         elif value < value_list[mid_index]:
             end = mid_index - 1
     else:
-        raise ValueError("value " + str(value) +
-                         " not in the value_list range")
+        raise ValueError("value " + str(value) + " not in the value_list range")
 
 
 def normal_distribution_2D(mu1, mu2, sigma1, sigma2, rho, x, y):
@@ -169,8 +168,7 @@ def get_file_path(path_dir, net, sta, loc, cha):
 
 
 def convert_str2float_list(strings: str):
-    list_temp = strings.replace("[", "").replace(
-        "]", "").replace(" ", "").split(",")
+    list_temp = strings.replace("[", "").replace("]", "").replace(" ", "").split(",")
     list_final = []
     for i in range(len(list_temp)):
         if list_temp[i] != "":
@@ -179,8 +177,7 @@ def convert_str2float_list(strings: str):
 
 
 def convert_str2int_list(strings: str):
-    list_temp = strings.replace("[", "").replace(
-        "]", "").replace(" ", "").split(",")
+    list_temp = strings.replace("[", "").replace("]", "").replace(" ", "").split(",")
     list_final = []
     for i in range(len(list_temp)):
         if list_temp[i] != "":
@@ -243,8 +240,7 @@ def convert_str2item_list(strings: str):
 
 
 def get_number_in_line(line):
-    numbers = re.findall(
-        r"[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?", line)
+    numbers = re.findall(r"[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?", line)
     # print(numbers)
     numbers = [float(item) for item in numbers if item != ""]
     return numbers
