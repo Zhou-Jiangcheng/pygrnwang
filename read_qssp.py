@@ -198,10 +198,4 @@ def convert_pd2np_mpi(path_green):
 
 
 if __name__ == "__main__":
-    path_green_ = "/e/qb"
-    convert_pd2np_single_thread(
-        path_green=path_green_,
-        event_dep_list=[2 * h + 1 for h in range(15)],
-        receiver_dep_list=[2 * h + 1 for h in range(15)],
-    )
-    # convert_pd2np_mpi(path_green=path_green_)
+    pass
