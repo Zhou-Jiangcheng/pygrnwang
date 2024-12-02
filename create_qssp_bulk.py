@@ -1,4 +1,5 @@
 import os
+import platform
 import shutil
 import datetime
 import pickle
@@ -38,7 +39,10 @@ def pre_process_spec(
     path_nd=None,
     earth_model_layer_num=None,
 ):
-    path_bin_call = os.path.join(path_green, "qssp2020.bin")
+    if platform.system() == 'Windows':
+        path_bin_call = os.path.join(path_green, "qssp2020.exe")
+    else:
+        path_bin_call = os.path.join(path_green, "qssp2020.bin")
     if not os.path.exists(path_bin_call):
         shutil.copy(path_bin, path_bin_call)
     item_list_spec = []
@@ -111,7 +115,10 @@ def pre_process_func(
     path_nd=None,
     earth_model_layer_num=None,
 ):
-    path_bin_call = os.path.join(path_green, "qssp2020.bin")
+    if platform.system() == 'Windows':
+        path_bin_call = os.path.join(path_green, "qssp2020.exe")
+    else:
+        path_bin_call = os.path.join(path_green, "qssp2020.bin")
     if not os.path.exists(path_bin_call):
         shutil.copy(path_bin, path_bin_call)
     item_list_func = []

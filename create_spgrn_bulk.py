@@ -37,7 +37,10 @@ def pre_process(
             path_nd,
             earth_model_layer_num,
         )
-        path_bin_call = os.path.join(path_green, "spgrn2020.bin")
+        if platform.system() == 'Windows':
+            path_bin_call = os.path.join(path_green, "spgrn2020.exe")
+        else:
+            path_bin_call = os.path.join(path_green, "spgrn2020.bin")
         if not os.path.exists(path_bin_call):
             shutil.copy(path_bin, path_bin_call)
     group_list = group(event_depth_list, processes_num)

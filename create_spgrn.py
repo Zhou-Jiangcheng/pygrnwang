@@ -1,4 +1,5 @@
 import os
+import platform
 import shutil
 import subprocess
 import datetime
@@ -84,29 +85,25 @@ def call_spgrn(event_depth, path_green):
             path_green, "GreenFunc", "%.1f" % event_depth, "%.1f.inp" % event_depth
         )
     )
-    path_bin_call = os.path.join(path_green, "spgrn2020.bin")
-    spgrn_process = subprocess.Popen(
-        [path_bin_call], stdin=subprocess.PIPE, stdout=subprocess.PIPE
-    )
-    spgrn_process.communicate(str.encode(path_inp))
-    # if platform.system() == "Windows":
-    #     spgrn_process = subprocess.Popen(
-    #         [os.path.join(path_green, "spgrn2020.exe")],
-    #         stdin=subprocess.PIPE,
-    #         stdout=subprocess.PIPE)
-    #     spgrn_process.communicate(str.encode(path_inp))
-    # else:
-    #     try:
-    #         spgrn_process = subprocess.Popen(
-    #             [os.path.join(path_green, "spgrn2020.bin")],
-    #             stdin=subprocess.PIPE,
-    #             stdout=subprocess.PIPE)
-    #         spgrn_process.communicate(str.encode(path_inp))
-    #     except Exception as e:
-    #         print(e)
-    #         raise ("this system is not supported yet, \
-    #             please compile the source code of spgrn2020, \
-    #             copy and replace the spgrn2020.bin file ")
+
+    if platform.system() == "Windows":
+        spgrn_process = subprocess.Popen(
+            [os.path.join(path_green, "spgrn2020.exe")],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE)
+        spgrn_process.communicate(str.encode(path_inp))
+    else:
+        try:
+            spgrn_process = subprocess.Popen(
+                [os.path.join(path_green, "spgrn2020.bin")],
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE)
+            spgrn_process.communicate(str.encode(path_inp))
+        except Exception as e:
+            print(e)
+            raise ("this system is not supported yet, \
+                please compile the source code of spgrn2020, \
+                copy and replace the spgrn2020.bin file ")
 
 
 def create_grnlib(

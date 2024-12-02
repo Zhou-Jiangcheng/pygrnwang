@@ -235,29 +235,25 @@ def call_qssp2020(event_depth, receiver_depth, mt_com, path_green):
         ).replace("'", "")
     else:
         return ValueError("mt_com wrong!!!")
-    path_bin_call = os.path.join(path_green, "qssp2020.bin")
-    qssp_process = subprocess.Popen(
-        [path_bin_call], stdin=subprocess.PIPE, stdout=subprocess.PIPE
-    )
-    qssp_process.communicate(str.encode(path_inp))
-    # if platform.system() == "Windows":
-    #     spgrn_process = subprocess.Popen(
-    #         [os.path.join(path_green, "qssp2020.exe")],
-    #         stdin=subprocess.PIPE,
-    #         stdout=subprocess.PIPE)
-    #     spgrn_process.communicate(str.encode(path_inp))
-    # else:
-    #     try:
-    #         spgrn_process = subprocess.Popen(
-    #             [os.path.join(path_green, "qssp2020.bin")],
-    #             stdin=subprocess.PIPE,
-    #             stdout=subprocess.PIPE)
-    #         spgrn_process.communicate(str.encode(path_inp))
-    #     except Exception as e:
-    #         print(e)
-    #         raise ("this system is not supported yet, \
-    #             please compile the source code of qssp2020, \
-    #             copy and replace the qssp2020.bin file ")
+
+    if platform.system() == "Windows":
+        qssp_process = subprocess.Popen(
+            [os.path.join(path_green, "qssp2020.exe")],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE)
+        qssp_process.communicate(str.encode(path_inp))
+    else:
+        try:
+            qssp_process = subprocess.Popen(
+                [os.path.join(path_green, "qssp2020.bin")],
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE)
+            qssp_process.communicate(str.encode(path_inp))
+        except Exception as e:
+            print(e)
+            raise ("this system is not supported yet, \
+                please compile the source code of qssp2020, \
+                copy and replace the qssp2020.bin file ")
 
 
 def create_grnlib(
@@ -350,7 +346,10 @@ def create_grnlib(
             path_nd,
             earth_model_layer_num,
         )
-    path_bin_call = os.path.join(path_green, "qssp2020.bin")
+    if platform.system() == 'Windows':
+        path_bin_call = os.path.join(path_green, "qssp2020.exe")
+    else:
+        path_bin_call = os.path.join(path_green, "qssp2020.bin")
     if not os.path.exists(path_bin_call):
         shutil.copy(path_bin, path_bin_call)
     call_qssp2020(event_depth, receiver_depth, "spec", path_green)

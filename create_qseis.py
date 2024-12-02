@@ -1,5 +1,6 @@
 import datetime
 import os
+import platform
 import subprocess
 import math
 
@@ -109,31 +110,25 @@ def call_qseis(event_depth, n_group, path_green):
     sub_sub_dir = str(os.path.join(path_green, "%.1f" % event_depth, "%d" % n_group))
     os.chdir(sub_sub_dir)
     path_inp = str(os.path.join(sub_sub_dir, "%.1f_%d.inp" % (event_depth, n_group)))
-    qssp_process = subprocess.Popen(
-        [os.path.join(path_green, "qseis06.bin")],
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-    )
-    qssp_process.communicate(str.encode(path_inp))
 
-    # if platform.system() == "Windows":
-    #     qssp_process = subprocess.Popen(
-    #         [os.path.join(path_green, "qseis06.exe")],
-    #         stdin=subprocess.PIPE,
-    #         stdout=subprocess.PIPE)
-    #     qssp_process.communicate(str.encode(path_inp))
-    # else:
-    #     try:
-    #         qssp_process = subprocess.Popen(
-    #             [os.path.join(path_green, "qseis06.bin")],
-    #             stdin=subprocess.PIPE,
-    #             stdout=subprocess.PIPE)
-    #         qssp_process.communicate(str.encode(path_inp))
-    #     except Exception as e:
-    #         print(e)
-    #         raise ("this system is not supported yet, \
-    #             please compile the source code of qseis06, \
-    #             copy and replace the qseis06.bin file ")
+    if platform.system() == "Windows":
+        qssp_process = subprocess.Popen(
+            [os.path.join(path_green, "qseis06.exe")],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE)
+        qssp_process.communicate(str.encode(path_inp))
+    else:
+        try:
+            qssp_process = subprocess.Popen(
+                [os.path.join(path_green, "qseis06.bin")],
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE)
+            qssp_process.communicate(str.encode(path_inp))
+        except Exception as e:
+            print(e)
+            raise ("this system is not supported yet, \
+                please compile the source code of qseis06, \
+                copy and replace the qseis06.bin file ")
     convert2bin(sub_sub_dir)
 
 
