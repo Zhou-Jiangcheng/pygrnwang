@@ -11,24 +11,10 @@ Wang, R., Heimann, S., Zhang, Y., Wang, H., & Dahm, T. (2017). Complete syntheti
 1. Install the requirments. (Debian 12, Python 3.11)
 
 ```
-sudo apt install gfortran
-conda install numpy scipy pandas mpi4py -c conda-forge
-```
-
-2. Add the folder path containing this Python library to the environment.
-
-For example, if the folder path is `/home/pygrnwang` and you have already created a Python 3.11 virtual environment named `pygrnwang` using Anaconda, add `/home` to the `/path_anaconda/envs/pygrnwang/lib/python3.11/site-packages/custom.pth` file.
-
-3. Compile the corresponding Fortran source files (in `qseis06_src`, `qssp2020_src`, and `spgrn2020_src`, respectively).
-
-```
-cd ./qseis06_src
-gfortran ./*.f -O3 -o qseis06.bin
-cp qseis06.bin ../
-cd ../spgrn2020_src
-gfortran ./*.f -O3 -o spgrn2020.bin
-cp spgrn2020.bin ../
-cd ../qssp2020_src
-gfortran ./*.f -O3 -o qssp2020.bin
-cp qssp2020.bin ../
+sudo apt install default-jdk
+conda create -n pygrnwang python=3.9
+conda install gfortran numpy scipy pandas mpi4py -c conda-forge
+git clone https://github.com/Zhou-Jiangcheng/pygrnwang.git
+cd pygrnwang
+pip install .
 ```
