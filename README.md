@@ -14,7 +14,7 @@ Wang, R., Heimann, S., Zhang, Y., Wang, H., & Dahm, T. (2017). Complete syntheti
 
 ```
 sudo apt install default-jdk
-conda create -n pygrnwang python=3.9
+conda create -n pygrnwang python=3.11
 conda install gfortran numpy scipy pandas mpi4py -c conda-forge
 git clone https://github.com/Zhou-Jiangcheng/pygrnwang.git
 cd pygrnwang
