@@ -61,7 +61,7 @@ def create_inp_spgrn2020(
         with open(path_inp, "r") as fr:
             lines = fr.readlines()
     else:
-        from spgrn2020inp import s
+        from .spgrn2020inp import s
 
         lines = s.split("\n")
         lines = [line + "\n" for line in lines]

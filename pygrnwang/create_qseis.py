@@ -60,7 +60,7 @@ def create_inp_qseis06(
         with open(path_inp, "r") as fr:
             lines = fr.readlines()
     else:
-        from pygrnwang.qseis06inp import s
+        from .qseis06inp import s
 
         lines = s.split("\n")
         lines = [line + "\n" for line in lines]
