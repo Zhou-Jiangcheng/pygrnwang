@@ -167,7 +167,7 @@ def pre_process_func(
                     min_harmonic,
                     max_harmonic,
                     source_radius,
-                    1,
+                    0,
                     source_duration,
                     output_observables,
                     time_window,
