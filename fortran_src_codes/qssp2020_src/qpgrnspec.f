@@ -117,7 +117,8 @@ c
         disk(1)=(3.d0+x)/4.d0
         do ldeg=2,ldegmax
           disk(ldeg)=(dble(2*ldeg-1)*x*disk(ldeg-1)
-     &               +dble(4-ldeg)*disk(ldeg-2))/dble(ldeg+3)
+     &               +dble(4-ldeg)*disk(ldeg-2))
+     &              /dble(ldeg+3)
         enddo
         do ldeg=0,ldegmax
           disk(ldeg)=disk(ldeg)*dble(2*ldeg+1)/(4.d0*PI*rrs**2)
@@ -564,15 +565,26 @@ c
 c
 c         1. Vertical single force (F3=1)
 c
-          cs2=dcmplx(-disk(ldeg),0.d0)
-          ul0(ldeg,1)=cs2*ypsv(1,2)
-          vl0(ldeg,1)=cs2*ypsv(3,2)
-          wl0(ldeg,1)=(0.d0,0.d0)
-          el0(ldeg,1)=cs2*ypsv(2,2)
-          fl0(ldeg,1)=cs2*ypsv(4,2)
-          gl0(ldeg,1)=(0.d0,0.d0)
-          pl0(ldeg,1)=cs2*ypsv(5,2)
-          ql0(ldeg,1)=cs2*(cg1*ypsv(1,2)-cg5*ypsv(5,2)+ypsv(6,2))
+          if(lys.lt.lyob)then
+            ul0(ldeg,1)=(0.d0,0.d0)
+            vl0(ldeg,1)=(0.d0,0.d0)
+            wl0(ldeg,1)=(0.d0,0.d0)
+            el0(ldeg,1)=(0.d0,0.d0)
+            fl0(ldeg,1)=(0.d0,0.d0)
+            gl0(ldeg,1)=(0.d0,0.d0)
+            pl0(ldeg,1)=(0.d0,0.d0)
+            ql0(ldeg,1)=(0.d0,0.d0)
+          else
+            cs2=dcmplx(-disk(ldeg),0.d0)
+            ul0(ldeg,1)=cs2*ypsv(1,2)
+            vl0(ldeg,1)=cs2*ypsv(3,2)
+            wl0(ldeg,1)=(0.d0,0.d0)
+            el0(ldeg,1)=cs2*ypsv(2,2)
+            fl0(ldeg,1)=cs2*ypsv(4,2)
+            gl0(ldeg,1)=(0.d0,0.d0)
+            pl0(ldeg,1)=cs2*ypsv(5,2)
+            ql0(ldeg,1)=cs2*(cg1*ypsv(1,2)-cg5*ypsv(5,2)+ypsv(6,2))
+          endif
 c
 c         2. Explosion (M11=M22=M33=1)
 c
@@ -594,20 +606,31 @@ c
 c
 c         3. CLVD (M33=1,M11=M22=-0.5)
 c
-          cs1=dcmplx( disk(ldeg)/roup(lys),0.d0)/cvpup(lys)**2
-          cs2=dcmplx( disk(ldeg)/rrup(lys),0.d0)
-     &       *((3.d0,0.d0)-(4.d0,0.d0)*(cvsup(lys)/cvpup(lys))**2)
-          cs4=-(0.5d0,0.d0)*cs2
-          ul0(ldeg,3)=cs1*ypsv(1,1)+cs2*ypsv(1,2)+cs4*ypsv(1,4)
-          vl0(ldeg,3)=cs1*ypsv(3,1)+cs2*ypsv(3,2)+cs4*ypsv(3,4)
-          wl0(ldeg,3)=(0.d0,0.d0)
-          el0(ldeg,3)=cs1*ypsv(2,1)+cs2*ypsv(2,2)+cs4*ypsv(2,4)
-          fl0(ldeg,3)=cs1*ypsv(4,1)+cs2*ypsv(4,2)+cs4*ypsv(4,4)
-          gl0(ldeg,3)=(0.d0,0.d0)
-          pl0(ldeg,3)=cs1*ypsv(5,1)+cs2*ypsv(5,2)+cs4*ypsv(5,4)
-          ql0(ldeg,3)=cs1*(cg1*ypsv(1,1)-cg5*ypsv(5,1)+ypsv(6,1))
-     &               +cs2*(cg1*ypsv(1,2)-cg5*ypsv(5,2)+ypsv(6,2))
-     &               +cs4*(cg1*ypsv(1,4)-cg5*ypsv(5,4)+ypsv(6,4))
+          if(lys.lt.lyob)then
+            ul0(ldeg,3)=(0.d0,0.d0)
+            vl0(ldeg,3)=(0.d0,0.d0)
+            wl0(ldeg,3)=(0.d0,0.d0)
+            el0(ldeg,3)=(0.d0,0.d0)
+            fl0(ldeg,3)=(0.d0,0.d0)
+            gl0(ldeg,3)=(0.d0,0.d0)
+            pl0(ldeg,3)=(0.d0,0.d0)
+            ql0(ldeg,3)=(0.d0,0.d0)
+          else
+            cs1=dcmplx( disk(ldeg)/roup(lys),0.d0)/cvpup(lys)**2
+            cs2=dcmplx( disk(ldeg)/rrup(lys),0.d0)
+     &         *((3.d0,0.d0)-(4.d0,0.d0)*(cvsup(lys)/cvpup(lys))**2)
+            cs4=-(0.5d0,0.d0)*cs2
+            ul0(ldeg,3)=cs1*ypsv(1,1)+cs2*ypsv(1,2)+cs4*ypsv(1,4)
+            vl0(ldeg,3)=cs1*ypsv(3,1)+cs2*ypsv(3,2)+cs4*ypsv(3,4)
+            wl0(ldeg,3)=(0.d0,0.d0)
+            el0(ldeg,3)=cs1*ypsv(2,1)+cs2*ypsv(2,2)+cs4*ypsv(2,4)
+            fl0(ldeg,3)=cs1*ypsv(4,1)+cs2*ypsv(4,2)+cs4*ypsv(4,4)
+            gl0(ldeg,3)=(0.d0,0.d0)
+            pl0(ldeg,3)=cs1*ypsv(5,1)+cs2*ypsv(5,2)+cs4*ypsv(5,4)
+            ql0(ldeg,3)=cs1*(cg1*ypsv(1,1)-cg5*ypsv(5,1)+ypsv(6,1))
+     &                 +cs2*(cg1*ypsv(1,2)-cg5*ypsv(5,2)+ypsv(6,2))
+     &                 +cs4*(cg1*ypsv(1,4)-cg5*ypsv(5,4)+ypsv(6,4))
+          endif
 c
 c         4. Horizontal single force (F1=1)
 c

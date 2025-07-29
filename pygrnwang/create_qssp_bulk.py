@@ -58,8 +58,7 @@ def pre_process_spec(
         path_bin_call = os.path.join(path_green, "qssp2020.exe")
     else:
         path_bin_call = os.path.join(path_green, "qssp2020.bin")
-    if not os.path.exists(path_bin_call):
-        shutil.copy(path_bin, path_bin_call)
+    shutil.copy(path_bin, path_bin_call)
     item_list_spec = []
     for event_depth in event_depth_list:
         for receiver_depth in receiver_depth_list:
@@ -325,6 +324,7 @@ def pre_process_qssp2020(
         "source_duration": source_duration,
         "output_observables": output_observables,
         "time_window": time_window,
+        "sampling_num": round(time_window / sampling_interval + 1),
         "time_reduction": time_reduction,
         "dist_range": dist_range,
         "delta_dist": delta_dist,

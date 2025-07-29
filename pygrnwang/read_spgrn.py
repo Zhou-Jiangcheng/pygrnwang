@@ -118,29 +118,33 @@ def seek_spgrn2020(
     grn_dep_list = green_info["event_depth_list"]
     grn_receiver_list = green_info["receiver_depth_list"]
     if not isinstance(grn_dep_list, list):
-        grn_dep = grn_dep_list
+        grn_dep_source = grn_dep_list
     else:
-        grn_dep = grn_dep_list[
-            np.argmin(np.abs(event_depth_km - np.array(grn_dep_list)))]
+        grn_dep_source = grn_dep_list[
+            np.argmin(np.abs(event_depth_km - np.array(grn_dep_list)))
+        ]
     if not isinstance(grn_receiver_list, list):
-        grn_receiver = grn_receiver_list
+        grn_dep_receiver = grn_receiver_list
     else:
-        grn_receiver = grn_receiver_list[
-            np.argmin(np.abs(receiver_depth_km - np.array(grn_receiver_list)))]
+        grn_dep_receiver = grn_receiver_list[
+            np.argmin(np.abs(receiver_depth_km - np.array(grn_receiver_list)))
+        ]
 
     path_greenfunc = str(
-        os.path.join(path_green, "GreenFunc", "%.2f" % grn_dep, "%.2f" % grn_receiver)
+        os.path.join(
+            path_green, "GreenFunc", "%.2f" % grn_dep_source, "%.2f" % grn_dep_receiver
+        )
     )
 
     # green_info = read_green_info_spgrn2020(
-    #     path_greenfunc=path_greenfunc, green_depth=grn_dep
+    #     path_greenfunc=path_greenfunc, green_depth=grn_dep_source
     # )
     tpts_table = read_tpts_table(
         path_greenfunc=path_greenfunc, dist_in_km=dist_km, green_info=green_info
     )
 
-    path_grn_data = os.path.join(path_greenfunc, "grn_d%.2f" % grn_dep)
-    time_series, green_dist = read_time_series_spgrn2020(
+    path_grn_data = os.path.join(path_greenfunc, "grn_d%.2f" % grn_dep_source)
+    time_series, grn_dist = read_time_series_spgrn2020(
         path_grn_data=path_grn_data, dist_in_km=dist_km, green_info=green_info
     )
     # r,t,z
@@ -179,10 +183,10 @@ def seek_spgrn2020(
             model_name=model_name,
         )
 
-    conv_shift = round(green_info['source_duration'] * srate_grn / 2)
-    if conv_shift != 0:
-        seismograms = np.roll(seismograms, -conv_shift)
-        seismograms[:, -conv_shift:] = 0
+    # conv_shift = round(green_info["source_duration"] * srate_grn / 2)
+    # if conv_shift != 0:
+    #     seismograms = np.roll(seismograms, -conv_shift)
+    #     seismograms[:, -conv_shift:] = 0
 
     seismograms_resasmple = np.zeros((3, round(sampling_num * srate / srate_grn)))
     for i in range(3):
@@ -198,9 +202,9 @@ def seek_spgrn2020(
             tpts_table,
             first_p,
             first_s,
-            grn_dep,
-            grn_receiver,
-            green_dist,
+            grn_dep_source,
+            grn_dep_receiver,
+            grn_dist,
         )
 
 

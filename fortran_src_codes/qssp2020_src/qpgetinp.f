@@ -9,7 +9,7 @@ c
       integer*4 ipath,isurf
       real*8 twindow,twinout,suppress,munit,sfe,sfn,sfz,omi
       real*8 strike,dip,rake,depdif,dswap(14)
-      character*80 grndir,outfile,fswap
+      character*100 grndir,outfile,fswap
 c
 c     uniform receiver depth
 c     ======================
@@ -274,7 +274,7 @@ c
         enddo
       enddo
 c
-      do flen=80,1,-1
+      do flen=100,1,-1
         if(grndir(flen:flen).ne.' ')goto 200
       enddo
 200   continue
@@ -495,7 +495,7 @@ c
         read(unit,*)latr(ir),lonr(ir),rname(ir),tred(ir)
       enddo
 c
-      do flen=80,1,-1
+      do flen=100,1,-1
         if(outfile(flen:flen).ne.' ')goto 300
       enddo
 300   continue
@@ -632,14 +632,6 @@ c
           endif
         endif
       enddo
-c      open(39,file='model.out',status='unknown')
-c      write(39,'(a)')'  no   depth[km]    vp[km/s]    vs[km/s]'
-c     &                 //'  ro[g/cm^3]          qp          qs'
-c      do i=1,l
-c        write(39,'(i4,4f12.3,2f12.1)')i,dp0(i)/KM2M,vp0(i)/KM2M,
-c     &          vs0(i)/KM2M,ro0(i)/KM2M,qp0(i),qs0(i)
-c      enddo
-c      close(39)
 c
       if(dp0(l).gt.rratmos)then
         stop ' Error in qpgetinp: earth radius larger than pre-defined!'

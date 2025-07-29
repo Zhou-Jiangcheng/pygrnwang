@@ -2,9 +2,8 @@ import os
 import subprocess
 import platform
 
-from .utils import (
-    convert_earth_model_nd2inp
-)
+from .spgrn2020inp import s as str_inp
+from .utils import convert_earth_model_nd2inp
 
 
 def create_dir_spgrn2020(event_depth, receiver_depth, path_green):
@@ -56,24 +55,18 @@ def create_inp_spgrn2020(
             path_green, "GreenSpec", "%.2f" % event_depth, "%.2f" % receiver_depth, ""
         )
     )
-    path_inp = os.path.join(path_green, "spgrn2020.inp")
-    if os.path.exists(path_inp):
-        with open(path_inp, "r") as fr:
-            lines = fr.readlines()
-    else:
-        from .spgrn2020inp import s
 
-        lines = s.split("\n")
-        lines = [line + "\n" for line in lines]
+    lines = str_inp.split("\n")
+    lines = [line + "\n" for line in lines]
     last_line = [lines[-1]]
     lines_earth = lines[113:-1]
     lines = lines[:113]  # cutoff earth model
     lines[25] = "%.2f\n" % receiver_depth
-    lines[41] = "%.2f  %.2f\n" % (spec_time_window, sampling_interval)
-    lines[42] = "%.2f\n" % max_frequency
-    lines[43] = "%.2f\n" % max_slowness
-    lines[44] = "%.2f\n" % anti_alias
-    lines[52] = "%.2f %d\n" % (gravity_fc, gravity_harmonic)
+    lines[41] = "%f  %f\n" % (spec_time_window, sampling_interval)
+    lines[42] = "%f\n" % max_frequency
+    lines[43] = "%f\n" % max_slowness
+    lines[44] = "%f\n" % anti_alias
+    lines[52] = "%f %d\n" % (gravity_fc, gravity_harmonic)
     lines[60] = "%d %d\n" % (cal_sph, cal_tor)
     lines[71] = '"%s"\n' % path_spec
     lines[73] = '%.2f  %.2f  "grn_d%.2f"  %d\n' % (
@@ -84,10 +77,10 @@ def create_inp_spgrn2020(
     )
     lines[90] = '"%s"\n' % path_func
     lines[91] = '"GreenInfo%.2f.dat"\n' % event_depth
-    lines[94] = "%.2f  %.2f\n" % (time_window, sampling_interval)
-    lines[95] = "%.2f\n" % -green_before_p
-    lines[96] = "%.2f\n" % source_duration
-    lines[98] = "%.2f  %.2f  %.2f  %.2f\n" % (
+    lines[94] = "%f  %f\n" % (time_window, sampling_interval)
+    lines[95] = "%f\n" % -green_before_p
+    lines[96] = "%f\n" % source_duration
+    lines[98] = "%f  %f  %f  %f\n" % (
         dist_range[0],
         dist_range[1],
         delta_dist_range[0],

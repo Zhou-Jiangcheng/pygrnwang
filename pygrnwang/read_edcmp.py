@@ -6,13 +6,13 @@ import numpy as np
 from scipy.interpolate import RegularGridInterpolator
 import pandas as pd
 
-from .geo import d2m
-
-d2km = d2m / 1e3
+from .geo import d2km
 
 
 def read_edcmp_raw(path_green, output_type, obs_depth, obs_depth_list):
-    grn_obs_depth = obs_depth_list[np.argmin(np.abs(obs_depth - np.array(obs_depth_list)))]
+    grn_obs_depth = obs_depth_list[
+        np.argmin(np.abs(obs_depth - np.array(obs_depth_list)))
+    ]
     df = pd.read_csv(
         str(
             os.path.join(
@@ -40,10 +40,10 @@ def interpolate_values(xmin, xmax, nx, ymin, ymax, ny, v_array, obs_array):
 
 
 def seek_edcmp2(
-        path_green: str,
-        output_type: str,
-        obs_array: np.array,
-        geo_coordinate=True,
+    path_green: str,
+    output_type: str,
+    obs_array: np.array,
+    geo_coordinate=True,
 ):
     """
     :param path_green: the root dir of Green's function lib
@@ -88,12 +88,12 @@ def seek_edcmp2(
         if obs_ref is None:
             raise ValueError("The Green's function lib dose not use obs_ref!")
         elif (
-                np.min(obs_array[:, 0]) - obs_ref[0] < x_min / d2km
-                or np.max(obs_array[:, 0]) - obs_ref[0] > x_max / d2km
-                or np.min(obs_array[:, 1]) - obs_ref[1] < y_min / d2km
-                or np.max(obs_array[:, 1]) - obs_ref[1] > y_max / d2km
-                # or np.min(obs_array[:, 2]) < obs_depth_list[0]
-                # or np.max(obs_array[:, 2]) > obs_depth_list[-1]
+            np.min(obs_array[:, 0]) - obs_ref[0] < x_min / d2km
+            or np.max(obs_array[:, 0]) - obs_ref[0] > x_max / d2km
+            or np.min(obs_array[:, 1]) - obs_ref[1] < y_min / d2km
+            or np.max(obs_array[:, 1]) - obs_ref[1] > y_max / d2km
+            # or np.min(obs_array[:, 2]) < obs_depth_list[0]
+            # or np.max(obs_array[:, 2]) > obs_depth_list[-1]
         ):
             print(
                 np.min(obs_array[:, 0]) - obs_ref[0] < x_min / d2km,
@@ -105,8 +105,8 @@ def seek_edcmp2(
             )
             raise ValueError("obs_array exceeds the range of Green's function lib!")
         else:
-            obs_array[:, 0] = (obs_array[:, 0] - obs_ref[0]) * d2m / 1e3
-            obs_array[:, 1] = (obs_array[:, 1] - obs_ref[1]) * d2m / 1e3
+            obs_array[:, 0] = (obs_array[:, 0] - obs_ref[0]) * d2km
+            obs_array[:, 1] = (obs_array[:, 1] - obs_ref[1]) * d2km
 
     unique_depths = np.unique(obs_array[:, 2])
     for i in range(len(unique_depths)):
@@ -116,8 +116,7 @@ def seek_edcmp2(
             path_green, output_type, unique_depths[i], obs_depth_list
         )
         v_interp_dep_i = interpolate_values(
-            x_min, x_max, nx, y_min, y_max, ny,
-            v_dep_i, obs_array_dep_i
+            x_min, x_max, nx, y_min, y_max, ny, v_dep_i, obs_array_dep_i
         )
         values_output[inds_i] = v_interp_dep_i
     return values_output

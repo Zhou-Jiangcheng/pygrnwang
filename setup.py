@@ -38,13 +38,18 @@ class CustomBuildPy(_build_py):
             "edgrn2.0_src": "edgrn2.%s" % platform_exec,
             "edcmp2.0_src": "edcmp2.%s" % platform_exec,
             "qssp2020_src": "qssp2020.%s" % platform_exec,
-            "qseis06_src": "qseis06.%s" % platform_exec,
+            "qseis_stress_src": "qseis_stress.%s" % platform_exec,
             "spgrn2020_src": "spgrn2020.%s" % platform_exec,
         }
         for src_folder, bin_name in fortran_subdirs.items():
             fortran_src_dir = os.path.join(os.getcwd(), "fortran_src_codes", src_folder)
             output_binary = os.path.join(exec_dir, bin_name)
-            compile_command = f"gfortran {fortran_src_dir}/*.f -O3 -o {output_binary}"
+            if src_folder == 'qseis_stress_src':
+                compile_command = (f"gfortran {fortran_src_dir}/*.f -O3 "
+                                   f"-ffixed-line-length-none -std=legacy "
+                                   f"-fPIC -Wl,--no-relax -o {output_binary}")
+            else:
+                compile_command = f"gfortran {fortran_src_dir}/*.f -O3 -o {output_binary}"
             print(
                 f"Compiling Fortran sources in {src_folder} with command: {compile_command}"
             )
@@ -59,14 +64,14 @@ setup(
     author="Zhou Jiangcheng",
     author_email="zhoujcpku@outlook.com",
     description="This Python package serves as the frontend for calculating and building "
-                "Green's function libraries for synthetic seismograms.",
+    "Green's function libraries for synthetic seismograms.",
     long_description=open("README.md", encoding="utf-8").read(),
     long_description_content_type="text/markdown",
     url="https://github.com/Zhou-Jiangcheng/pygrnwang",
     packages=find_packages(),
     include_package_data=True,
     package_data={
-        "pycfs": ["exec/*"],
+        "pygrnwang": ["exec/*"],
     },
     # Pass the dependencies read from requirements.txt to install_requires
     install_requires=requirements,
@@ -78,7 +83,7 @@ setup(
     python_requires=">=3.9",
     entry_points={
         "console_scripts": [
-            "pycfs=pycfs.main:main",
+            "pygrnwang=pygrnwang.main:main",
         ],
     },
     cmdclass={"build_py": CustomBuildPy},  # type:ignore

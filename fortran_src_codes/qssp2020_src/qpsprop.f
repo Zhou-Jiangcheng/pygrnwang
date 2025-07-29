@@ -38,6 +38,10 @@ c
 c
         if(freesurf.and.lyup.eq.1)then
           yupc(1,1)=(1.d0,0.d0)
+          if(ldeg.eq.1)then
+            yupc(1,2)=-(1.d0,0.d0)/cgrup(1)
+            yupc(2,2)=-(1.d0,0.d0)/cgrup(1)
+          endif
           yupc(3,2)=(1.d0,0.d0)
         else
           call qpstart4a(ldeg,lyup,2,yupc)
@@ -144,6 +148,10 @@ c
             enddo
             yup(1,1)=(1.d0,0.d0)
             yup(3,2)=(1.d0,0.d0)
+            if(ldeg.eq.1)then
+              yup(1,3)=-(1.d0,0.d0)/cgrup(1)
+              yup(3,3)=-(1.d0,0.d0)/cgrup(1)
+            endif
             yup(5,3)=(1.d0,0.d0)
           else
             call qpstart6a(ldeg,lyup,2,yup)

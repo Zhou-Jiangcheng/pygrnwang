@@ -6,7 +6,7 @@ c     work space
 c
       integer*4 ig,ierr,runtime
       integer*4 time
-      character*80 inputfile
+      character*100 inputfile
 c
 c     read input file file
 c
@@ -34,7 +34,7 @@ c
       print *,'#                                                    #'
       print *,'#              Helmholtz Centre Potsdam              #'
       print *,'#    GFZ German Research Centre for Geosciences      #'
-      print *,'#           Last modified: September 2020            #'
+      print *,'#           Last modified: September 2017            #'
       print *,'#                                                    #'
       print *,'######################################################'
       print *,'                                                      '

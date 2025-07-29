@@ -4,7 +4,7 @@
       integer*4 ierr
 c
       integer*4 i,j,k,id,is,ir,ig,nd,nt0,nf0,ntcut0,nfcut0,ishift
-      integer*4 lf,lf1,istp,ldeg,ldegf,ldeg0,lfused
+      integer*4 lf,lf1,istp,ldeg,ldegf,ldeg0
       integer*4 istat,ldegup,ldeglw,ldegneed
       real*8 depsarc,dis0,anorm,slwcut
       real*8 f,dt0,df0,rn,re,azi,bazi,bazi0
@@ -140,11 +140,6 @@ c
             idr(is,ir)=0
           else
             idr(is,ir)=min0(ndmax,idint(dlog(dis(is,ir)/dis0)))
-          endif
-c
-          if(idr(is,ir).eq.0.and.ipatha.eq.0.and.
-     &       dis(is,ir).gt.5.d0*dabs(dpr-deps(is)))then
-            idr(is,ir)=min0(ndmax,1+idr(is,ir))
           endif
 c
           ssd(is,ir)=dcmplx(dsin(dis(is,ir)),0.d0)
@@ -318,23 +313,23 @@ c
           lamr=claup(lyr)
           ksir=lamr+c2*muer
 c
-          read(21,end=400)ldegf
-          read(22,end=400)ldegf
-          read(23,end=400)ldegf
-          read(24,end=400)ldegf
-          read(25,end=400)ldegf
-          read(26,end=400)ldegf
-          read(27,end=400)ldegf
-          read(28,end=400)ldegf
+          read(21)ldegf
+          read(22)ldegf
+          read(23)ldegf
+          read(24)ldegf
+          read(25)ldegf
+          read(26)ldegf
+          read(27)ldegf
+          read(28)ldegf
 c
-          read(21,end=400)((ul0(ldeg,istp),ldeg=0,ldegf),istp=1,6)              !Y1
-          read(22,end=400)((vl0(ldeg,istp),ldeg=0,ldegf),istp=1,6)              !Y3
-          read(23,end=400)((wl0(ldeg,istp),ldeg=0,ldegf),istp=4,6)              !Y7
-          read(24,end=400)((el0(ldeg,istp),ldeg=0,ldegf),istp=1,6)              !Y2
-          read(25,end=400)((fl0(ldeg,istp),ldeg=0,ldegf),istp=1,6)              !Y4
-          read(26,end=400)((gl0(ldeg,istp),ldeg=0,ldegf),istp=4,6)              !Y8
-          read(27,end=400)((pl0(ldeg,istp),ldeg=0,ldegf),istp=1,6)              !Y5
-          read(28,end=400)((ql0(ldeg,istp),ldeg=0,ldegf),istp=1,6)              !dY5/dr derived from Y1, Y5 and Y6
+          read(21)((ul0(ldeg,istp),ldeg=0,ldegf),istp=1,6)              !Y1
+          read(22)((vl0(ldeg,istp),ldeg=0,ldegf),istp=1,6)              !Y3
+          read(23)((wl0(ldeg,istp),ldeg=0,ldegf),istp=4,6)              !Y7
+          read(24)((el0(ldeg,istp),ldeg=0,ldegf),istp=1,6)              !Y2
+          read(25)((fl0(ldeg,istp),ldeg=0,ldegf),istp=1,6)              !Y4
+          read(26)((gl0(ldeg,istp),ldeg=0,ldegf),istp=4,6)              !Y8
+          read(27)((pl0(ldeg,istp),ldeg=0,ldegf),istp=1,6)              !Y5
+          read(28)((ql0(ldeg,istp),ldeg=0,ldegf),istp=1,6)              !dY5/dr derived from Y1, Y5 and Y6
 c
           ldegneed=0
           ldeglw=ldegmax
@@ -1085,9 +1080,8 @@ c
           write(*,'(i6,a,f10.4,3(a,i5))')lf,'.',1.0d+03*f,
      &                        ' mHz: spectra read: ',ldegf,
      &                        ', used: ',ldeglw,' - ',ldegneed
-          lfused=lf
         enddo
-400     continue
+c
         close(21)
         close(22)
         close(23)
@@ -1096,13 +1090,8 @@ c
         close(26)
         close(27)
         close(28)
-        if(lfused.lt.nfcut)then
-          write(*,'(a,i6,a)')' Warning: Only ',lfused,
-     &    ' spectra read from '//specfile(ig)(1:40)
-        else
-          write(*,'(i6,a)')lfused,' spectra read from '
+        write(*,'(i6,a)')lf-1,' spectra read from '
      &                      //specfile(ig)(1:40)
-        endif
 500     continue
       enddo
 c

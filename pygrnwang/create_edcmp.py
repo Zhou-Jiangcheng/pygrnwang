@@ -3,18 +3,20 @@ import platform
 import subprocess
 import math
 
+from .edcmp2inp import s as str_inp
+
 
 def create_inp_edcmp2(
-        path_green,
-        obs_depth,
-        obs_x_range,
-        obs_y_range,
-        obs_delta_x,
-        obs_delta_y,
-        source_array_edcmp,
-        layered=True,
-        lam=30516224000,
-        mu=33701888000,
+    path_green,
+    obs_depth,
+    obs_x_range,
+    obs_y_range,
+    obs_delta_x,
+    obs_delta_y,
+    source_array_edcmp,
+    layered=True,
+    lam=30516224000,
+    mu=33701888000,
 ):
     """
 
@@ -33,16 +35,8 @@ def create_inp_edcmp2(
     :param mu:
     :return:
     """
-    path_inp = os.path.join(path_green, "edcmp2.inp")
-    if os.path.exists(path_inp):
-        with open(path_inp, "r") as fr:
-            lines = fr.readlines()
-    else:
-        from .edcmp2inp import s
-
-        lines = s.split("\n")
-        lines = [line + "\n" for line in lines]
-
+    lines = str_inp.split("\n")
+    lines = [line + "\n" for line in lines]
     lines_after_sources = lines[97:]
     lines = lines[:96]
 
@@ -95,9 +89,13 @@ def create_inp_edcmp2(
 
 
 def call_edcmp2(obs_depth, path_green, check_finished=False):
-    sub_sub_dir = str(os.path.join(path_green, "edcmp2", "%.2f" % obs_depth))
-    if check_finished and os.path.exists(os.path.join(sub_sub_dir, ".finished")) and\
-        len(os.listdir(sub_sub_dir))>2:
+    os.chdir(path_green)
+    sub_sub_dir = str(os.path.join("edcmp2", "%.2f" % obs_depth))
+    if (
+        check_finished
+        and os.path.exists(os.path.join(sub_sub_dir, ".finished"))
+        and len(os.listdir(sub_sub_dir)) > 2
+    ):
         return None
     path_inp = str(os.path.join(sub_sub_dir, "grn.inp"))
 

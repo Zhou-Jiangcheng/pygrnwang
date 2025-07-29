@@ -6,7 +6,9 @@ Wang, R. (1999). A simple orthonormalization method for stable and efficient com
 
 Wang, R. (2003). Computation of deformation induced by earthquakes in a multi-layered elastic crust—FORTRAN programs EDGRN/EDCMP. Computers & Geosciences, 29(2), 195–207. https://doi.org/10.1016/S0098-3004(02)00111-5
 
-Wang, R., Heimann, S., Zhang, Y., Wang, H., & Dahm, T. (2017). Complete synthetic seismograms based on a spherical self-gravitating Earth model with an atmosphere–ocean–mantle–core structure.  *Geophysical Journal International* ,  *210* (3), 1739–1764.
+Wang, R., & Wang, H. (2007). A fast converging and anti-aliasing algorithm for green’s functions in terms of spherical or cylindrical harmonics. Geophysical Journal International, 170(1), 239–248. https://doi.org/10.1111/j.1365-246X.2007.03385.x
+
+Wang, R., Heimann, S., Zhang, Y., Wang, H., & Dahm, T. (2017). Complete synthetic seismograms based on a spherical self-gravitating earth model with an atmosphere–ocean–mantle–core structure. Geophysical Journal International, 210(3), 1739–1764. https://doi.org/10.1093/gji/ggx259
 
 # Installation
 
@@ -15,7 +17,7 @@ Wang, R., Heimann, S., Zhang, Y., Wang, H., & Dahm, T. (2017). Complete syntheti
 ```
 sudo apt install default-jdk
 conda create -n pygrnwang python=3.11
-conda install gfortran numpy scipy pandas mpi4py -c conda-forge
+conda install gfortran numpy scipy pandas tqdm jpype1 mpi4py -c conda-forge
 git clone https://github.com/Zhou-Jiangcheng/pygrnwang.git
 cd pygrnwang
 pip install .

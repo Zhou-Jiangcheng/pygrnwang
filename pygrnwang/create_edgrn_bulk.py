@@ -31,8 +31,7 @@ def pre_process_edgrn2(
         path_bin_call = os.path.join(path_green, "edgrn2.exe")
     else:
         path_bin_call = os.path.join(path_green, "edgrn2.bin")
-    if not os.path.exists(path_bin_call):
-        shutil.copy(path_bin, path_bin_call)
+    shutil.copy(path_bin, path_bin_call)
 
     for obs_depth in obs_depth_list:
         sub_sub_dir = str(os.path.join(path_green, "edgrn2", "%.2f" % obs_depth))
@@ -80,7 +79,7 @@ def create_grnlib_edgrn2_sequential(path_green, check_finished=False):
     # s = datetime.datetime.now()
     with open(os.path.join(path_green, "group_list_edgrn.pkl"), "rb") as fr:
         group_list_edgrn = pickle.load(fr)
-    for item in tqdm(group_list_edgrn, desc="Computing Green\'s function library"):
+    for item in tqdm(group_list_edgrn, desc="Computing Green's function library"):
         for i in range(len(item)):
             # print("computing " + str(item[i]) + " km")
             call_edgrn2(item[i], path_green, check_finished)
@@ -93,7 +92,7 @@ def create_grnlib_edgrn2_parallel_single_node(path_green, check_finished=False):
     s = datetime.datetime.now()
     with open(os.path.join(path_green, "group_list_edgrn.pkl"), "rb") as fr:
         group_list_edgrn = pickle.load(fr)
-    for item in tqdm(group_list_edgrn, desc="Computing Green\'s function library"):
+    for item in tqdm(group_list_edgrn, desc="Computing Green's function library"):
         # print("computing " + str(item) + " km")
         for i in range(len(item)):
             item[i] = [item[i]] + [path_green, check_finished]

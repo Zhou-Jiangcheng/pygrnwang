@@ -185,7 +185,7 @@ def seek_qssp2020(
                                    for three-component: (3 x N_T),
                                    for six-component: (6 x N_T).
         Otherwise, returns a tuple:
-            (seismograms, tpts_table, first_p, first_s, green_dist)
+            (seismograms, tpts_table, first_p, first_s, grn_dist)
             where tpts_table is a dict with keys "p_onset" and "s_onset".
     """
     if green_info is None:
@@ -201,15 +201,15 @@ def seek_qssp2020(
     grn_dep_list = green_info["event_depth_list"]
     grn_receiver_list = green_info["receiver_depth_list"]
     if not isinstance(grn_dep_list, list):
-        grn_dep = grn_dep_list
+        grn_dep_source = grn_dep_list
     else:
-        grn_dep = grn_dep_list[
+        grn_dep_source = grn_dep_list[
             np.argmin(np.abs(event_depth_km - np.array(grn_dep_list)))
         ]
     if not isinstance(grn_receiver_list, list):
-        grn_receiver = grn_receiver_list
+        grn_dep_receiver = grn_receiver_list
     else:
-        grn_receiver = grn_receiver_list[
+        grn_dep_receiver = grn_receiver_list[
             np.argmin(np.abs(receiver_depth_km - np.array(grn_receiver_list)))
         ]
 
@@ -235,7 +235,12 @@ def seek_qssp2020(
     if output_type in one_com_list:
         # One-component branch (e.g., gravimeter)
         u = seek_raw_qssp2020(
-            path_green, grn_dep, grn_receiver, dist_km, output_type, green_info
+            path_green,
+            grn_dep_source,
+            grn_dep_receiver,
+            dist_km,
+            output_type,
+            green_info,
         )
         u_enz_green_north = np.zeros((sampling_num, 1))
         for i_rtp in range(6):
@@ -245,7 +250,12 @@ def seek_qssp2020(
     elif output_type in three_com_list:
         # Three-component branch: process data (e.g., displacement, velocity, acceleration)
         u_all = seek_raw_qssp2020(
-            path_green, grn_dep, grn_receiver, dist_km, output_type, green_info
+            path_green,
+            grn_dep_source,
+            grn_dep_receiver,
+            dist_km,
+            output_type,
+            green_info,
         )
         u_enz_green_north = np.zeros((sampling_num, 3))
         for i_rtp in range(6):
@@ -268,7 +278,12 @@ def seek_qssp2020(
     elif output_type in six_com_list:
         # Six-component branch: process data (e.g., strain, strain rate, stress, stress rate)
         epsilon_all = seek_raw_qssp2020(
-            path_green, grn_dep, grn_receiver, dist_km, output_type, green_info
+            path_green,
+            grn_dep_source,
+            grn_dep_receiver,
+            dist_km,
+            output_type,
+            green_info,
         )
         epsilon_enz_green_north = np.tensordot(
             epsilon_all.reshape(sampling_num, 6, 6), mt_rtp, axes=(1, 0)
@@ -287,15 +302,15 @@ def seek_qssp2020(
 
     # Compute the Green's function distance closest to the input distance.
     nearest_indice = round((dist_km - dist_range[0]) / delta_dist)
-    green_dist = dist_range[0] + nearest_indice * delta_dist
+    grn_dist = dist_range[0] + nearest_indice * delta_dist
 
     # Process P-wave arrival times if before_p, shift, or pad_zeros is set.
     tpts_table = None
     if (before_p is not None) or shift or pad_zeros:
         grn_first_p, grn_first_s = read_tpts_table_qssp2020(
             path_green=path_green,
-            event_depth_km=grn_dep,
-            receiver_depth_km=grn_receiver,
+            event_depth_km=grn_dep_source,
+            receiver_depth_km=grn_dep_receiver,
             ind=nearest_indice,
         )
         tpts_table = {"p_onset": grn_first_p, "s_onset": grn_first_s}
@@ -331,10 +346,10 @@ def seek_qssp2020(
             model_name=model_name,
         )
 
-    conv_shift = round(green_info["source_duration"] * srate_grn / 2)
-    if conv_shift != 0:
-        seismograms = np.roll(seismograms, -conv_shift)
-        seismograms[:, -conv_shift:] = 0
+    # conv_shift = round(green_info["source_duration"] * srate_grn / 2)
+    # if conv_shift != 0:
+    #     seismograms = np.roll(seismograms, -conv_shift)
+    #     seismograms[:, -conv_shift:] = 0
 
     seismograms_resample = np.zeros(
         (seismograms.shape[0], round(sampling_num * srate / srate_grn))
@@ -353,9 +368,9 @@ def seek_qssp2020(
             tpts_table,
             first_p,
             first_s,
-            grn_dep,
-            grn_receiver,
-            green_dist,
+            grn_dep_source,
+            grn_dep_receiver,
+            grn_dist,
         )
 
 

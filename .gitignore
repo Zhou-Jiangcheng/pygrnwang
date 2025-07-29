@@ -167,3 +167,8 @@ cython_debug/
 
 # test
 test/
+
+# fortran
+*.mod
+*.o
+*.bin

@@ -7,7 +7,7 @@ c
       real*8 shift(nr),dswap(4*nf),y0(nr),y(nr)
       complex*16 cy0(nf,nr),cy(nf,nr),cswap(2*nf)
       character*10 rname(nr)
-      character*80 outfile
+      character*100 outfile
 c
       real*8 PI2
       data PI2/6.28318530717959d0/

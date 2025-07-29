@@ -102,6 +102,7 @@ def pre_process_spgrn2020(
         "source_radius": source_radius,
         "cal_gf": cal_gf,
         "time_window": time_window,
+        "sampling_num": round(time_window / sampling_interval + 1),
         "green_before_p": green_before_p,
         "source_duration": source_duration,
         "dist_range": dist_range,

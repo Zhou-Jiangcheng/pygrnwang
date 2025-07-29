@@ -6,6 +6,7 @@ import math
 import numpy as np
 import pandas as pd
 
+from .qseis_stress_inp import s as str_inp
 from .utils import convert_earth_model_nd2inp
 
 
@@ -34,7 +35,6 @@ def create_dir_qseis06(
 
 
 def create_inp_qseis06(
-        path_green,
         path_sub_dir,
         event_depth,
         receiver_depth,
@@ -45,49 +45,64 @@ def create_inp_qseis06(
         N_each_group,
         time_window,
         sampling_interval,
-        time_reduction_velo,
-        wavenumber_sampling_rate=2,
+        slowness_int_algorithm=0,
+        slowness_window=None,
+        time_reduction_velo=0,
+        wavenumber_sampling_rate=12,
         anti_alias=0.01,
         free_surface=True,
         wavelet_duration=4,
+        wavelet_type=1,
         flat_earth_transform=True,
         path_nd=None,
         earth_model_layer_num=None,
         order=0,
 ):
-    path_inp = os.path.join(path_green, "qseis06.inp")
-    if os.path.exists(path_inp):
-        with open(path_inp, "r") as fr:
-            lines = fr.readlines()
-    else:
-        from .qseis06inp import s
-
-        lines = s.split("\n")
-        lines = [line + "\n" for line in lines]
+    # when receiver depth is not 0, change dists in inp file
+    r_ratio = (6371 - receiver_depth) / 6371
+    lines = str_inp.split("\n")
+    lines = [line + "\n" for line in lines]
 
     lines_earth = lines[207:-22]
     lines_end = lines[-22:]
 
+    # SOURCE PARAMETERS
     lines[26] = "%.2f\n" % event_depth
-    lines[42] = "%.2f\n" % receiver_depth
-    lines[43] = '1 1\n'
 
-    lines[46] = "%.2f %.2f %d\n" % (
+    # RECEIVER PARAMETERS
+    lines[42] = "%.2f\n" % receiver_depth
+    lines[43] = "1 1\n"
+    lines[46] = "%f %f %d\n" % (
         0.0,
         time_window,
-        2 ** (math.ceil(math.log(time_window / sampling_interval + 1, 2))),
+        round(time_window / sampling_interval + 1),
     )
-    lines[47] = "%d %.2f\n" % (1, time_reduction_velo)
+    lines[47] = "%d %f\n" % (1, time_reduction_velo)
 
-    lines[68] = "%.2f\n" % wavenumber_sampling_rate
-    lines[69] = "%.2f\n" % anti_alias
+    # WAVENUMBER INTEGRATION PARAMETERS
+    lines[66] = "%d\n" % slowness_int_algorithm
+    if slowness_window is not None:
+        lines[67] = "%f %f %f %f\n" % (
+            slowness_window[0],
+            slowness_window[1],
+            slowness_window[2],
+            slowness_window[3],
+        )
+    else:
+        lines[67] = "0.0 0.0 0.0 0.0\n"
+    lines[68] = "%f\n" % wavenumber_sampling_rate
+    lines[69] = "%f\n" % anti_alias
 
+    # OPTIONS FOR PARTIAL SOLUTIONS
     if free_surface:
         lines[103] = "0\n"
     else:
         lines[103] = "1\n"
-    lines[124] = "%d 1\n" % wavelet_duration
 
+    # SOURCE TIME FUNCTION (WAVELET) PARAMETERS (Note 3)
+    lines[124] = "%d %d\n" % (wavelet_duration, wavelet_type)
+
+    # GLOBAL MODEL PARAMETERS (Note 5)
     if flat_earth_transform:
         lines[191] = "1\n"
     else:
@@ -106,9 +121,9 @@ def create_inp_qseis06(
 
     for n in range(N_dist_group - 1):
         lines[44] = "%d\n" % N_each_group
-        lines[45] = "%.2f %.2f\n" % (
-            dist_range[0] + n * N_each_group * delta_dist,
-            dist_range[0] + ((n + 1) * N_each_group - 1) * delta_dist,
+        lines[45] = "%f %f\n" % (
+            (dist_range[0] + n * N_each_group * delta_dist) * r_ratio,
+            (dist_range[0] + ((n + 1) * N_each_group - 1) * delta_dist) * r_ratio,
         )
         path_inp = os.path.join(path_sub_dir, "%d_%d" % (n, order), "grn.inp")
         with open(path_inp, "w") as fw:
@@ -116,9 +131,9 @@ def create_inp_qseis06(
     else:
         res = N_dist - (N_dist_group - 1) * N_each_group
         lines[44] = "%d\n" % res
-        lines[45] = "%.2f %.2f\n" % (
-            dist_range[0] + (N_dist_group - 1) * N_each_group * delta_dist,
-            dist_range[1],
+        lines[45] = "%f %f\n" % (
+            (dist_range[0] + (N_dist_group - 1) * N_each_group * delta_dist) * r_ratio,
+            dist_range[1] * r_ratio,
         )
         path_inp = os.path.join(
             path_sub_dir, "%d_%d" % (N_dist_group - 1, order), "grn.inp"
@@ -130,59 +145,77 @@ def create_inp_qseis06(
 
 def create_inp_qseis06_points(
         path_green,
-        path_sub_dir,
         event_depth,
         receiver_depth,
         n_group,
         points,
         time_window,
         sampling_interval,
-        time_reduction_velo,
+        slowness_int_algorithm=0,
+        slowness_window=None,
+        time_reduction_velo=0,
         wavenumber_sampling_rate=2,
         anti_alias=0.01,
         free_surface=True,
         wavelet_duration=4,
+        wavelet_type=1,
         flat_earth_transform=True,
         path_nd=None,
         earth_model_layer_num=None,
         order=0,
 ):
-    path_inp = os.path.join(path_green, "qseis06.inp")
-    if os.path.exists(path_inp):
-        with open(path_inp, "r") as fr:
-            lines = fr.readlines()
-    else:
-        from pygrnwang.qseis06inp import s
+    path_sub_dir = str(
+        os.path.join(path_green, "%.2f" % event_depth, "%.2f" % receiver_depth)
+    )
+    # when receiver depth is not 0, change dists in inp file
+    r_ratio = (6371 - receiver_depth) / 6371
+    points = points * r_ratio
 
-        lines = s.split("\n")
-        lines = [line + "\n" for line in lines]
+    lines = str_inp.split("\n")
+    lines = [line + "\n" for line in lines]
 
     lines_earth = lines[207:-22]
     lines_end = lines[-22:]
 
+    # SOURCE PARAMETERS
     lines[26] = "%f\n" % event_depth
+
+    # RECEIVER PARAMETERS
     lines[42] = "%f\n" % receiver_depth
-
-    lines[43] = '0 1\n'
-    lines[44] = '%d\n' % len(points)
-    lines[45] = " ".join("%.4f" % _ for _ in points)+"\n"
-
-    lines[46] = "%.2f %.2f %d\n" % (
+    lines[43] = "0 1\n"
+    lines[44] = "%d\n" % len(points)
+    lines[45] = " ".join("%.4f" % _ for _ in points) + "\n"
+    lines[46] = "%f %f %d\n" % (
         0.0,
         time_window,
-        2 ** (math.ceil(math.log(time_window / sampling_interval + 1, 2))),
+        round(time_window / sampling_interval + 1),
     )
-    lines[47] = "%d %.2f\n" % (1, time_reduction_velo)
+    lines[47] = "%d %f\n" % (1, time_reduction_velo)
 
-    lines[68] = "%.2f\n" % wavenumber_sampling_rate
-    lines[69] = "%.2f\n" % anti_alias
+    # WAVENUMBER INTEGRATION PARAMETERS
+    lines[66] = "%d\n" % slowness_int_algorithm
+    if slowness_window is not None:
+        lines[67] = "%f %f %f %f\n" % (
+            slowness_window[0],
+            slowness_window[1],
+            slowness_window[2],
+            slowness_window[3],
+        )
+    else:
+        lines[67] = "0.0 0.0 0.0 0.0\n"
+    lines[68] = "%f\n" % wavenumber_sampling_rate
+    lines[69] = "%f\n" % anti_alias
 
+    # OPTIONS FOR PARTIAL SOLUTIONS
     if free_surface:
         lines[103] = "0\n"
     else:
         lines[103] = "1\n"
-    lines[124] = "%d 1\n" % wavelet_duration
 
+    # SOURCE TIME FUNCTION (WAVELET) PARAMETERS (Note 3)
+    lines[124] = "%d %d\n" % (wavelet_duration, wavelet_type)
+
+    # GLOBAL MODEL PARAMETERS (Note 5)
     if flat_earth_transform:
         lines[191] = "1\n"
     else:
@@ -199,9 +232,7 @@ def create_inp_qseis06_points(
     lines[200] = "%d\n" % earth_model_layer_num
     lines = lines[:207] + lines_earth + lines_end
 
-    path_inp = os.path.join(
-        path_sub_dir, "%d_%d" % (n_group, order), "grn.inp"
-    )
+    path_inp = os.path.join(path_sub_dir, "%d_%d" % (n_group, order), "grn.inp")
     with open(path_inp, "w") as fw:
         fw.writelines(lines)
     return path_inp
@@ -241,33 +272,54 @@ def call_qseis06(
         fw.writelines([])
 
 
-def convert_pd2bin_qseis06(sub_sub_dir):
-    ex_z_df = pd.read_csv(os.path.join(sub_sub_dir, "ex.tz"), sep="\\s+")
-    ex_r_df = pd.read_csv(os.path.join(sub_sub_dir, "ex.tr"), sep="\\s+")
-    ss_z_df = pd.read_csv(os.path.join(sub_sub_dir, "ss.tz"), sep="\\s+")
-    ss_r_df = pd.read_csv(os.path.join(sub_sub_dir, "ss.tr"), sep="\\s+")
-    ss_t_df = pd.read_csv(os.path.join(sub_sub_dir, "ss.tt"), sep="\\s+")
-    ds_z_df = pd.read_csv(os.path.join(sub_sub_dir, "ds.tz"), sep="\\s+")
-    ds_r_df = pd.read_csv(os.path.join(sub_sub_dir, "ds.tr"), sep="\\s+")
-    ds_t_df = pd.read_csv(os.path.join(sub_sub_dir, "ds.tt"), sep="\\s+")
-    cl_z_df = pd.read_csv(os.path.join(sub_sub_dir, "cl.tz"), sep="\\s+")
-    cl_r_df = pd.read_csv(os.path.join(sub_sub_dir, "cl.tr"), sep="\\s+")
-    time_series = np.concatenate(
-        [
-            ex_z_df.values[:, 1:],
-            ex_r_df.values[:, 1:],
-            ss_z_df.values[:, 1:],
-            ss_r_df.values[:, 1:],
-            ss_t_df.values[:, 1:],
-            ds_z_df.values[:, 1:],
-            ds_r_df.values[:, 1:],
-            ds_t_df.values[:, 1:],
-            cl_z_df.values[:, 1:],
-            cl_r_df.values[:, 1:],
-        ]
-    ).T
-    time_series = np.array(time_series, dtype=np.float32)
-    time_series.tofile(os.path.join(sub_sub_dir, "grn.bin"))
+def convert_pd2bin_qseis06(path_greenfunc, remove=False):
+    for com in ["tr", "tz", "tv"]:
+        ex_com = pd.read_csv(
+            str(os.path.join(path_greenfunc, "ex.%s" % com)), sep="\\s+"
+        ).to_numpy()
+        ss_com = pd.read_csv(
+            str(os.path.join(path_greenfunc, "ss.%s" % com)), sep="\\s+"
+        ).to_numpy()
+        ds_com = pd.read_csv(
+            str(os.path.join(path_greenfunc, "ds.%s" % com)), sep="\\s+"
+        ).to_numpy()
+        cl_com = pd.read_csv(
+            str(os.path.join(path_greenfunc, "cl.%s" % com)), sep="\\s+"
+        ).to_numpy()
+        time_series_com = np.concatenate(
+            [
+                ex_com[:, 1:],
+                ss_com[:, 1:],
+                ds_com[:, 1:],
+                cl_com[:, 1:],
+            ]
+        )
+        time_series_com = np.array(time_series_com, dtype=np.float32)
+        np.save(os.path.join(path_greenfunc, "grn_%s.npy" % com), time_series_com)
+        if remove:
+            os.remove(os.path.join(path_greenfunc, "ex.%s" % com))
+            os.remove(os.path.join(path_greenfunc, "ss.%s" % com))
+            os.remove(os.path.join(path_greenfunc, "ds.%s" % com))
+            os.remove(os.path.join(path_greenfunc, "cl.%s" % com))
+
+    for com in ["tt"]:
+        ss_r = pd.read_csv(
+            str(os.path.join(path_greenfunc, "ss.%s" % com)), sep="\\s+"
+        ).to_numpy()
+        ds_r = pd.read_csv(
+            str(os.path.join(path_greenfunc, "ds.%s" % com)), sep="\\s+"
+        ).to_numpy()
+        time_series_com = np.concatenate(
+            [
+                ss_r[:, 1:],
+                ds_r[:, 1:],
+            ]
+        )
+        time_series_com = np.array(time_series_com, dtype=np.float32)
+        np.save(os.path.join(path_greenfunc, "grn_%s.npy" % com), time_series_com)
+        if remove:
+            os.remove(os.path.join(path_greenfunc, "ss.%s" % com))
+            os.remove(os.path.join(path_greenfunc, "ds.%s" % com))
 
 
 if __name__ == "__main__":

@@ -175,11 +175,11 @@ def create_inp_qssp2020(
 
     lines[24] = "%.2f\n" % receiver_depth
 
-    lines[52] = "%.2f  %.2f\n" % (spec_time_window, sampling_interval)
-    lines[53] = "%.2f\n" % max_frequency
-    lines[54] = "%.2f\n" % max_slowness
-    lines[55] = "%.2f\n" % anti_alias
-    lines[56] = "%d %.2f %.2f\n" % (
+    lines[52] = "%f  %f\n" % (spec_time_window, sampling_interval)
+    lines[53] = "%f\n" % max_frequency
+    lines[54] = "%f\n" % max_slowness
+    lines[55] = "%f\n" % anti_alias
+    lines[56] = "%d %f %f\n" % (
         turning_point_filter,
         turning_point_d1,
         turning_point_d2,
@@ -190,7 +190,7 @@ def create_inp_qssp2020(
 
     lines[75] = "%d %d %d %d\n" % (cal_sph, cal_tor, min_harmonic, max_harmonic)
 
-    lines[86] = "1 %.2f '%s'\n" % (source_radius, path_spec)
+    lines[86] = "1 %f '%s'\n" % (source_radius, path_spec)
     lines[87] = "%.2f 'Green_%.2fkm' %d\n" % (event_depth, event_depth, cal_gf)
 
     lines[111] = "1 1\n"
@@ -200,8 +200,8 @@ def create_inp_qssp2020(
         mt[ind_mt] = 1
     lines[112] = (
         "1.0 "
-        + " ".join("%.2f" % mt[_] for _ in range(6))
-        + " 0.0 0.0 %.2f 0.0 %.2f\n" % (event_depth, source_duration)
+        + " ".join("%f" % mt[_] for _ in range(6))
+        + " 0.0 0.0 %.2f 0.0 %f\n" % (event_depth, source_duration)
     )
     lines[135] = " ".join(["%d" % output_observables[_] for _ in range(11)]) + "\n"
     lines[136] = "'%s'\n" % path_func
@@ -221,6 +221,7 @@ def create_inp_qssp2020(
         )
     if earth_model_layer_num is None:
         earth_model_layer_num = len(lines_earth)
+    lines_earth = lines_earth[:earth_model_layer_num]
     lines_earth_head[7] = "%d  %d\n" % (earth_model_layer_num, physical_dispersion)
     if mt_com == "spec":
         path_inp = os.path.join(
@@ -270,7 +271,11 @@ def call_qssp2020(
 
     sub_dir = os.path.dirname(path_inp)
     path_finished = os.path.join(sub_dir, ".finished")
-    if check_finished and os.path.exists(path_finished) and len(os.listdir(sub_dir))>2:
+    if (
+        check_finished
+        and os.path.exists(path_finished)
+        and len(os.listdir(sub_dir)) > 2
+    ):
         return None
 
     if platform.system() == "Windows":

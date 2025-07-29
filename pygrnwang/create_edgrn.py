@@ -3,30 +3,23 @@ import platform
 import subprocess
 import math
 
+from .edgrn2inp import s as str_inp
 from .utils import convert_earth_model_nd2inp
 
 
 def create_inp_edgrn2(
-        path_green,
-        obs_depth,
-        grn_dist_range,
-        grn_delta_dist,
-        grn_source_depth_range,
-        grn_delta_source_depth,
-        wavenumber_sampling_rate=12,
-        path_nd=None,
-        earth_model_layer_num=None,
+    path_green,
+    obs_depth,
+    grn_dist_range,
+    grn_delta_dist,
+    grn_source_depth_range,
+    grn_delta_source_depth,
+    wavenumber_sampling_rate=12,
+    path_nd=None,
+    earth_model_layer_num=None,
 ):
-    path_inp = os.path.join(path_green, "edgrn2.inp")
-    if os.path.exists(path_inp):
-        with open(path_inp, "r") as fr:
-            lines = fr.readlines()
-    else:
-        from .edgrn2inp import s
-
-        lines = s.split("\n")
-        lines = [line + "\n" for line in lines]
-
+    lines = str_inp.split("\n")
+    lines = [line + "\n" for line in lines]
     lines_earth = lines[84:-1]
     lines_end = lines[-1]
     lines = lines[:84]
@@ -39,11 +32,11 @@ def create_inp_edgrn2(
         grn_dist_range[1] * 1e3,
     )
     n_source_depth = (
-            math.ceil(
-                (grn_source_depth_range[1] - grn_source_depth_range[0])
-                / grn_delta_source_depth
-            )
-            + 1
+        math.ceil(
+            (grn_source_depth_range[1] - grn_source_depth_range[0])
+            / grn_delta_source_depth
+        )
+        + 1
     )
     lines[41] = "%d %f %f\n" % (
         n_source_depth,
@@ -61,7 +54,7 @@ def create_inp_edgrn2(
     for i in range(len(lines_earth)):
         temp = lines_earth[i].split()
         lines_earth[i] = (
-                temp[0] + " " + " ".join("%.4f" % (float(_) * 1e3) for _ in temp[1:-2])
+            temp[0] + " " + " ".join("%.4f" % (float(_) * 1e3) for _ in temp[1:-2])
         )
         lines_earth[i] = lines_earth[i] + "\n"
     if earth_model_layer_num is None:
@@ -76,9 +69,13 @@ def create_inp_edgrn2(
 
 
 def call_edgrn2(obs_depth, path_green, check_finished=False):
-    sub_sub_dir = str(os.path.join(path_green, "edgrn2", "%.2f" % obs_depth))
-    if check_finished and os.path.exists(os.path.join(sub_sub_dir, ".finished")) and \
-            len(os.listdir(sub_sub_dir)) > 2:
+    os.chdir(path_green)
+    sub_sub_dir = str(os.path.join("edgrn2", "%.2f" % obs_depth))
+    if (
+        check_finished
+        and os.path.exists(os.path.join(sub_sub_dir, ".finished"))
+        and len(os.listdir(sub_sub_dir)) > 2
+    ):
         return None
     path_inp = str(os.path.join(sub_sub_dir, "grn.inp"))
 

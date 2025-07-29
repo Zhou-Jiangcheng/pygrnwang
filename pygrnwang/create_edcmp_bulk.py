@@ -12,25 +12,25 @@ from mpi4py import MPI
 from multiprocessing import Pool
 
 from .create_edcmp import create_inp_edcmp2, call_edcmp2
-from .utils import group, cal_max_dist_from_2d_points
-from .geo import convert_sub_faults_geo2ned, d2m
+from .utils import group
+from .geo import d2km, convert_sub_faults_geo2ned, cal_max_dist_from_2d_points
 
 
 def pre_process_edcmp2(
-        processes_num,
-        path_green,
-        path_bin,
-        obs_depth_list,
-        obs_x_range,
-        obs_y_range,
-        obs_delta_x,
-        obs_delta_y,
-        source_array,
-        source_ref=None,
-        obs_ref=None,
-        layered=True,
-        lam=30516224000,
-        mu=33701888000,
+    processes_num,
+    path_green,
+    path_bin,
+    obs_depth_list,
+    obs_x_range,
+    obs_y_range,
+    obs_delta_x,
+    obs_delta_y,
+    source_array,
+    source_ref=None,
+    obs_ref=None,
+    layered=True,
+    lam=30516224000,
+    mu=33701888000,
 ):
     """
     Pre-processes input data for edcmp2, updates Green's function library settings,
@@ -67,10 +67,7 @@ def pre_process_edcmp2(
         path_bin_call = os.path.join(path_green, "edcmp2.exe")
     else:
         path_bin_call = os.path.join(path_green, "edcmp2.bin")
-
-    # If the binary does not exist in the Green's function directory, copy it.
-    if not os.path.exists(path_bin_call):
-        shutil.copy(path_bin, path_bin_call)
+    shutil.copy(path_bin, path_bin_call)
 
     # Load the current Green's function library information.
     with open(os.path.join(path_green, "green_lib_info.json"), "r") as fr:
@@ -78,18 +75,23 @@ def pre_process_edcmp2(
 
     # If a source reference is provided, convert source coordinates.
     if source_ref is not None:
-        source_array_new[:, 3] = source_array_new[:, 3] * 1e3  # Convert depth from km to m.
         sources_ned = convert_sub_faults_geo2ned(
             source_array_new[:, 1:4], np.concatenate([source_ref, np.zeros(1)]), True
         )
-        source_array_new[:, 1:4] = sources_ned / 1e3  # Convert NED coordinates back to km.
+        source_array_new[:, 1:4] = (
+            sources_ned / 1e3
+        )  # Convert NED coordinates back to km.
 
     # If an observation reference is provided, convert observation ranges and intervals.
     if obs_ref is not None:
-        obs_x_range = list((np.array(obs_x_range) - obs_ref[0]) * d2m / 1e3)  # Convert x-range to km.
-        obs_y_range = list((np.array(obs_y_range) - obs_ref[1]) * d2m / 1e3)  # Convert y-range to km.
-        obs_delta_x = obs_delta_x * d2m / 1e3  # Convert x sampling interval to km.
-        obs_delta_y = obs_delta_y * d2m / 1e3  # Convert y sampling interval to km.
+        obs_x_range = list(
+            (np.array(obs_x_range) - obs_ref[0]) * d2km
+        )  # Convert x-range to km.
+        obs_y_range = list(
+            (np.array(obs_y_range) - obs_ref[1]) * d2km
+        )  # Convert y-range to km.
+        obs_delta_x = obs_delta_x * d2km  # Convert x sampling interval to km.
+        obs_delta_y = obs_delta_y * d2km  # Convert y sampling interval to km.
 
     # Check if the observation grid exceeds the range supported by the Green's function library.
     nx = math.ceil((obs_x_range[1] - obs_x_range[0]) / obs_delta_x) + 1
@@ -140,7 +142,7 @@ def pre_process_edcmp2(
     green_info["mu"] = mu
     json_str = json.dumps(green_info, indent=4, ensure_ascii=False)
     with open(
-            os.path.join(path_green, "green_lib_info.json"), "w", encoding="utf-8"
+        os.path.join(path_green, "green_lib_info.json"), "w", encoding="utf-8"
     ) as file:
         file.write(json_str)
 
@@ -151,12 +153,12 @@ def pre_process_edcmp2(
 
     return group_list_edcmp
 
+
 def compute_static_stress_edcmp2_sequential(path_green, check_finished=False):
     # s = datetime.datetime.now()
     with open(os.path.join(path_green, "group_list_edcmp.pkl"), "rb") as fr:
         group_list_edcmp = pickle.load(fr)
-    for item in tqdm(group_list_edcmp,
-                     desc="Computing static stress"):
+    for item in tqdm(group_list_edcmp, desc="Computing static stress"):
         for i in range(len(item)):
             # print("computing " + str(item[i]) + " km")
             call_edcmp2(item[i], path_green, check_finished)
@@ -168,8 +170,7 @@ def compute_static_stress_edcmp2_parallel_single_node(path_green, check_finished
     # s = datetime.datetime.now()
     with open(os.path.join(path_green, "group_list_edcmp.pkl"), "rb") as fr:
         group_list_edcmp = pickle.load(fr)
-    for item in tqdm(group_list_edcmp,
-                     desc="Computing static stress"):
+    for item in tqdm(group_list_edcmp, desc="Computing static stress"):
         for i in range(len(item)):
             item[i] = [item[i]] + [path_green, check_finished]
         pool = Pool()

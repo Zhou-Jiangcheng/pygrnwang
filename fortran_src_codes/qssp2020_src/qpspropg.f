@@ -37,11 +37,11 @@ c
           yupc(1,1)=comi2*crrup(lyup)/cgrup(lyup)
           yupc(2,1)=(1.d0,0.d0)
 c
-          if(ldeg.gt.1)then
-            yupc(1,2)=(1.d0,0.d0)
-            yupc(3,2)=cgrup(lyup)/crrup(lyup)
-          else
-            yupc(4,2)=(1.d0,0.d0)
+          yupc(1,2)=(1.d0,0.d0)
+          yupc(3,2)=cgrup(lyup)/crrup(lyup)
+c
+          if(ldeg.eq.1)then
+            yupc(4,2)=(3.d0,0.d0)*yupc(3,2)
           endif
         else
           call qpstart4g(ldeg,lyup,2,yupc)
@@ -187,7 +187,7 @@ c
             yup(2,j)=crolw(ly)*crrlw(ly)**2
      &              *(yupc(1,j)*cgrlw(ly)/crrlw(ly)
      &              -comi2*yupc(2,j)-yupc(3,j))
-            yup(3,j)=yupc(2,j)   !(0.d0,0.d0)
+            yup(3,j)=(0.d0,0.d0)
             yup(4,j)=(0.d0,0.d0)
             yup(5,j)=yupc(3,j)
             yup(6,j)=yupc(4,j)
@@ -208,10 +208,9 @@ c
             enddo
             yup(1,1)=(1.d0,0.d0)
             yup(3,2)=(1.d0,0.d0)
-            if(ldeg.gt.1)then
-              yup(5,3)=(1.d0,0.d0)
-            else
-              yup(6,3)=(1.d0,0.d0)
+            yup(5,3)=(1.d0,0.d0)
+            if(ldeg.eq.1)then
+              yup(6,3)=(3.d0,0.d0)*yup(5,3)
             endif
           else
             call qpstart6g(ldeg,lyup,2,yup)
@@ -468,7 +467,7 @@ c
             yup(2,j)=crolw(ly)*crrlw(ly)**2
      &            *(yupc(1,j)*cgrlw(ly)/crrlw(ly)
      &            -comi2*yupc(2,j)-yupc(3,j))
-            yup(3,j)=yupc(2,j) !(0.d0,0.d0)
+            yup(3,j)=(0.d0,0.d0)
             yup(4,j)=(0.d0,0.d0)
             yup(5,j)=yupc(3,j)
             yup(6,j)=yupc(4,j)
@@ -577,7 +576,7 @@ c
           yup(2,j)=croup(lys)*crrup(lys)**2
      &          *(yupc(1,j)*cgrup(lys)/crrup(lys)
      &          -comi2*yupc(2,j)-yupc(3,j))
-          yup(3,j)=yupc(2,j) !(0.d0,0.d0)
+          yup(3,j)=(0.d0,0.d0)
           yup(4,j)=(0.d0,0.d0)
           yup(5,j)=yupc(3,j)
           yup(6,j)=yupc(4,j)
@@ -874,7 +873,7 @@ c
             ylw(2,j)=croup(lycm)*crrup(lycm)**2
      &              *(ylwc(1,j)*cgrup(lycm)/crrup(lycm)
      &              -comi2*ylwc(2,j)-ylwc(3,j))
-            ylw(3,j)=ylwc(2,j) !(0.d0,0.d0)
+            ylw(3,j)=(0.d0,0.d0)
             ylw(4,j)=(0.d0,0.d0)
             ylw(5,j)=ylwc(3,j)
             ylw(6,j)=ylwc(4,j)
@@ -1201,7 +1200,7 @@ c
           ylw(2,j)=croup(lys)*crrup(lys)**2
      &            *(ylwc(1,j)*cgrup(lys)/crrup(lys)
      &            -comi2*ylwc(2,j)-ylwc(3,j))
-          ylw(3,j)=ylwc(2,j) !(0.d0,0.d0)
+          ylw(3,j)=(0.d0,0.d0)
           ylw(4,j)=(0.d0,0.d0)
           ylw(5,j)=ylwc(3,j)
           ylw(6,j)=ylwc(4,j)
@@ -1595,7 +1594,7 @@ c
             ylw(2,j)=croup(lycm)*crrup(lycm)**2
      &              *(ylwc(1,j)*cgrup(lycm)/crrup(lycm)
      &              -comi2*ylwc(2,j)-ylwc(3,j))
-            ylw(3,j)=ylwc(2,j) !(0.d0,0.d0)
+            ylw(3,j)=(0.d0,0.d0)
             ylw(4,j)=(0.d0,0.d0)
             ylw(5,j)=ylwc(3,j)
             ylw(6,j)=ylwc(4,j)
@@ -1917,7 +1916,7 @@ c
           ylw(2,j)=croup(lys)*crrup(lys)**2
      &            *(ylwc(1,j)*cgrup(lys)/crrup(lys)
      &            -comi2*ylwc(2,j)-ylwc(3,j))
-          ylw(3,j)=ylwc(2,j) !(0.d0,0.d0)
+          ylw(3,j)=(0.d0,0.d0)
           ylw(4,j)=(0.d0,0.d0)
           ylw(5,j)=ylwc(3,j)
           ylw(6,j)=ylwc(4,j)

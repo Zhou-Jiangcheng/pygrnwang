@@ -13,7 +13,7 @@ from edu.sc.seis.TauP import TauP_Time  # type: ignore
 
 
 def taup_time_java(
-    event_depth_km, dist_km, phases_list, receiver_depth_km=0, model_name="ak135"
+        event_depth_km, dist_km, phases_list, receiver_depth_km=0, model_name="ak135"
 ):
     ttobj = TauP_Time(model_name)
     ttobj.setSourceDepth(event_depth_km)
@@ -35,7 +35,7 @@ def taup_time_java(
 def cal_first_p(event_depth_km, dist_km, receiver_depth_km=0, model_name="ak135"):
     if event_depth_km < receiver_depth_km:
         event_depth_km, receiver_depth_km = receiver_depth_km, event_depth_km
-    phases_list_p = ["p", "P", "Pg", "Pn", "Pdiff", "PKP"]
+    phases_list_p = ["p", "P", "pP", "Pg", "Pn", "Pdiff", "PKP"]
     ttobj_p = TauP_Time(model_name)
     ttobj_p.setSourceDepth(event_depth_km)
     ttobj_p.setReceiverDepth(receiver_depth_km)
@@ -49,7 +49,7 @@ def cal_first_p(event_depth_km, dist_km, receiver_depth_km=0, model_name="ak135"
 def cal_first_p_s(event_depth_km, dist_km, receiver_depth_km=0, model_name="ak135"):
     if event_depth_km < receiver_depth_km:
         event_depth_km, receiver_depth_km = receiver_depth_km, event_depth_km
-    phases_list_p = ["p", "P", "Pg", "Pn", "Pdiff", "PKP"]
+    phases_list_p = ["p", "P", "pP", "Pg", "Pn", "Pdiff", "PKP"]
     ttobj_p = TauP_Time(model_name)
     ttobj_p.setSourceDepth(event_depth_km)
     ttobj_p.setReceiverDepth(receiver_depth_km)
@@ -58,7 +58,7 @@ def cal_first_p_s(event_depth_km, dist_km, receiver_depth_km=0, model_name="ak13
     arr_p = ttobj_p.getArrival(0)
     first_p = arr_p.getTime()
 
-    phases_list_s = ["s", "S", "Sg", "Sn", "Sdiff", "SKS"]
+    phases_list_s = ["s", "S", "sS", "pS", "Sg", "Sn", "Sdiff", "SKS"]
     ttobj_s = TauP_Time(model_name)
     ttobj_s.setSourceDepth(event_depth_km)
     ttobj_s.setReceiverDepth(receiver_depth_km)

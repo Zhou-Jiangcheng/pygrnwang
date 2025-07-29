@@ -3,7 +3,7 @@ c
 c     CONSTANTS
 c     =========
       integer*4 ndmax
-      parameter(ndmax=4)
+      parameter(ndmax=2)
       real*8 PI,PI2
       parameter(PI=3.14159265358979d0,PI2=6.28318530717959d0)
       real*8 DEG2RAD,KM2M
@@ -38,7 +38,7 @@ c
 c
       complex*16 comi,comi2
 c
-      character*80 dispout(3),veloout(3),acceout(3),
+      character*100 dispout(3),veloout(3),acceout(3),
      &             rotaout(3),rotarateout(3),
      &             strainout(6),strainrateout(6),
      &             stressout(6),stressrateout(6),
@@ -111,7 +111,7 @@ c
      &                         expl(:),clvd(:),ss12(:),
      &                         ss11(:),ds31(:),ds23(:)
 c
-      character*80,allocatable:: specfile(:),uspecfile(:),vspecfile(:),
+      character*100,allocatable:: specfile(:),uspecfile(:),vspecfile(:),
      &  wspecfile(:),especfile(:),fspecfile(:),gspecfile(:),
      &  pspecfile(:),qspecfile(:)
       character*10,allocatable:: rname(:)

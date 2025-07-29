@@ -9,7 +9,7 @@ c
       real*8 f
 c
       integer*4 ly
-      real*8 fac,pup,plw,sup,slw,qswap
+      real*8 fac,pup,plw,sup,slw
       complex*16 cqpup,cqsup,cqplw,cqslw
 c
       if(.not.dispersion.or.f.ge.FSBREF)then
@@ -31,14 +31,8 @@ c
           cqpup=(1.d0,0.d0)
           cqplw=(1.d0,0.d0)
         endif
-c
-        if(ly.ge.lyob.and.ly.lt.lycm.or.ly.ge.lycc)then
-          pup=1.d0+fac/qpup(ly)
-          plw=1.d0+fac/qplw(ly)
-        else
-          pup=1.d0
-          plw=1.d0
-        endif
+        pup=1.d0+fac/qpup(ly)
+        plw=1.d0+fac/qplw(ly)
 c
         cvpup(ly)=dcmplx(vpup(ly)*pup/cdabs(cqpup),0.d0)*cqpup
         cvplw(ly)=dcmplx(vplw(ly)*plw/cdabs(cqplw),0.d0)*cqplw

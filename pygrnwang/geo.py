@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 
 d2m = 111194.92664455874
+d2km = 111.19492664455874
 
 
 def rotate_2d_points(points: np.ndarray, degree: float) -> np.ndarray:
@@ -73,7 +74,6 @@ def rotate_vector_y(v, gamma):
         ]
     )
 
-    # 对向量进行矩阵乘法
     rotated_vec = np.dot(R, v)
 
     return rotated_vec
@@ -95,7 +95,6 @@ def rotate_vector_z(v, gamma):
         ]
     )
 
-    # 对向量进行矩阵乘法
     rotated_vec = np.dot(R, v)
 
     return rotated_vec
@@ -146,51 +145,6 @@ def cartesian_2_spherical(x, y, z):
         else:
             phi = 0
     return r, phi, theta
-
-
-def cal_travel_time_taup(
-    event_depth_km, dist_km, phase, receiver_depth_km=0, model_name="ak135"
-):
-    cmd = "taup time -ph %s -model %s -h %f --stadepth %f -km %f --time" % (
-        phase,
-        model_name,
-        event_depth_km,
-        receiver_depth_km,
-        dist_km,
-    )
-    result = os.popen(cmd).read()
-    t = float(result.strip())
-    return t
-
-
-def cal_first_p_s(event_depth_km, dist_km, receiver_depth_km=0, model_name="ak135"):
-    if event_depth_km < receiver_depth_km:
-        event_depth_km, receiver_depth_km = receiver_depth_km, event_depth_km
-    if shutil.which("taup"):
-        cmd = "taup time -ph %s -model %s -h %f --stadepth %f -km %f --time" % (
-            "p,P,Pn,PKP,Pdiff",
-            model_name,
-            event_depth_km,
-            receiver_depth_km,
-            dist_km,
-        )
-        result = os.popen(cmd).read()
-        first_P = min(list(map(float, result.split())))
-
-        cmd = "taup time -ph %s -model %s -h %f --stadepth %f -km %f --time" % (
-            "s,S,Sn,SKS",
-            model_name,
-            event_depth_km,
-            receiver_depth_km,
-            dist_km,
-        )
-        result = os.popen(cmd).read()
-        first_S = min(list(map(float, result.split())))
-        return first_P, first_S
-    else:
-        raise ValueError(
-            "Taup must be installed and placed in the PATH environment variable!"
-        )
 
 
 def geo_2_r_earth(lat, lon, dep, r0=6371000):
@@ -285,23 +239,26 @@ def convert_axis_delta_ned2geo(lat0, lon0, dep0, r_ned):
 
 def convert_sub_faults_geo2ned(sub_faults, source_point, approximate=True):
     """
-    :param sub_faults:
-    :param source_point:
+    :param sub_faults: lat(deg), lon(deg), dep(km)
+    :param source_point: lat(deg), lon(deg), dep(km)
     :param approximate:
     :return: sub_faults_ned (unit m)
     """
-    origin_point = source_point.copy()
-    sub_faults_ned = np.zeros_like(sub_faults)
+    sub_faults_c = sub_faults.copy()
+    source_point_c = source_point.copy()
+    sub_faults_c[:, 2] = sub_faults_c[:, 2] * 1e3
+    source_point_c[2] = source_point_c[2] * 1e3
+    sub_faults_ned = np.zeros_like(sub_faults_c)
     if not approximate:
-        for n in range(sub_faults.shape[0]):
+        for n in range(sub_faults_c.shape[0]):
             sub_faults_ned[n, :] = convert_axis_delta_geo2ned(
-                *origin_point, *sub_faults[n, :]
+                *source_point_c.copy(), *sub_faults_c[n, :].copy()
             ).flatten()
     else:
-        for n in range(sub_faults.shape[0]):
-            x = (sub_faults[n, 0] - origin_point[0]) * d2m
-            y = (sub_faults[n, 1] - origin_point[1]) * d2m
-            z = sub_faults[n, 2] - origin_point[2]
+        for n in range(sub_faults_c.shape[0]):
+            x = (sub_faults_c[n, 0] - source_point_c[0]) * d2m
+            y = (sub_faults_c[n, 1] - source_point_c[1]) * d2m
+            z = sub_faults_c[n, 2] - source_point_c[2]
             sub_faults_ned[n, :] = np.array([x, y, z])
     return sub_faults_ned
 
@@ -330,5 +287,117 @@ def select_df_geo(df: pd.DataFrame, lat_range, lon_range, time_range) -> pd.Data
     return df_filtered
 
 
-if __name__ == "__main__":
-    pass
+def geographic_centroid(points):
+    """
+    Calculate the approximate geographic center.
+
+    :param points: NumPy array of shape (N, 2), where each row is [latitude_deg, longitude_deg]
+    :return: (centroid_lat_deg, centroid_lon_deg)
+    """
+    lat_rad = np.deg2rad(points[:, 0])
+    lon_rad = np.deg2rad(points[:, 1])
+
+    x = np.cos(lat_rad) * np.cos(lon_rad)
+    y = np.cos(lat_rad) * np.sin(lon_rad)
+    z = np.sin(lat_rad)
+
+    x_mean = x.mean()
+    y_mean = y.mean()
+    z_mean = z.mean()
+
+    centroid_lat_rad = np.arctan2(z_mean, np.sqrt(x_mean**2 + y_mean**2))
+    centroid_lon_rad = np.arctan2(y_mean, x_mean)
+
+    centroid_lat_deg = np.rad2deg(centroid_lat_rad)
+    centroid_lon_deg = np.rad2deg(centroid_lon_rad)
+
+    return centroid_lat_deg, centroid_lon_deg
+
+
+def cal_max_dist_from_2d_points(A: np.ndarray, B: np.ndarray):
+    """
+
+    :param A: (m,2)
+    :param B: (n,2)
+    :return: max_distance
+    """
+    # Calculate the differences in each dimension (broadcasting)
+    differences = A[:, np.newaxis, :] - B[np.newaxis, :, :]
+
+    # Square the differences and sum across columns (to get squared distances)
+    squared_distances = np.sum(differences**2, axis=2)
+
+    # Take the square root to get Euclidean distances
+    distances = np.sqrt(squared_distances)
+
+    # Find the maximum distance
+    max_distance = np.max(distances)
+    return max_distance
+
+
+def create_rotate_z_mat(gamma):
+    """
+    Generates a rotation matrix about the Z-axis.
+    From y to x.
+    Parameters:
+        gamma : float
+            Rotation angle in radians.
+
+    Returns:
+        R : numpy.ndarray
+            A 3x3 rotation matrix.
+    """
+    R = np.array(
+        [
+            [np.cos(gamma), -np.sin(gamma), 0],
+            [np.sin(gamma), np.cos(gamma), 0],
+            [0, 0, 1],
+        ]
+    )
+    return R
+
+
+def rotate_symmetric_tensor_series(tensor, gamma):
+    """
+    Rotates a series of symmetric tensors without using an explicit loop.
+
+    Parameters:
+        tensor: numpy array of shape (n, 6)
+            Each row is [xx, xy, xz, yy, yz, zz] representing a symmetric tensor.
+        gamma: float
+            Rotation angle around the z-axis (in radians) used to create the rotation matrix.
+
+    Returns:
+        rotated_tensor: numpy array of shape (n, 6)
+            Rotated tensor components in the same order as the input.
+    """
+    # Create the 3x3 rotation matrix (assumed to be defined elsewhere).
+    R = create_rotate_z_mat(gamma)
+    n = tensor.shape[0]
+
+    # Construct full symmetric matrices from the condensed tensor representation.
+    A = np.empty((n, 3, 3), dtype=tensor.dtype)
+    A[:, 0, 0] = tensor[:, 0]
+    A[:, 0, 1] = tensor[:, 1]
+    A[:, 0, 2] = tensor[:, 2]
+    A[:, 1, 0] = tensor[:, 1]
+    A[:, 1, 1] = tensor[:, 3]
+    A[:, 1, 2] = tensor[:, 4]
+    A[:, 2, 0] = tensor[:, 2]
+    A[:, 2, 1] = tensor[:, 4]
+    A[:, 2, 2] = tensor[:, 5]
+
+    # Rotate each tensor using batch matrix multiplication:
+    # Compute rotated_A = R.T @ A @ R for each tensor.
+    rotated_A = np.einsum("ij,njk,kl->nil", R.T, A, R)
+
+    # Extract the independent components from the rotated tensors.
+    rotated_tensor = np.empty((n, 6), dtype=tensor.dtype)
+    rotated_tensor[:, 0] = rotated_A[:, 0, 0]
+    rotated_tensor[:, 1] = rotated_A[:, 0, 1]
+    rotated_tensor[:, 2] = rotated_A[:, 0, 2]
+    rotated_tensor[:, 3] = rotated_A[:, 1, 1]
+    rotated_tensor[:, 4] = rotated_A[:, 1, 2]
+    rotated_tensor[:, 5] = rotated_A[:, 2, 2]
+
+    return rotated_tensor

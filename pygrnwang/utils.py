@@ -16,7 +16,9 @@ def read_source_array(source_inds, path_input, shift2corner=False, source_shapes
             header=None,
         ).to_numpy()
         if shift2corner:
-            mu_strike = source_plane[source_shapes[ind_src][1], :3] - source_plane[0, :3]
+            mu_strike = (
+                source_plane[source_shapes[ind_src][1], :3] - source_plane[0, :3]
+            )
             mu_dip = source_plane[1, :3] - source_plane[0, :3]
             source_plane[:, :3] = source_plane[:, :3] - mu_strike / 2 - mu_dip / 2
         if ind_src == 0:
@@ -29,7 +31,7 @@ def read_source_array(source_inds, path_input, shift2corner=False, source_shapes
 def group(inp_list, num_in_each_group):
     group_list = []
     for i in range(len(inp_list) // num_in_each_group):
-        group_list.append(inp_list[i * num_in_each_group: (i + 1) * num_in_each_group])
+        group_list.append(inp_list[i * num_in_each_group : (i + 1) * num_in_each_group])
     rest = len(inp_list) % num_in_each_group
     if rest != 0:
         group_list.append(inp_list[-rest:])
@@ -37,14 +39,14 @@ def group(inp_list, num_in_each_group):
 
 
 def shift_green2real_tpts(
-        seismograms,
-        tpts_table,
-        green_before_p,
-        srate,
-        event_depth_km,
-        dist_in_km,
-        receiver_depth_km=0,
-        model_name="ak135",
+    seismograms,
+    tpts_table,
+    green_before_p,
+    srate,
+    event_depth_km,
+    dist_in_km,
+    receiver_depth_km=0,
+    model_name="ak135",
 ):
     first_p, first_s = cal_first_p_s(
         event_depth_km=event_depth_km,
@@ -72,8 +74,8 @@ def shift_green2real_tpts(
             seismograms[i] = np.concatenate([green_before_p, p_s, after_s])
         else:
             seismograms[i] = np.concatenate([green_before_p, p_s])[
-                             : len(seismograms[i])
-                             ]
+                : len(seismograms[i])
+            ]
 
     return seismograms, first_p, first_s
 
@@ -89,7 +91,7 @@ def cal_max_dist_from_2d_points(A: np.ndarray, B: np.ndarray):
     differences = A[:, np.newaxis, :] - B[np.newaxis, :, :]
 
     # Square the differences and sum across columns (to get squared distances)
-    squared_distances = np.sum(differences ** 2, axis=2)
+    squared_distances = np.sum(differences**2, axis=2)
 
     # Take the square root to get Euclidean distances
     distances = np.sqrt(squared_distances)
@@ -199,6 +201,7 @@ def convert_earth_model_nd2nd_without_Q(path_nd, path_output):
     return lines_new
 
 
+
 def read_nd(path_nd):
     with open(path_nd, "r") as fr:
         lines = fr.readlines()
@@ -210,6 +213,32 @@ def read_nd(path_nd):
                 lines_new.append(float(temp[j]))
     nd_model = np.array(lines_new).reshape(-1, 4)
     return nd_model
+
+
+def read_material_nd(model_name, depth):
+    if model_name == "ak135fc":
+        from .ak135fc import s as str_nd
+
+        lines = str_nd.split("\n")
+        lines_new = []
+        for i in range(len(lines)):
+            temp = lines[i].split()
+            if len(temp) > 1:
+                for j in range(len(temp)):
+                    lines_new.append(float(temp[j]))
+        nd_model = np.array(lines_new).reshape(-1, 4)
+    else:
+        nd_model = read_nd(model_name)
+    ind = np.argwhere((nd_model[:, 0] - depth) >= 0)[0][0]
+    return nd_model[ind]
+
+
+def read_layerd_material(path_layerd_dat, depth_in_km):
+    # thickness, rho, vp, vs, qp, qs
+    depth_in_m = depth_in_km * 1e3
+    dat = np.loadtxt(path_layerd_dat)
+    ind = np.argwhere((np.cumsum(dat[:, 0]) - depth_in_m) >= 0)[0][0]
+    return dat[ind]
 
 
 def create_stf(tau, srate):

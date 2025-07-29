@@ -1,4 +1,5 @@
 from typing import Tuple
+import warnings
 
 import numpy as np
 
@@ -138,6 +139,134 @@ def cal_m0_from_mt(mt):
         )
     )
     return m0
+
+
+def mt2plane(mt):
+    """
+
+    :param mt: in NED axis, [M11, M12, M13, M22, M23, M33].
+    :return: [[strike1, dip1, rake1], [strike2, dip2, rake2],
+    n1, d1, n2, d2, t, b, p, eigenvalues]
+
+    n is the normal vector of the plane, in NED axis.
+    d is the rupture vector on the plane, in NED axis.
+
+    n points in the negative direction of D, i.e. upwards
+
+    When the dip angle is 0,
+
+    return: [pl1, pl2, n1, d1, n2, d2, t, b, p, eigenvalues]
+    """
+    M = mt2full_mt_matrix(mt)
+    [eigenvalues, eigenvectors] = np.linalg.eig(M)
+
+    index = eigenvalues.argsort()
+    eigenvectors = eigenvectors[:, index]
+    eigenvalues = eigenvalues[index]
+    p = eigenvectors[:, 0]
+    b = eigenvectors[:, 1]
+    t = eigenvectors[:, 2]
+    n = 1 / np.sqrt(2) * (t + p)
+    d = 1 / np.sqrt(2) * (t - p)
+
+    threshold = 1e-15
+
+    def ignore_small_angle_vector(vector):
+        for i in range(3):
+            if np.abs(vector[i]) < threshold:
+                vector[i] = 0
+            if np.abs(vector[i] - 1) < threshold:
+                vector[i] = 1
+            if np.abs(vector[i] + 1) < threshold:
+                vector[i] = -1
+        return vector
+
+    n = ignore_small_angle_vector(n)
+    d = ignore_small_angle_vector(d)
+
+    # print(eigenvalues)
+    # print(eigenvectors)
+    # print(t, b, p)
+    # print(n,d)
+
+    def nd2plane(n_in, d_in):
+        # 保证n朝上
+        if n_in[2] > 0:
+            n_in = -n_in
+            d_in = -d_in
+        delta = np.arccos(-n_in[2])
+        if np.abs(delta - 0) <= threshold:
+            delta = 0
+        if np.abs(delta - np.pi / 2) <= threshold:
+            delta = np.pi / 2
+
+        if n_in[1] == 0:
+            if delta == 0:
+                warnings.warn("n is vertical. Strike is set as 0.")
+                phi = 0
+            elif delta == np.pi / 2:
+                warnings.warn(
+                    "n is horizontal. The part directed by n is set as the hanging wall of the fault."
+                )
+                if n_in[0] > 0:
+                    phi = np.pi * 3 / 2
+                else:
+                    phi = np.pi / 2
+            else:
+                if n_in[0] > 0:
+                    phi = np.pi * 3 / 2
+                else:
+                    phi = np.pi / 2
+        else:
+            if delta == np.pi / 2:
+                warnings.warn(
+                    "n is horizontal. The part directed by n is set as the hanging wall of the fault."
+                )
+                if n_in[0] == 0:
+                    if n_in[1] == 1:
+                        phi = 0
+                    elif n_in[1] == -1:
+                        phi = np.pi
+                    else:
+                        raise ValueError(
+                            "n is horizontal,n[0] is 0, but n[1] is not 1 or -1."
+                        )
+                else:
+                    phi = np.arctan(-n_in[0] / n_in[1])
+            else:
+                phi = np.arctan(-n_in[0] / n_in[1])
+        if (n_in[0] <= 0) and (n_in[1] > 0):
+            pass
+        elif (n_in[0] <= 0) and (n_in[1] < 0):
+            phi = phi + np.pi
+        elif (n_in[0] > 0) and (n_in[1] < 0):
+            phi = phi + np.pi
+        elif (n_in[0] > 0) and (n_in[1] > 0):
+            phi = phi + 2 * np.pi
+
+        cos_lambda = d_in[0] * np.cos(phi) + d_in[1] * np.sin(phi)
+        sin_lambda_cos_delta = d_in[0] * np.sin(phi) - d_in[1] * np.cos(phi)
+        lambda_ = np.arccos(cos_lambda)
+        if sin_lambda_cos_delta < 0:
+            lambda_ = -lambda_
+        # elif np.abs(sin_lambda_cos_delta) <= threshold:
+        #     if d_in[0] != 0:
+        #         lambda_ = np.arctan(d_in[1] / d_in[0])
+        #     else:
+        #         if np.abs(d_in[1] - 1) <= threshold:
+        #             lambda_ = 0
+        #         else:
+        #             lambda_ = np.arccos(-d_in[1])
+
+        pl = np.array([phi, delta, lambda_])
+        pl = pl * 180 / np.pi
+        return pl, n_in, d_in
+
+    pl1, n1, d1 = list(nd2plane(n, d))
+    pl2, n2, d2 = list(nd2plane(d, n))
+
+    return [pl1, pl2, n1, d1, n2, d2, t, b, p, eigenvalues]
+
 
 
 def plane2mt(M0, strike, dip, rake):
