@@ -32,27 +32,27 @@ def create_order_ind(order, diff_accu_order):
 
 
 def pre_process_qseis06(
-        processes_num,
-        path_green,
-        path_bin,
-        event_depth_list,
-        receiver_depth_list,
-        dist_range,
-        delta_dist,
-        N_each_group,
-        time_window,
-        sampling_interval,
-        slowness_int_algorithm=0,
-        slowness_window=None,
-        time_reduction_velo=0,
-        wavenumber_sampling_rate=12,
-        anti_alias=0.01,
-        free_surface=True,
-        wavelet_duration=0,
-        wavelet_type=1,
-        flat_earth_transform=True,
-        path_nd=None,
-        earth_model_layer_num=None,
+    processes_num,
+    path_green,
+    path_bin,
+    event_depth_list,
+    receiver_depth_list,
+    dist_range,
+    delta_dist,
+    N_each_group,
+    time_window,
+    sampling_interval,
+    slowness_int_algorithm=0,
+    slowness_window=None,
+    time_reduction_velo=0,
+    wavenumber_sampling_rate=12,
+    anti_alias=0.01,
+    free_surface=True,
+    wavelet_duration=0,
+    wavelet_type=1,
+    flat_earth_transform=True,
+    path_nd=None,
+    earth_model_layer_num=None,
 ):
     print("preprocessing")
     os.makedirs(path_green, exist_ok=True)
@@ -101,7 +101,7 @@ def pre_process_qseis06(
                 flat_earth_transform=flat_earth_transform,
                 path_nd=path_nd,
                 earth_model_layer_num=earth_model_layer_num,
-                order=0
+                order=0,
             )
 
     path_nd_without_Q = os.path.join(path_green, "noQ.nd")
@@ -134,7 +134,7 @@ def pre_process_qseis06(
     }
     json_str = json.dumps(green_info, indent=4, ensure_ascii=False)
     with open(
-            os.path.join(path_green, "green_lib_info.json"), "w", encoding="utf-8"
+        os.path.join(path_green, "green_lib_info.json"), "w", encoding="utf-8"
     ) as file:
         file.write(json_str)
 
@@ -150,30 +150,30 @@ def pre_process_qseis06(
 
 
 def pre_process_qseis06_strain_rate(
-        processes_num,
-        path_green,
-        path_bin,
-        event_depth_list,
-        receiver_depth_list,
-        dist_range,
-        delta_dist,
-        N_each_group,
-        time_window,
-        sampling_interval,
-        slowness_int_algorithm=0,
-        slowness_window=None,
-        time_reduction_velo=0,
-        wavenumber_sampling_rate=12,
-        anti_alias=0.01,
-        free_surface=True,
-        wavelet_duration=0,
-        wavelet_type=1,
-        flat_earth_transform=True,
-        path_nd=None,
-        earth_model_layer_num=None,
-        k_dr=0.001,
-        dz=0.1,  # km
-        diff_accu_order=4,
+    processes_num,
+    path_green,
+    path_bin,
+    event_depth_list,
+    receiver_depth_list,
+    dist_range,
+    delta_dist,
+    N_each_group,
+    time_window,
+    sampling_interval,
+    slowness_int_algorithm=0,
+    slowness_window=None,
+    time_reduction_velo=0,
+    wavenumber_sampling_rate=12,
+    anti_alias=0.01,
+    free_surface=True,
+    wavelet_duration=0,
+    wavelet_type=1,
+    flat_earth_transform=True,
+    path_nd=None,
+    earth_model_layer_num=None,
+    k_dr=0.001,
+    dz=0.1,  # km
+    diff_accu_order=4,
 ):
     os.makedirs(path_green, exist_ok=True)
     if diff_accu_order not in [2, 4, 6, 8]:
@@ -204,10 +204,10 @@ def pre_process_qseis06_strain_rate(
             for n_group in range(N_dist_group):
                 for order in range(diff_accu_order + 1):
                     points_n_o = points[
-                                 n_group * N_each_group: (n_group + 1) * N_each_group
-                                 ]
+                        n_group * N_each_group : (n_group + 1) * N_each_group
+                    ]
                     points_n_o = (
-                            points_n_o + (order - diff_accu_order // 2) * points_n_o * k_dr
+                        points_n_o + (order - diff_accu_order // 2) * points_n_o * k_dr
                     )
                     order_ind = create_order_ind(order, diff_accu_order)
                     # print(n_group, order, order_ind, dist_range)
@@ -230,21 +230,24 @@ def pre_process_qseis06_strain_rate(
                         flat_earth_transform=flat_earth_transform,
                         path_nd=path_nd,
                         earth_model_layer_num=earth_model_layer_num,
-                        order=order_ind
+                        order=order_ind,
                     )
                 if receiver_depth > 0:
                     for order in range(diff_accu_order + 1):
                         if order == diff_accu_order // 2:
                             continue
                         receiver_depth_inp = (
-                                receiver_depth + (order - diff_accu_order // 2) * dz
+                            receiver_depth + (order - diff_accu_order // 2) * dz
                         )
                         order_ind = (
-                                create_order_ind(order, diff_accu_order) + diff_accu_order
+                            create_order_ind(order, diff_accu_order) + diff_accu_order
                         )
                         path_sub_dir = str(
-                            os.path.join(path_green, "%.2f" % event_depth,
-                                         "%.2f" % receiver_depth)
+                            os.path.join(
+                                path_green,
+                                "%.2f" % event_depth,
+                                "%.2f" % receiver_depth,
+                            )
                         )
                         create_inp_qseis06(
                             path_sub_dir=path_sub_dir,
@@ -268,7 +271,7 @@ def pre_process_qseis06_strain_rate(
                             flat_earth_transform=flat_earth_transform,
                             path_nd=path_nd,
                             earth_model_layer_num=earth_model_layer_num,
-                            order=order_ind
+                            order=order_ind,
                         )
 
     path_nd_without_Q = os.path.join(path_green, "noQ.nd")
@@ -305,7 +308,7 @@ def pre_process_qseis06_strain_rate(
     }
     json_str = json.dumps(green_info, indent=4, ensure_ascii=False)
     with open(
-            os.path.join(path_green, "green_lib_info.json"), "w", encoding="utf-8"
+        os.path.join(path_green, "green_lib_info.json"), "w", encoding="utf-8"
     ) as file:
         file.write(json_str)
 
@@ -326,11 +329,11 @@ def pre_process_qseis06_strain_rate(
 
 
 def create_grnlib_qseis06_sequential(
-        path_green, check_finished=False, convert_pd2bin=True, remove_pd=True
+    path_green, check_finished=False, convert_pd2bin=True, remove_pd=True
 ):
     with open(os.path.join(path_green, "group_list.pkl"), "rb") as fr:
         group_list = pickle.load(fr)
-    for item in tqdm(group_list, desc="Computing Green\'s Func Lib"):
+    for item in tqdm(group_list, desc="Computing Green's Func Lib"):
         for i in range(len(item)):
             # print("computing " + str(item[i]))
             item[i] = item[i] + [path_green, check_finished]
@@ -340,11 +343,11 @@ def create_grnlib_qseis06_sequential(
 
 
 def create_grnlib_qseis06_parallel_single_node(
-        path_green, check_finished=False, convert_pd2bin=True, remove_pd=True
+    path_green, check_finished=False, convert_pd2bin=True, remove_pd=True
 ):
     with open(os.path.join(path_green, "group_list.pkl"), "rb") as fr:
         group_list = pickle.load(fr)
-    for item in tqdm(group_list, desc="Computing Green\'s Func Lib"):
+    for item in tqdm(group_list, desc="Computing Green's Func Lib"):
         # print("computing " + str(item))
         for i in range(len(item)):
             item[i] = item[i] + [path_green, check_finished]
@@ -397,7 +400,7 @@ def convert_pd2bin_qseis06_all(path_green, remove=False):
             )
             sub_sub_dirs = os.listdir(sub_dir)
             for sub_sub_dir in sub_sub_dirs:
-                if '_table.bin' not in sub_sub_dir:
+                if "_table.bin" not in sub_sub_dir:
                     convert_pd2bin_qseis06(
                         os.path.join(sub_dir, sub_sub_dir), remove=remove
                     )

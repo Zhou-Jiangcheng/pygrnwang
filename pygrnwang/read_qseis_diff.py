@@ -7,7 +7,7 @@ import numpy as np
 from .read_qseis import (
     read_time_series_qseis06_bin,
     read_time_series_qseis06_ascii,
-    synthesize_qseis06
+    synthesize_qseis06,
 )
 from .utils import (
     shift_green2real_tpts,
@@ -24,8 +24,8 @@ def rotate_strain_polar2cartesian(theta, e_rr, e_rt, e_tt):
     theta = np.deg2rad(theta)
     cos_theta = np.cos(theta)
     sin_theta = np.sin(theta)
-    cos_theta_sq = cos_theta ** 2
-    sin_theta_sq = sin_theta ** 2
+    cos_theta_sq = cos_theta**2
+    sin_theta_sq = sin_theta**2
     sin_time_cos_theta = sin_theta * cos_theta
     e_xx = e_rr * cos_theta_sq + e_tt * sin_theta_sq - 2 * e_rt * sin_time_cos_theta
     e_yy = e_rr * sin_theta_sq + e_tt * cos_theta_sq + 2 * e_rt * sin_time_cos_theta
@@ -38,49 +38,49 @@ def diff_central_1order(v_array, diff_accu_order):
         return (v_array[2] - v_array[0]) / 2
     elif diff_accu_order == 4:
         return (
-                1 / 12 * v_array[0]
-                - 2 / 3 * v_array[1]
-                + 2 / 3 * v_array[3]
-                - 1 / 12 * v_array[4]
+            1 / 12 * v_array[0]
+            - 2 / 3 * v_array[1]
+            + 2 / 3 * v_array[3]
+            - 1 / 12 * v_array[4]
         )
     elif diff_accu_order == 6:
         return (
-                -1 / 60 * v_array[0]
-                + 3 / 20 * v_array[1]
-                - 3 / 4 * v_array[2]
-                + 3 / 4 * v_array[4]
-                - 3 / 20 * v_array[5]
-                + 1 / 60 * v_array[6]
+            -1 / 60 * v_array[0]
+            + 3 / 20 * v_array[1]
+            - 3 / 4 * v_array[2]
+            + 3 / 4 * v_array[4]
+            - 3 / 20 * v_array[5]
+            + 1 / 60 * v_array[6]
         )
     elif diff_accu_order == 8:
         return (
-                1 / 280 * v_array[0]
-                - 4 / 105 * v_array[1]
-                + 1 / 5 * v_array[2]
-                - 4 / 5 * v_array[3]
-                + 4 / 5 * v_array[5]
-                - 1 / 5 * v_array[6]
-                + 4 / 105 * v_array[7]
-                - 1 / 280 * v_array[8]
+            1 / 280 * v_array[0]
+            - 4 / 105 * v_array[1]
+            + 1 / 5 * v_array[2]
+            - 4 / 5 * v_array[3]
+            + 4 / 5 * v_array[5]
+            - 1 / 5 * v_array[6]
+            + 4 / 105 * v_array[7]
+            - 1 / 280 * v_array[8]
         )
     else:
         raise ValueError("diff_accu_order must be in [2,4,6,8]")
 
 
 def seek_qseis06_strain_rate_diff(
-        path_green,
-        event_depth_km,
-        receiver_depth_km,
-        az_deg,
-        dist_km,
-        focal_mechanism,
-        srate,
-        before_p=None,
-        pad_zeros=False,
-        shift=False,
-        only_seismograms=True,
-        model_name="ak135fc",
-        green_info=None,
+    path_green,
+    event_depth_km,
+    receiver_depth_km,
+    az_deg,
+    dist_km,
+    focal_mechanism,
+    srate,
+    before_p=None,
+    pad_zeros=False,
+    shift=False,
+    only_seismograms=True,
+    model_name="ak135fc",
+    green_info=None,
 ):
     if green_info is None:
         with open(os.path.join(path_green, "green_lib_info.json"), "r") as fr:
@@ -160,35 +160,29 @@ def seek_qseis06_strain_rate_diff(
         path_bin = os.path.join(path_greenfunc_order, "grn_tz.npy")
         if os.path.exists(path_bin):
             time_series_list = read_time_series_qseis06_bin(
-                path_greenfunc=path_greenfunc_order,
-                start_count=start_count
+                path_greenfunc=path_greenfunc_order, start_count=start_count
             )
         else:
             time_series_list = read_time_series_qseis06_ascii(
                 path_greenfunc=path_greenfunc_order, start_count=start_count
             )
-        velo_dr = synthesize_qseis06(
-            time_series_list=time_series_list, m1=m1, m2=m2
-        )
-        velo_raw_dr[order * 3: (order + 1) * 3, :] = velo_dr
+        velo_dr = synthesize_qseis06(time_series_list=time_series_list, m1=m1, m2=m2)
+        velo_raw_dr[order * 3 : (order + 1) * 3, :] = velo_dr
     pur_pr = diff_central_1order(velo_raw_dr[0:-1:3, :], diff_accu_order) / dr
     put_pr = diff_central_1order(velo_raw_dr[1:-1:3, :], diff_accu_order) / dr
     puz_pr = (
-            diff_central_1order(velo_raw_dr[2: len(velo_raw_dr): 3, :], diff_accu_order)
-            / dr
+        diff_central_1order(velo_raw_dr[2 : len(velo_raw_dr) : 3, :], diff_accu_order)
+        / dr
     )
-    np.save('/home/zjc/Desktop/put_pr_diff.npy', put_pr)
-    np.save('/home/zjc/Desktop/pur_pr_diff.npy', pur_pr)
+    np.save("/home/zjc/Desktop/put_pr_diff.npy", put_pr)
+    np.save("/home/zjc/Desktop/pur_pr_diff.npy", pur_pr)
 
     # partial u_i / partial theta
-    path_greenfunc_order = str(
-        os.path.join(path_greenfunc, "%d_%d" % (ind_group, 0))
-    )
+    path_greenfunc_order = str(os.path.join(path_greenfunc, "%d_%d" % (ind_group, 0)))
     path_bin = os.path.join(path_greenfunc_order, "grn_tz.npy")
     if os.path.exists(path_bin):
         time_series_list = read_time_series_qseis06_bin(
-            path_greenfunc=path_greenfunc_order,
-            start_count=start_count
+            path_greenfunc=path_greenfunc_order, start_count=start_count
         )
     else:
         time_series_list = read_time_series_qseis06_ascii(
@@ -223,24 +217,23 @@ def seek_qseis06_strain_rate_diff(
             path_bin = os.path.join(path_greenfunc_order, "grn_tz.npy")
             if os.path.exists(path_bin):
                 time_series_list = read_time_series_qseis06_bin(
-                    path_greenfunc=path_greenfunc_order,
-                    start_count=start_count
+                    path_greenfunc=path_greenfunc_order, start_count=start_count
                 )
             else:
                 time_series_list = read_time_series_qseis06_ascii(
                     path_greenfunc=path_greenfunc_order, start_count=start_count
                 )
             velo_dz = synthesize_qseis06(
-            time_series_list=time_series_list, m1=m1, m2=m2
-        )
-            velo_raw_dz[order * 3: (order + 1) * 3, :] = velo_dz
+                time_series_list=time_series_list, m1=m1, m2=m2
+            )
+            velo_raw_dz[order * 3 : (order + 1) * 3, :] = velo_dz
         pur_pz = diff_central_1order(velo_raw_dz[0:-1:3, :], diff_accu_order) / dz
         put_pz = diff_central_1order(velo_raw_dz[1:-1:3, :], diff_accu_order) / dz
         puz_pz = (
-                diff_central_1order(
-                    velo_raw_dz[2: len(velo_raw_dr): 3, :], diff_accu_order
-                )
-                / dz
+            diff_central_1order(
+                velo_raw_dz[2 : len(velo_raw_dr) : 3, :], diff_accu_order
+            )
+            / dz
         )
         e_rz = 1 / 2 * (pur_pz + puz_pr)
         e_tz = 1 / 2 * (put_pz + puz_pt / r)
@@ -253,18 +246,14 @@ def seek_qseis06_strain_rate_diff(
         vp = nd_model[ind, 1] * 1e3
         vs = nd_model[ind, 2] * 1e3
         rho = nd_model[ind, 3] * 1e3
-        mu = rho * vs ** 2
-        lam = rho * vp ** 2 - 2 * mu
+        mu = rho * vs**2
+        lam = rho * vp**2 - 2 * mu
         e_rz = np.zeros_like(e_rr)
         e_tz = np.zeros_like(e_rr)
         e_zz = -lam / (lam + 2 * mu) * (e_rr + e_tt)
 
-    strain_tensor = np.array(
-        [e_tt, e_rt, -e_tz, e_rr, -e_rz, e_zz]
-    )
-    seismograms = rotate_symmetric_tensor_series(
-        strain_tensor.T, np.deg2rad(-az_deg)
-    ).T
+    strain_tensor = np.array([e_tt, e_rt, -e_tz, e_rr, -e_rz, e_zz])
+    seismograms = rotate_symmetric_tensor_series(strain_tensor.T, np.deg2rad(-az_deg)).T
 
     tpts_table = None
     if (before_p is not None) or shift:
@@ -339,44 +328,49 @@ def convert_strain2stress(strain, lam, mu):
 
 
 def seek_qseis06_stress_rate_diff(
-        path_green,
-        event_depth_km,
-        receiver_depth_km,
-        az_deg,
-        dist_km,
-        focal_mechanism,
-        srate,
-        before_p=None,
-        pad_zeros=False,
-        shift=False,
-        only_seismograms=True,
-        model_name="ak135fc",
-        green_info=None,
+    path_green,
+    event_depth_km,
+    receiver_depth_km,
+    az_deg,
+    dist_km,
+    focal_mechanism,
+    srate,
+    before_p=None,
+    pad_zeros=False,
+    shift=False,
+    only_seismograms=True,
+    model_name="ak135fc",
+    green_info=None,
 ):
     if green_info is None:
         with open(os.path.join(path_green, "green_lib_info.json"), "r") as fr:
             green_info = json.load(fr)
     srate_grn = 1 / green_info["sampling_interval"]
     sampling_num = (
-            round(green_info["time_window"] / green_info["sampling_interval"]) + 1
+        round(green_info["time_window"] / green_info["sampling_interval"]) + 1
     )
-    (strain_rate, tpts_table, first_p, first_s,
-     grn_dep_source, grn_dep_receiver, grn_dist) = (
-        seek_qseis06_strain_rate_diff(
-            path_green,
-            event_depth_km,
-            receiver_depth_km,
-            az_deg,
-            dist_km,
-            focal_mechanism,
-            srate_grn,
-            before_p,
-            pad_zeros,
-            shift,
-            False,
-            model_name,
-            green_info,
-        )
+    (
+        strain_rate,
+        tpts_table,
+        first_p,
+        first_s,
+        grn_dep_source,
+        grn_dep_receiver,
+        grn_dist,
+    ) = seek_qseis06_strain_rate_diff(
+        path_green,
+        event_depth_km,
+        receiver_depth_km,
+        az_deg,
+        dist_km,
+        focal_mechanism,
+        srate_grn,
+        before_p,
+        pad_zeros,
+        shift,
+        False,
+        model_name,
+        green_info,
     )
 
     path_nd_noQ = green_info["path_nd_without_Q"]
@@ -386,8 +380,8 @@ def seek_qseis06_stress_rate_diff(
     vp = nd_model[ind, 1] * 1e3
     vs = nd_model[ind, 2] * 1e3
     rho = nd_model[ind, 3] * 1e3
-    mu = rho * vs ** 2
-    lam = rho * vp ** 2 - 2 * mu
+    mu = rho * vs**2
+    lam = rho * vp**2 - 2 * mu
     seismograms = convert_strain2stress(strain_rate, lam, mu)
 
     seismograms_resample = np.zeros((6, round(sampling_num * srate / srate_grn)))

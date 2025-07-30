@@ -19,27 +19,27 @@ from .utils import group, convert_earth_model_nd2nd_without_Q
 
 
 def pre_process_qseis_stress(
-        processes_num,
-        path_green,
-        path_bin,
-        event_depth_list,
-        receiver_depth_list,
-        dist_range,
-        delta_dist,
-        N_each_group,
-        time_window,
-        sampling_interval,
-        slowness_int_algorithm=0,
-        slowness_window=None,
-        time_reduction_velo=0,
-        wavenumber_sampling_rate=12,
-        anti_alias=0.01,
-        free_surface=True,
-        wavelet_duration=0,
-        wavelet_type=1,
-        flat_earth_transform=True,
-        path_nd=None,
-        earth_model_layer_num=None,
+    processes_num,
+    path_green,
+    path_bin,
+    event_depth_list,
+    receiver_depth_list,
+    dist_range,
+    delta_dist,
+    N_each_group,
+    time_window,
+    sampling_interval,
+    slowness_int_algorithm=0,
+    slowness_window=None,
+    time_reduction_velo=0,
+    wavenumber_sampling_rate=12,
+    anti_alias=0.01,
+    free_surface=True,
+    wavelet_duration=0,
+    wavelet_type=1,
+    flat_earth_transform=True,
+    path_nd=None,
+    earth_model_layer_num=None,
 ):
     print("Preprocessing")
     os.makedirs(path_green, exist_ok=True)
@@ -100,7 +100,7 @@ def pre_process_qseis_stress(
         "N_each_group": N_each_group,
         "time_window": time_window,
         "sampling_interval": sampling_interval,
-        "sampling_num": round(time_window/sampling_interval+1),
+        "sampling_num": round(time_window / sampling_interval + 1),
         "slowness_int_algorithm": slowness_int_algorithm,
         "slowness_window": slowness_window,
         "time_reduction_velo": time_reduction_velo,
@@ -116,7 +116,7 @@ def pre_process_qseis_stress(
     }
     json_str = json.dumps(green_info, indent=4, ensure_ascii=False)
     with open(
-            os.path.join(path_green, "green_lib_info.json"), "w", encoding="utf-8"
+        os.path.join(path_green, "green_lib_info.json"), "w", encoding="utf-8"
     ) as file:
         file.write(json_str)
 
@@ -132,7 +132,7 @@ def pre_process_qseis_stress(
 
 
 def create_grnlib_qseis_stress_sequential(
-        path_green, check_finished=False, convert_pd2bin=True, remove_pd=True
+    path_green, check_finished=False, convert_pd2bin=True, remove_pd=True
 ):
     with open(os.path.join(path_green, "group_list.pkl"), "rb") as fr:
         group_list = pickle.load(fr)
@@ -146,7 +146,7 @@ def create_grnlib_qseis_stress_sequential(
 
 
 def create_grnlib_qseis_stress_parallel(
-        path_green, check_finished=False, convert_pd2bin=True, remove_pd=True
+    path_green, check_finished=False, convert_pd2bin=True, remove_pd=True
 ):
     with open(os.path.join(path_green, "group_list.pkl"), "rb") as fr:
         group_list = pickle.load(fr)
@@ -176,15 +176,14 @@ def convert_pd2bin_qseis_stress_all(path_green, remove=False):
             )
             sub_sub_dirs = os.listdir(sub_dir)
             for sub_sub_dir in sub_sub_dirs:
-                if '_table.bin' not in sub_sub_dir:
+                if "_table.bin" not in sub_sub_dir:
                     convert_pd2bin_qseis_stress(
                         os.path.join(sub_dir, sub_sub_dir), remove=remove
                     )
 
 
-
 def create_grnlib_qseis_stress_parallel_multi_nodes(
-        path_green, check_finished=False, convert_pd2bin=True, remove_pd=True
+    path_green, check_finished=False, convert_pd2bin=True, remove_pd=True
 ):
     s = datetime.datetime.now()
     with open(os.path.join(path_green, "group_list.pkl"), "rb") as fr:

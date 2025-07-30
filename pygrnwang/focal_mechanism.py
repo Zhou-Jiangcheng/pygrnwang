@@ -268,7 +268,6 @@ def mt2plane(mt):
     return [pl1, pl2, n1, d1, n2, d2, t, b, p, eigenvalues]
 
 
-
 def plane2mt(M0, strike, dip, rake):
     """
 

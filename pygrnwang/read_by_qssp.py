@@ -118,7 +118,7 @@ def create_inp_qssp2020_read(
 
     lines[111] = "1 1\n"
     mt_ned = check_convert_fm(focal_mechanism)
-    mt = convert_mt_axis(mt=mt_ned, convert_flag='ned2rtp')
+    mt = convert_mt_axis(mt=mt_ned, convert_flag="ned2rtp")
     lines[112] = (
         "1.0 "
         + " ".join("%f" % mt[_] for _ in range(6))

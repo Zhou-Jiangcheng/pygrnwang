@@ -72,10 +72,10 @@ def read_time_series_qseis06_stress_bin(path_greenfunc, start_count):
 def synthesize_rzv(time_series, m1):
     # ex,ss,ds,cl
     rzv = (
-            time_series[0] * m1[0]
-            + time_series[1] * m1[1]
-            + time_series[2] * m1[2]
-            + time_series[3] * m1[3]
+        time_series[0] * m1[0]
+        + time_series[1] * m1[1]
+        + time_series[2] * m1[2]
+        + time_series[3] * m1[3]
     )
     return rzv
 
@@ -88,10 +88,10 @@ def synthesize_t(time_series, m2):
 def synthesize_przv_pt(time_series, pm1_paz):
     m1 = pm1_paz
     rt = (
-            time_series[0] * m1[0]
-            + time_series[1] * m1[1]
-            + time_series[2] * m1[2]
-            + time_series[3] * m1[3]
+        time_series[0] * m1[0]
+        + time_series[1] * m1[1]
+        + time_series[2] * m1[2]
+        + time_series[3] * m1[3]
     )
     return rt
 
@@ -103,24 +103,24 @@ def synthesize_pt_pt(time_series, pm2_paz):
 
 
 def seek_qseis06_stress(
-        path_green,
-        event_depth_km,
-        receiver_depth_km,
-        az_deg,
-        dist_km,
-        focal_mechanism,
-        srate,
-        output_type='stress',
-        rotate=True,
-        before_p=None,
-        pad_zeros=False,
-        shift=False,
-        only_seismograms=True,
-        model_name="ak135fc",
-        green_info=None,
+    path_green,
+    event_depth_km,
+    receiver_depth_km,
+    az_deg,
+    dist_km,
+    focal_mechanism,
+    srate,
+    output_type="stress",
+    rotate=True,
+    before_p=None,
+    pad_zeros=False,
+    shift=False,
+    only_seismograms=True,
+    model_name="ak135fc",
+    green_info=None,
 ):
-    if output_type not in ['stress', 'stress_rate']:
-        raise ValueError('output_type must be stress or stress_rate')
+    if output_type not in ["stress", "stress_rate"]:
+        raise ValueError("output_type must be stress or stress_rate")
     if green_info is None:
         with open(os.path.join(path_green, "green_lib_info.json"), "r") as fr:
             green_info = json.load(fr)
@@ -130,7 +130,7 @@ def seek_qseis06_stress(
     dist_range = green_info["dist_range"]
     delta_dist = green_info["delta_dist"]
     num_each_group = green_info["N_each_group"]
-    wavelet_type = green_info['wavelet_type']
+    wavelet_type = green_info["wavelet_type"]
     grn_dep_list = green_info["event_depth_list"]
     grn_receiver_list = green_info["receiver_depth_list"]
     if not isinstance(grn_dep_list, list):
@@ -227,8 +227,8 @@ def seek_qseis06_stress(
     [_, rho, vp, vs, _, _] = read_layerd_material(
         os.path.join(path_greenfunc_sub, "layered_model.dat"), grn_dep_receiver
     )
-    mu = vs ** 2 * rho
-    lam = vp ** 2 * rho - 2 * mu
+    mu = vs**2 * rho
+    lam = vp**2 * rho - 2 * mu
     r = dist_km * 1e3
     e_zz = (sigma_zz - lam * tv) / (2 * mu)
     pur_pr_indirect = tv - e_zz - (put_pt + ur) / r
@@ -236,14 +236,15 @@ def seek_qseis06_stress(
     sigma_tt = lam * tv + 2 * mu * (put_pt + ur) / r
     sigma_rt = mu * (pur_pt / r + put_pr - ut / r)
 
-    np.save('/home/zjc/Desktop/put_pr.npy', put_pr)
-    np.save('/home/zjc/Desktop/pur_pr.npy', pur_pr)
+    np.save("/home/zjc/Desktop/put_pr.npy", put_pr)
+    np.save("/home/zjc/Desktop/pur_pr.npy", pur_pr)
     import matplotlib
-    matplotlib.use('tkagg')
+
+    matplotlib.use("tkagg")
     plt.figure()
     plt.plot(pur_pr[:100])
     plt.plot(pur_pr_indirect[:100])
-    plt.legend(['dirived from k*J\'(kr)', 'dirived from szz,utt,tv'])
+    plt.legend(["dirived from k*J'(kr)", "dirived from szz,utt,tv"])
     plt.show()
 
     sigma_tensor = np.array(
@@ -303,12 +304,18 @@ def seek_qseis06_stress(
         seismograms_resample[i] = resample(
             seismograms[i], srate_old=srate_grn, srate_new=srate, zero_phase=True
         )
-    if wavelet_type == 1 and output_type == 'stress':
+    if wavelet_type == 1 and output_type == "stress":
         seismograms_resample = np.cumsum(seismograms_resample, axis=1) / srate
-    elif wavelet_type == 2 and output_type == 'stress_rate':
-        seismograms_resample = signal.convolve(
-            seismograms_resample.T, np.array([1, -1])[:, None],
-            mode="same", method="auto").T / srate
+    elif wavelet_type == 2 and output_type == "stress_rate":
+        seismograms_resample = (
+            signal.convolve(
+                seismograms_resample.T,
+                np.array([1, -1])[:, None],
+                mode="same",
+                method="auto",
+            ).T
+            / srate
+        )
 
     if only_seismograms:
         return seismograms_resample

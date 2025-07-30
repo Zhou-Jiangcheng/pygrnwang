@@ -11,13 +11,13 @@ from .utils import convert_earth_model_nd2inp
 
 
 def create_dir_qseis06(
-        path_green,
-        event_depth,
-        receiver_depth,
-        dist_range,
-        delta_dist,
-        N_each_group=100,
-        order=0,
+    path_green,
+    event_depth,
+    receiver_depth,
+    dist_range,
+    delta_dist,
+    N_each_group=100,
+    order=0,
 ):
     sub_dir = str(
         os.path.join(path_green, "%.2f" % event_depth, "%.2f" % receiver_depth)
@@ -35,28 +35,28 @@ def create_dir_qseis06(
 
 
 def create_inp_qseis06(
-        path_sub_dir,
-        event_depth,
-        receiver_depth,
-        dist_range,
-        delta_dist,
-        N_dist,
-        N_dist_group,
-        N_each_group,
-        time_window,
-        sampling_interval,
-        slowness_int_algorithm=0,
-        slowness_window=None,
-        time_reduction_velo=0,
-        wavenumber_sampling_rate=12,
-        anti_alias=0.01,
-        free_surface=True,
-        wavelet_duration=4,
-        wavelet_type=1,
-        flat_earth_transform=True,
-        path_nd=None,
-        earth_model_layer_num=None,
-        order=0,
+    path_sub_dir,
+    event_depth,
+    receiver_depth,
+    dist_range,
+    delta_dist,
+    N_dist,
+    N_dist_group,
+    N_each_group,
+    time_window,
+    sampling_interval,
+    slowness_int_algorithm=0,
+    slowness_window=None,
+    time_reduction_velo=0,
+    wavenumber_sampling_rate=12,
+    anti_alias=0.01,
+    free_surface=True,
+    wavelet_duration=4,
+    wavelet_type=1,
+    flat_earth_transform=True,
+    path_nd=None,
+    earth_model_layer_num=None,
+    order=0,
 ):
     # when receiver depth is not 0, change dists in inp file
     r_ratio = (6371 - receiver_depth) / 6371
@@ -144,25 +144,25 @@ def create_inp_qseis06(
 
 
 def create_inp_qseis06_points(
-        path_green,
-        event_depth,
-        receiver_depth,
-        n_group,
-        points,
-        time_window,
-        sampling_interval,
-        slowness_int_algorithm=0,
-        slowness_window=None,
-        time_reduction_velo=0,
-        wavenumber_sampling_rate=2,
-        anti_alias=0.01,
-        free_surface=True,
-        wavelet_duration=4,
-        wavelet_type=1,
-        flat_earth_transform=True,
-        path_nd=None,
-        earth_model_layer_num=None,
-        order=0,
+    path_green,
+    event_depth,
+    receiver_depth,
+    n_group,
+    points,
+    time_window,
+    sampling_interval,
+    slowness_int_algorithm=0,
+    slowness_window=None,
+    time_reduction_velo=0,
+    wavenumber_sampling_rate=2,
+    anti_alias=0.01,
+    free_surface=True,
+    wavelet_duration=4,
+    wavelet_type=1,
+    flat_earth_transform=True,
+    path_nd=None,
+    earth_model_layer_num=None,
+    order=0,
 ):
     path_sub_dir = str(
         os.path.join(path_green, "%.2f" % event_depth, "%.2f" % receiver_depth)
@@ -239,7 +239,7 @@ def create_inp_qseis06_points(
 
 
 def call_qseis06(
-        event_depth, receiver_depth, n_group, order, path_green, check_finished=False
+    event_depth, receiver_depth, n_group, order, path_green, check_finished=False
 ):
     sub_sub_dir = str(
         os.path.join(

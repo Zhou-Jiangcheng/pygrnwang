@@ -44,12 +44,16 @@ class CustomBuildPy(_build_py):
         for src_folder, bin_name in fortran_subdirs.items():
             fortran_src_dir = os.path.join(os.getcwd(), "fortran_src_codes", src_folder)
             output_binary = os.path.join(exec_dir, bin_name)
-            if src_folder == 'qseis_stress_src':
-                compile_command = (f"gfortran {fortran_src_dir}/*.f -O3 "
-                                   f"-ffixed-line-length-none -std=legacy "
-                                   f"-fPIC -Wl,--no-relax -o {output_binary}")
+            if src_folder == "qseis_stress_src":
+                compile_command = (
+                    f"gfortran {fortran_src_dir}/*.f -O3 "
+                    f"-ffixed-line-length-none -std=legacy "
+                    f"-fPIC -Wl,--no-relax -o {output_binary}"
+                )
             else:
-                compile_command = f"gfortran {fortran_src_dir}/*.f -O3 -o {output_binary}"
+                compile_command = (
+                    f"gfortran {fortran_src_dir}/*.f -O3 -o {output_binary}"
+                )
             print(
                 f"Compiling Fortran sources in {src_folder} with command: {compile_command}"
             )

@@ -13,7 +13,7 @@ from edu.sc.seis.TauP import TauP_Time  # type: ignore
 
 
 def taup_time_java(
-        event_depth_km, dist_km, phases_list, receiver_depth_km=0, model_name="ak135"
+    event_depth_km, dist_km, phases_list, receiver_depth_km=0, model_name="ak135"
 ):
     ttobj = TauP_Time(model_name)
     ttobj.setSourceDepth(event_depth_km)

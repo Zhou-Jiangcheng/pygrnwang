@@ -22,7 +22,7 @@ c
 c
       real*8 eps,rd2r
       complex*16 c2
-      data eps,rd2r/1.0d-06,1.0d-02/
+      data eps,rd2r/1.0d-04,5.0d-02/
       data c2/(2.d0,0.d0)/
 c
 c     ics = 1  when the azmuth-factor is cos(ms*theta) for poloidal mode

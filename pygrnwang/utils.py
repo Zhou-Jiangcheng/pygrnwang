@@ -201,7 +201,6 @@ def convert_earth_model_nd2nd_without_Q(path_nd, path_output):
     return lines_new
 
 
-
 def read_nd(path_nd):
     with open(path_nd, "r") as fr:
         lines = fr.readlines()

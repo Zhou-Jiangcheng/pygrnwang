@@ -70,37 +70,37 @@ def read_time_series_qseis06_ascii(path_greenfunc, start_count):
 
 def synthesize_qseis06(time_series_list, m1, m2):
     r = (
-            time_series_list[0][0] * m1[0]
-            + time_series_list[0][1] * m1[1]
-            + time_series_list[0][2] * m1[2]
-            + time_series_list[0][3] * m1[3]
+        time_series_list[0][0] * m1[0]
+        + time_series_list[0][1] * m1[1]
+        + time_series_list[0][2] * m1[2]
+        + time_series_list[0][3] * m1[3]
     )
     z = (
-            time_series_list[1][0] * m1[0]
-            + time_series_list[1][1] * m1[1]
-            + time_series_list[1][2] * m1[2]
-            + time_series_list[1][3] * m1[3]
+        time_series_list[1][0] * m1[0]
+        + time_series_list[1][1] * m1[1]
+        + time_series_list[1][2] * m1[2]
+        + time_series_list[1][3] * m1[3]
     )
     t = time_series_list[2][0] * m2[0] + time_series_list[2][1] * m2[1]
     return r, t, z
 
 
 def seek_qseis06(
-        path_green,
-        event_depth_km,
-        receiver_depth_km,
-        az_deg,
-        dist_km,
-        focal_mechanism,
-        srate,
-        output_type="disp",
-        rotate=True,
-        before_p=None,
-        pad_zeros=False,
-        shift=False,
-        only_seismograms=True,
-        model_name="ak135fc",
-        green_info=None,
+    path_green,
+    event_depth_km,
+    receiver_depth_km,
+    az_deg,
+    dist_km,
+    focal_mechanism,
+    srate,
+    output_type="disp",
+    rotate=True,
+    before_p=None,
+    pad_zeros=False,
+    shift=False,
+    only_seismograms=True,
+    model_name="ak135fc",
+    green_info=None,
 ):
     if green_info is None:
         with open(os.path.join(path_green, "green_lib_info.json"), "r") as fr:
@@ -223,12 +223,18 @@ def seek_qseis06(
             seismograms[i], srate_old=srate_grn, srate_new=srate, zero_phase=True
         )
 
-    if wavelet_type == 1 and output_type == 'disp':
+    if wavelet_type == 1 and output_type == "disp":
         seismograms_resample = np.cumsum(seismograms_resample, axis=1) / srate
-    elif wavelet_type == 2 and output_type == 'velo':
-        seismograms_resample = signal.convolve(
-            seismograms_resample.T, np.array([1, -1])[:, None],
-            mode="same", method="auto").T / srate
+    elif wavelet_type == 2 and output_type == "velo":
+        seismograms_resample = (
+            signal.convolve(
+                seismograms_resample.T,
+                np.array([1, -1])[:, None],
+                mode="same",
+                method="auto",
+            ).T
+            / srate
+        )
     if only_seismograms:
         return seismograms_resample
     else:
