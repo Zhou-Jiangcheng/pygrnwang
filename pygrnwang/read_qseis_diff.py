@@ -3,7 +3,6 @@ import json
 
 import numpy as np
 
-
 from .read_qseis import (
     read_time_series_qseis06_bin,
     read_time_series_qseis06_ascii,
@@ -15,19 +14,6 @@ from .geo import rotate_symmetric_tensor_series
 from .pytaup import read_tpts_table
 from .utils import read_nd, shift_green2real_tpts
 from .signal_process import resample
-
-
-def rotate_strain_polar2cartesian(theta, e_rr, e_rt, e_tt):
-    theta = np.deg2rad(theta)
-    cos_theta = np.cos(theta)
-    sin_theta = np.sin(theta)
-    cos_theta_sq = cos_theta**2
-    sin_theta_sq = sin_theta**2
-    sin_time_cos_theta = sin_theta * cos_theta
-    e_xx = e_rr * cos_theta_sq + e_tt * sin_theta_sq - 2 * e_rt * sin_time_cos_theta
-    e_yy = e_rr * sin_theta_sq + e_tt * cos_theta_sq + 2 * e_rt * sin_time_cos_theta
-    e_xy = e_rt * (cos_theta_sq - sin_theta_sq) + (e_tt - e_rr) * sin_time_cos_theta
-    return e_xx, e_xy, e_yy
 
 
 def diff_central_1order(v_array, diff_accu_order):
