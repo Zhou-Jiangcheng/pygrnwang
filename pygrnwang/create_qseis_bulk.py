@@ -59,9 +59,9 @@ def pre_process_qseis06(
     print("preprocessing")
     os.makedirs(path_green, exist_ok=True)
     if platform.system() == "Windows":
-        path_bin_call = os.path.join(path_green, "qseis06.exe")
+        path_bin_call = os.path.join(path_green, "qseis_stress.exe")
     else:
-        path_bin_call = os.path.join(path_green, "qseis06.bin")
+        path_bin_call = os.path.join(path_green, "qseis_stress.bin")
     shutil.copy(path_bin, path_bin_call)
 
     N_dist, N_dist_group = None, None
@@ -197,9 +197,9 @@ def pre_process_qseis06_strain_rate(
     if diff_accu_order not in [2, 4, 6, 8]:
         raise ValueError("diff_accu_order must be in [2,4,6,8]")
     if platform.system() == "Windows":
-        path_bin_call = os.path.join(path_green, "qseis06.exe")
+        path_bin_call = os.path.join(path_green, "qseis_stress.exe")
     else:
-        path_bin_call = os.path.join(path_green, "qseis06.bin")
+        path_bin_call = os.path.join(path_green, "qseis_stress.bin")
     shutil.copy(path_bin, path_bin_call)
 
     N_dist, N_dist_group = None, None
