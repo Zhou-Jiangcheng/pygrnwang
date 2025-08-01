@@ -1,10 +1,8 @@
 import os
-import platform
-import subprocess
 import math
 
 from .edgrn2inp import s as str_inp
-from .utils import convert_earth_model_nd2inp
+from .utils import convert_earth_model_nd2inp, call_exe
 
 
 def create_inp_edgrn2(
@@ -78,20 +76,21 @@ def call_edgrn2(obs_depth, path_green, check_finished=False):
     ):
         return None
     path_inp = str(os.path.join(sub_sub_dir, "grn.inp"))
+    path_finished = os.path.join(sub_sub_dir, ".finished")
 
-    if platform.system() == "Windows":
-        edgrn_process = subprocess.Popen(
-            [os.path.join(path_green, "edgrn2.exe")],
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-        )
-        edgrn_process.communicate(str.encode(path_inp))
-    else:
-        edgrn_process = subprocess.Popen(
-            [os.path.join(path_green, "edgrn2.bin")],
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-        )
-        edgrn_process.communicate(str.encode(path_inp))
-    with open(os.path.join(sub_sub_dir, ".finished"), "w") as fw:
-        fw.writelines([])
+    if (
+        check_finished
+        and os.path.exists(path_finished)
+        and len(os.listdir(sub_sub_dir)) > 2
+    ):
+        with open(path_finished, "r") as fr:
+            output = fr.readlines()
+        return output
+
+    output = call_exe(
+        path_green=path_green,
+        path_inp=path_inp,
+        path_finished=path_finished,
+        name="edgrn2",
+    )
+    return output

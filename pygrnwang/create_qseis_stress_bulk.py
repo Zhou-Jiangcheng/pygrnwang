@@ -8,6 +8,7 @@ from multiprocessing import Pool
 
 from tqdm import tqdm
 from mpi4py import MPI
+import jpype
 
 from .create_qseis_stress import (
     create_dir_qseis_stress,
@@ -15,6 +16,7 @@ from .create_qseis_stress import (
     call_qseis_stress,
     convert_pd2bin_qseis_stress,
 )
+from .pytaup import create_tpts_table
 from .utils import group, convert_earth_model_nd2nd_without_Q
 
 
@@ -40,6 +42,7 @@ def pre_process_qseis_stress(
     flat_earth_transform=True,
     path_nd=None,
     earth_model_layer_num=None,
+    check_finished_tpts_table=False,
 ):
     print("Preprocessing")
     os.makedirs(path_green, exist_ok=True)
@@ -89,6 +92,21 @@ def pre_process_qseis_stress(
     path_nd_without_Q = os.path.join(path_green, "noQ.nd")
     convert_earth_model_nd2nd_without_Q(path_nd, path_nd_without_Q)
 
+    # creating tp and ts tables
+    for event_depth in tqdm(event_depth_list, desc="Creating travel time tables"):
+        for receiver_depth in receiver_depth_list:
+            create_tpts_table(
+                path_green,
+                event_depth,
+                receiver_depth,
+                dist_range,
+                delta_dist,
+                path_nd_without_Q,
+                check_finished_tpts_table,
+            )
+    if jpype.isJVMStarted():
+        jpype.shutdownJVM()
+
     green_info = {
         "processes_num": processes_num,
         "event_depth_list": event_depth_list,
@@ -125,7 +143,8 @@ def pre_process_qseis_stress(
         for receiver_dep in receiver_depth_list:
             for nn in range(N_dist_group):
                 inp_list.append([event_dep, receiver_dep, nn])
-    group_list = group(inp_list, processes_num)
+    inp_list_sorted = sorted(inp_list, key=lambda x: abs(x[0] - x[1]))
+    group_list = group(inp_list_sorted, processes_num)
     with open(os.path.join(path_green, "group_list.pkl"), "wb") as fw:
         pickle.dump(group_list, fw)  # type: ignore
     return group_list

@@ -1,4 +1,6 @@
 import os
+import platform
+import subprocess
 
 import numpy as np
 import pandas as pd
@@ -288,6 +290,24 @@ def reshape_sub_faults(sub_faults, num_strike, num_dip):
     Y = np.concatenate([Y, np.array([Y[-1, :] + mu_strike[1]])], axis=0)
     Z = np.concatenate([Z, np.array([Z[-1, :] + mu_strike[2]])], axis=0)
     return X, Y, Z
+
+
+def call_exe(path_green, path_inp, path_finished, name):
+    name_exe = "%s.exe" % name if platform.system() == "Windows" else "%s.bin" % name
+    path_exe = os.path.join(path_green, name_exe)
+    proc = subprocess.Popen(
+        [path_exe],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    stdout_bytes, stderr_bytes = proc.communicate(str.encode(path_inp))
+    stdout_text = stdout_bytes.decode(errors="ignore")
+    stderr_text = stderr_bytes.decode(errors="ignore")
+    output = stdout_text + stderr_text
+    with open(path_finished, "w") as fw:
+        fw.writelines(output)
+        return None
 
 
 if __name__ == "__main__":

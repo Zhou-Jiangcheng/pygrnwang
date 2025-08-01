@@ -16,11 +16,11 @@ from .create_qssp import (
     mt_com_list,
     create_inp_qssp2020,
     create_dir_qssp2020,
-    create_tpts_table,
     call_qssp2020,
     convert_pd2bin_qssp2020,
 )
 from .utils import group, convert_earth_model_nd2nd_without_Q
+from .pytaup import create_tpts_table
 
 
 def pre_process_spec(
@@ -59,6 +59,7 @@ def pre_process_spec(
     else:
         path_bin_call = os.path.join(path_green, "qssp2020.bin")
     shutil.copy(path_bin, path_bin_call)
+
     item_list_spec = []
     for event_depth in event_depth_list:
         for receiver_depth in receiver_depth_list:
@@ -290,7 +291,7 @@ def pre_process_qssp2020(
     for event_depth in tqdm(event_depth_list, desc="Creating travel time tables"):
         for receiver_depth in receiver_depth_list:
             create_tpts_table(
-                path_green,
+                os.path.join(path_green, "GreenFunc"),
                 event_depth,
                 receiver_depth,
                 dist_range,
@@ -324,7 +325,7 @@ def pre_process_qssp2020(
         "source_duration": source_duration,
         "output_observables": output_observables,
         "time_window": time_window,
-        "sampling_num": round(time_window / sampling_interval + 1),
+        "sampling_num": round(time_window / sampling_interval) + 1,
         "time_reduction": time_reduction,
         "dist_range": dist_range,
         "delta_dist": delta_dist,
@@ -341,8 +342,6 @@ def pre_process_qssp2020(
 
 
 def create_grnlib_qssp2020_sequential(path_green, cal_spec=True, check_finished=False):
-    # s = datetime.datetime.now()
-
     if cal_spec:
         with open(os.path.join(path_green, "group_list_spec.pkl"), "rb") as fr:
             group_list_spec = pickle.load(fr)
@@ -366,15 +365,10 @@ def create_grnlib_qssp2020_sequential(path_green, cal_spec=True, check_finished=
     convert_pd2bin_qssp2020_all(path_green)
     remove_dat_files(path_green)
 
-    # e = datetime.datetime.now()
-    # print("run time:" + str(e - s))
-
 
 def create_grnlib_qssp2020_parallel_single_node(
     path_green, cal_spec=True, check_finished=False
 ):
-    # s = datetime.datetime.now()
-
     if cal_spec:
         with open(os.path.join(path_green, "group_list_spec.pkl"), "rb") as fr:
             group_list_spec = pickle.load(fr)
@@ -402,9 +396,6 @@ def create_grnlib_qssp2020_parallel_single_node(
         r.get()
         pool.close()
         pool.join()
-
-    # e = datetime.datetime.now()
-    # print("run time:" + str(e - s))
 
 
 def create_grnlib_qssp2020_spec_parallel_multi_nodes(path_green, check_finished=False):

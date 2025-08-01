@@ -7,7 +7,7 @@ c
 c
       integer*4 istp,n,nrec,l,lf,lf1,i,ir,nrr,nrs
       integer*4 ik,ik1,ik2,nk1,nk2,nbsj,idtrans
-      real*8 f,fcut,k,kmax,kc,dk,slwn
+      real*8 f,fcut,k,kc,dk,slwn
       real*8 pi,pi2,rr,rs,delta,cmax,ymax,yabs
       real*8 fac,zdis,rsdis,thickness,wvlen
       real*8 kcut(4),kcut1(4),kcut2(4)
@@ -106,7 +106,8 @@ c
         enddo
         yabs=dsqrt(yabs)*k*dexp(-0.5d0*(k*rdisk(1))**2)
         ymax=dmax1(ymax,yabs)
-        if(yabs.gt.eps*ymax.and.yabs.gt.0.d0)then
+        if(yabs.gt.eps*ymax.and.yabs.gt.0.d0.and.
+     &     ik1.lt.nk0max)then
           ik1=ik1+1
           goto 101
         endif
@@ -133,7 +134,8 @@ c
         enddo
         yabs=dsqrt(yabs)*k*dexp(-0.5d0*(k*rdisk(1))**2)
         ymax=dmax1(ymax,yabs)
-        if(yabs.gt.eps*ymax.and.yabs.gt.0.d0)then
+        if(yabs.gt.eps*ymax.and.yabs.gt.0.d0.and.
+     &     ik2.lt.(nbsjmax+nk0max)/2)then
           ik2=ik2+1
           goto 102
         endif
@@ -157,6 +159,8 @@ c
       endif
 c
       nbsj=2+idint(dmax1(kcut1(4),kcut2(4))/dk)+ndtrans
+      print *, kcut1(4)/dk, kcut2(4)/dk, ndtrans
+      print *, nbsj
 c
       if(nbsj.gt.nbsjmax)then
         stop ' parameter nbsjmax defined too small'

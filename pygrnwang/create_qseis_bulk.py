@@ -4,12 +4,12 @@ import platform
 import pickle
 import json
 import datetime
-import math
 from multiprocessing import Pool
 
 import numpy as np
 from tqdm import tqdm
 from mpi4py import MPI
+import jpype
 
 from .create_qseis import (
     create_dir_qseis06,
@@ -18,6 +18,7 @@ from .create_qseis import (
     call_qseis06,
     convert_pd2bin_qseis06,
 )
+from .pytaup import create_tpts_table
 from .utils import group, convert_earth_model_nd2nd_without_Q
 
 
@@ -53,6 +54,7 @@ def pre_process_qseis06(
     flat_earth_transform=True,
     path_nd=None,
     earth_model_layer_num=None,
+    check_finished_tpts_table=False,
 ):
     print("preprocessing")
     os.makedirs(path_green, exist_ok=True)
@@ -106,6 +108,21 @@ def pre_process_qseis06(
 
     path_nd_without_Q = os.path.join(path_green, "noQ.nd")
     convert_earth_model_nd2nd_without_Q(path_nd, path_nd_without_Q)
+
+    # creating tp and ts tables
+    for event_depth in tqdm(event_depth_list, desc="Creating travel time tables"):
+        for receiver_depth in receiver_depth_list:
+            create_tpts_table(
+                path_green,
+                event_depth,
+                receiver_depth,
+                dist_range,
+                delta_dist,
+                path_nd_without_Q,
+                check_finished_tpts_table,
+            )
+    if jpype.isJVMStarted():
+        jpype.shutdownJVM()
 
     green_info = {
         "processes_num": processes_num,
@@ -174,6 +191,7 @@ def pre_process_qseis06_strain_rate(
     k_dr=0.001,
     dz=0.1,  # km
     diff_accu_order=4,
+    check_finished_tpts_table=False,
 ):
     os.makedirs(path_green, exist_ok=True)
     if diff_accu_order not in [2, 4, 6, 8]:
@@ -278,6 +296,21 @@ def pre_process_qseis06_strain_rate(
     if path_nd is not None:
         convert_earth_model_nd2nd_without_Q(path_nd, path_nd_without_Q)
 
+    # creating tp and ts tables
+    for event_depth in tqdm(event_depth_list, desc="Creating travel time tables"):
+        for receiver_depth in receiver_depth_list:
+            create_tpts_table(
+                path_green,
+                event_depth,
+                receiver_depth,
+                dist_range,
+                delta_dist,
+                path_nd_without_Q,
+                check_finished_tpts_table,
+            )
+    if jpype.isJVMStarted():
+        jpype.shutdownJVM()
+
     green_info = {
         "processes_num": processes_num,
         "event_depth_list": event_depth_list,
@@ -322,7 +355,8 @@ def pre_process_qseis06_strain_rate(
                 else:
                     for order in range(diff_accu_order + 1):
                         inp_list.append([event_depth, receiver_depth, n_group, order])
-    group_list = group(inp_list, processes_num)
+    inp_list_sorted = sorted(inp_list, key=lambda x: abs(x[0] - x[1]))
+    group_list = group(inp_list_sorted, processes_num)
     with open(os.path.join(path_green, "group_list.pkl"), "wb") as fw:
         pickle.dump(group_list, fw)  # type: ignore
     return group_list

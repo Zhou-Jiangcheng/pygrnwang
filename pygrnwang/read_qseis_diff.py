@@ -174,8 +174,6 @@ def seek_qseis06_strain_rate_diff(
         diff_central_1order(velo_raw_dr[2 : len(velo_raw_dr) : 3, :], diff_accu_order)
         / dr
     )
-    np.save("/home/zjc/Desktop/put_pr_diff.npy", put_pr)
-    np.save("/home/zjc/Desktop/pur_pr_diff.npy", pur_pr)
 
     # partial u_i / partial theta
     path_greenfunc_order = str(os.path.join(path_greenfunc, "%d_%d" % (ind_group, 0)))

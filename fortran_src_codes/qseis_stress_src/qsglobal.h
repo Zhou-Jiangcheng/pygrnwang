@@ -14,8 +14,8 @@ c
 c     INDEX PARAMETERS FOR BESSEL FUNCTION TABLES
 c     ===========================================
 c
-      integer*4 nbsjmax
-      parameter(nbsjmax=1000000)
+      integer*4 nk0max,nbsjmax
+      parameter(nk0max=8192,nbsjmax=nk0max*8)
 c
 c     INDEX PARAMETERS FOR SEISMOMETER CHARACTERISTICS
 c     ================================================

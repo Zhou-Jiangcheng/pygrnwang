@@ -157,7 +157,7 @@ def seek_qseis06_stress(
         time_reduction = green_dist / time_reduction_velo
     else:
         time_reduction = 0
-    path_greenfunc_sub = os.path.join(path_greenfunc, "%d" % ind_group)
+    path_greenfunc_sub = os.path.join(path_greenfunc, "%d_0" % ind_group)
     if os.path.exists(os.path.join(path_greenfunc_sub, "grn_szt.npy")):
         time_series_list = read_time_series_qseis06_stress_bin(
             path_greenfunc=path_greenfunc_sub, start_count=start_count
@@ -231,21 +231,10 @@ def seek_qseis06_stress(
     lam = vp**2 * rho - 2 * mu
     r = dist_km * 1e3
     e_zz = (sigma_zz - lam * tv) / (2 * mu)
-    pur_pr_indirect = tv - e_zz - (put_pt + ur) / r
-    sigma_rr = lam * tv + 2 * mu * pur_pr_indirect
+    # pur_pr_indirect = tv - e_zz - (put_pt + ur) / r
+    sigma_rr = lam * tv + 2 * mu * pur_pr
     sigma_tt = lam * tv + 2 * mu * (put_pt + ur) / r
     sigma_rt = mu * (pur_pt / r + put_pr - ut / r)
-
-    np.save("/home/zjc/Desktop/put_pr.npy", put_pr)
-    np.save("/home/zjc/Desktop/pur_pr.npy", pur_pr)
-    import matplotlib
-
-    matplotlib.use("tkagg")
-    plt.figure()
-    plt.plot(pur_pr[:100])
-    plt.plot(pur_pr_indirect[:100])
-    plt.legend(["dirived from k*J'(kr)", "dirived from szz,utt,tv"])
-    plt.show()
 
     sigma_tensor = np.array(
         [sigma_tt, sigma_rt, -sigma_zt, sigma_rr, -sigma_zr, sigma_zz]

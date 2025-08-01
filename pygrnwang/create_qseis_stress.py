@@ -1,12 +1,10 @@
 import os
-import platform
-import subprocess
 import math
 
 import numpy as np
 import pandas as pd
 
-from .utils import convert_earth_model_nd2inp
+from .utils import convert_earth_model_nd2inp, call_exe
 from .qseis_stress_inp import s as str_inp
 
 
@@ -149,27 +147,25 @@ def call_qseis_stress(
         )
     )
     os.chdir(sub_sub_dir)
-    if check_finished and os.path.exists(os.path.join(sub_sub_dir, ".finished")):
-        return None
-    path_inp = str(os.path.join(sub_sub_dir, "grn.inp"))
+    path_inp = os.path.join(sub_sub_dir, "grn.inp")
+    path_finished = os.path.join(sub_sub_dir, ".finished")
 
-    if platform.system() == "Windows":
-        qssp_process = subprocess.Popen(
-            [os.path.join(path_green, "qseis_stress.exe")],
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-        )
-        qssp_process.communicate(str.encode(path_inp))
-    else:
-        qssp_process = subprocess.Popen(
-            [os.path.join(path_green, "qseis_stress.bin")],
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-        )
-        qssp_process.communicate(str.encode(path_inp))
-    with open(os.path.join(sub_sub_dir, ".finished"), "w") as fw:
-        fw.writelines([])
-        return None
+    if (
+        check_finished
+        and os.path.exists(path_finished)
+        and len(os.listdir(sub_sub_dir)) > 2
+    ):
+        with open(path_finished, "r") as fr:
+            output = fr.readlines()
+        return output
+
+    output = call_exe(
+        path_green=path_green,
+        path_inp=path_inp,
+        path_finished=path_finished,
+        name="qseis_stress",
+    )
+    return output
 
 
 def convert_pd2bin_qseis_stress(path_greenfunc, remove=False):

@@ -1,9 +1,8 @@
 import os
-import platform
-import subprocess
 import math
 
 from .edcmp2inp import s as str_inp
+from .utils import call_exe
 
 
 def create_inp_edcmp2(
@@ -98,20 +97,21 @@ def call_edcmp2(obs_depth, path_green, check_finished=False):
     ):
         return None
     path_inp = str(os.path.join(sub_sub_dir, "grn.inp"))
+    path_finished = os.path.join(sub_sub_dir, ".finished")
 
-    if platform.system() == "Windows":
-        edcmp_process = subprocess.Popen(
-            [os.path.join(path_green, "edcmp2.exe")],
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-        )
-        edcmp_process.communicate(str.encode(path_inp))
-    else:
-        edcmp_process = subprocess.Popen(
-            [os.path.join(path_green, "edcmp2.bin")],
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-        )
-        edcmp_process.communicate(str.encode(path_inp))
-    with open(os.path.join(sub_sub_dir, ".finished"), "w") as fw:
-        fw.writelines([])
+    if (
+        check_finished
+        and os.path.exists(path_finished)
+        and len(os.listdir(sub_sub_dir)) > 2
+    ):
+        with open(path_finished, "r") as fr:
+            output = fr.readlines()
+        return output
+
+    output = call_exe(
+        path_green=path_green,
+        path_inp=path_inp,
+        path_finished=path_finished,
+        name="edcmp2",
+    )
+    return output

@@ -1,13 +1,10 @@
 import os
-import subprocess
-import platform
 
 import numpy as np
 import pandas as pd
 
 from .geo import d2m
-from .utils import convert_earth_model_nd2inp
-from .pytaup import cal_first_p_s
+from .utils import convert_earth_model_nd2inp, call_exe
 
 mt_com_list = ["mrr", "mtt", "mpp", "mrt", "mrp", "mtp"]
 output_type_list = [
@@ -60,52 +57,6 @@ def create_locs(points, time_reduction):
         loc = "%f %f 'Loc%d' %f\n" % (points[i, 0], points[i, 1], i, time_reduction)
         lines_locs.append(loc)
     return lines_locs
-
-
-def create_tpts_table(
-    path_green,
-    event_depth_km,
-    receiver_depth_km,
-    dist_range,
-    delta_dist,
-    model_name="ak135",
-    check_finished=False,
-):
-    path_tp_table = os.path.join(
-        path_green,
-        "GreenFunc",
-        "%.2f" % event_depth_km,
-        "%.2f" % receiver_depth_km,
-        "tp_table.bin",
-    )
-    path_ts_table = os.path.join(
-        path_green,
-        "GreenFunc",
-        "%.2f" % event_depth_km,
-        "%.2f" % receiver_depth_km,
-        "ts_table.bin",
-    )
-    if (
-        check_finished
-        and os.path.exists(path_tp_table)
-        and os.path.exists(path_ts_table)
-    ):
-        return
-    dist_kms = np.linspace(
-        dist_range[0],
-        dist_range[1],
-        round(np.ceil((dist_range[1] - dist_range[0]) / delta_dist)) + 1,
-    )
-    tp_table = np.zeros(len(dist_kms), dtype=np.float32)
-    ts_table = np.zeros(len(dist_kms), dtype=np.float32)
-    for i in range(len(dist_kms)):
-        first_p, first_s = cal_first_p_s(
-            event_depth_km, dist_kms[i], receiver_depth_km, model_name
-        )
-        tp_table[i] = first_p
-        ts_table[i] = first_s
-    tp_table.tofile(path_tp_table)
-    ts_table.tofile(path_ts_table)
 
 
 def create_inp_qssp2020(
@@ -276,25 +227,17 @@ def call_qssp2020(
         and os.path.exists(path_finished)
         and len(os.listdir(sub_dir)) > 2
     ):
-        return None
+        with open(path_finished, "r") as fr:
+            output = fr.readlines()
+        return output
 
-    if platform.system() == "Windows":
-        spgrn_process = subprocess.Popen(
-            [os.path.join(path_green, "qssp2020.exe")],
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-        )
-        spgrn_process.communicate(str.encode(path_inp))
-    else:
-        spgrn_process = subprocess.Popen(
-            [os.path.join(path_green, "qssp2020.bin")],
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-        )
-        spgrn_process.communicate(str.encode(path_inp))
-
-    with open(path_finished, "w") as fw:
-        fw.writelines([])
+    output = call_exe(
+        path_green=path_green,
+        path_inp=path_inp,
+        path_finished=path_finished,
+        name="qssp2020",
+    )
+    return output
 
 
 def convert_pd2bin_qssp2020(path_green, event_depth, receiver_depth, output_type_ind):
