@@ -1,15 +1,14 @@
 import os
 import json
 
-import matplotlib.pyplot as plt
 import numpy as np
-import scipy.signal as signal
 import pandas as pd
+import scipy.signal as signal
 
-from .utils import shift_green2real_tpts, read_layerd_material
 from .focal_mechanism import check_convert_fm
 from .geo import rotate_symmetric_tensor_series
-from .pytaup import cal_first_p_s
+from .pytaup import read_tpts_table
+from .utils import read_layerd_material, shift_green2real_tpts
 from .signal_process import resample
 
 
@@ -19,16 +18,16 @@ def read_time_series_qseis06_stress_ascii(path_greenfunc, start_count):
     for com in ["tr", "tz", "tv", "trr", "szz", "szr"]:
         ex_com = pd.read_csv(
             os.path.join(path_greenfunc, "ex.%s" % com), sep="\\s+"
-        ).to_numpy()
+        ).to_numpy()  # type:ignore
         ss_com = pd.read_csv(
             os.path.join(path_greenfunc, "ss.%s" % com), sep="\\s+"
-        ).to_numpy()
+        ).to_numpy()  # type:ignore
         ds_com = pd.read_csv(
             os.path.join(path_greenfunc, "ds.%s" % com), sep="\\s+"
-        ).to_numpy()
+        ).to_numpy()  # type:ignore
         cl_com = pd.read_csv(
             os.path.join(path_greenfunc, "cl.%s" % com), sep="\\s+"
-        ).to_numpy()
+        ).to_numpy()  # type:ignore
         time_series_com = np.concatenate(
             [
                 ex_com[:, start_count],
@@ -43,10 +42,10 @@ def read_time_series_qseis06_stress_ascii(path_greenfunc, start_count):
     for com in ["tt", "ttr", "szt"]:
         ss_r = pd.read_csv(
             os.path.join(path_greenfunc, "ss.%s" % com), sep="\\s+"
-        ).to_numpy()
+        ).to_numpy()  # type:ignore
         ds_r = pd.read_csv(
             os.path.join(path_greenfunc, "ds.%s" % com), sep="\\s+"
-        ).to_numpy()
+        ).to_numpy()  # type:ignore
         time_series_com = np.concatenate(
             [
                 ss_r[:, start_count],
@@ -151,12 +150,9 @@ def seek_qseis06_stress(
     )
     ind = round((dist_km - dist_range[0]) / delta_dist)
     ind_group = ind // num_each_group
-    green_dist = dist_range[0] + ind * delta_dist
+    grn_dist = dist_range[0] + ind * delta_dist
     start_count = ind - ind_group * num_each_group
-    if time_reduction_velo != 0:
-        time_reduction = green_dist / time_reduction_velo
-    else:
-        time_reduction = 0
+
     path_greenfunc_sub = os.path.join(path_greenfunc, "%d_0" % ind_group)
     if os.path.exists(os.path.join(path_greenfunc_sub, "grn_szt.npy")):
         time_series_list = read_time_series_qseis06_stress_bin(
@@ -199,6 +195,7 @@ def seek_qseis06_stress(
 
     m1 = [exp, ss1 * sin_2az + ss2 * cos_2az, ds1 * cos_az + ds2 * sin_az, clvd]
     m2 = [ss1 * cos_2az - ss2 * sin_2az, ds1 * sin_az - ds2 * cos_az]
+
     pm1_paz = [
         exp,
         ss1 * 2 * cos_2az + ss2 * (-2) * sin_2az,
@@ -230,7 +227,7 @@ def seek_qseis06_stress(
     mu = vs**2 * rho
     lam = vp**2 * rho - 2 * mu
     r = dist_km * 1e3
-    e_zz = (sigma_zz - lam * tv) / (2 * mu)
+    # e_zz = (sigma_zz - lam * tv) / (2 * mu)
     # pur_pr_indirect = tv - e_zz - (put_pt + ur) / r
     sigma_rr = lam * tv + 2 * mu * pur_pr
     sigma_tt = lam * tv + 2 * mu * (put_pt + ur) / r
@@ -245,14 +242,19 @@ def seek_qseis06_stress(
         seismograms = sigma_tensor
 
     tpts_table = None
-    if (before_p is not None) or shift:
-        first_p_grn, first_s_grn = cal_first_p_s(
-            event_depth_km=event_depth_km,
-            receiver_depth_km=receiver_depth_km,
-            dist_km=green_dist,
-            model_name=model_name,
+    if (before_p is not None) or shift or pad_zeros:
+        first_p_grn, first_s_grn = read_tpts_table(
+            path_green=path_green,
+            event_depth_km=grn_dep_source,
+            receiver_depth_km=grn_dep_receiver,
+            ind=ind,
         )
         tpts_table = {"p_onset": first_p_grn, "s_onset": first_s_grn}
+
+    if time_reduction_velo != 0:
+        time_reduction = grn_dist / time_reduction_velo
+    else:
+        time_reduction = 0
 
     ts_count = 0
     if before_p is not None:
@@ -316,7 +318,7 @@ def seek_qseis06_stress(
             first_s,
             grn_dep_source,
             grn_dep_receiver,
-            green_dist,
+            grn_dist,
         )
 
 

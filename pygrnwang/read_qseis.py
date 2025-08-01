@@ -5,10 +5,10 @@ import numpy as np
 import scipy.signal as signal
 import pandas as pd
 
-from .utils import shift_green2real_tpts
 from .focal_mechanism import check_convert_fm
 from .geo import rotate_rtz_to_enz
-from .pytaup import cal_first_p_s
+from .pytaup import read_tpts_table
+from .utils import shift_green2real_tpts
 from .signal_process import resample
 
 
@@ -132,14 +132,10 @@ def seek_qseis06(
     )
     ind = round((dist_km - dist_range[0]) / delta_dist)
     ind_group = ind // num_each_group
-    green_dist = dist_range[0] + ind * delta_dist
+    grn_dist = dist_range[0] + ind * delta_dist
     start_count = ind - ind_group * num_each_group
-    if time_reduction_velo != 0:
-        time_reduction = green_dist / time_reduction_velo
-    else:
-        time_reduction = 0
-    path_greenfunc_sub = os.path.join(path_greenfunc, "%d_0" % ind_group)
 
+    path_greenfunc_sub = os.path.join(path_greenfunc, "%d_0" % ind_group)
     if os.path.exists(os.path.join(path_greenfunc_sub, "grn_tz.npy")):
         time_series_list = read_time_series_qseis06_bin(
             path_greenfunc=path_greenfunc_sub, start_count=start_count
@@ -174,14 +170,19 @@ def seek_qseis06(
         seismograms = np.array([r, -t, -z])
 
     tpts_table = None
-    if (before_p is not None) or shift:
-        first_p_grn, first_s_grn = cal_first_p_s(
-            event_depth_km=event_depth_km,
-            receiver_depth_km=receiver_depth_km,
-            dist_km=green_dist,
-            model_name=model_name,
+    if (before_p is not None) or shift or pad_zeros:
+        first_p_grn, first_s_grn = read_tpts_table(
+            path_green=path_green,
+            event_depth_km=grn_dep_source,
+            receiver_depth_km=grn_dep_receiver,
+            ind=ind,
         )
         tpts_table = {"p_onset": first_p_grn, "s_onset": first_s_grn}
+
+    if time_reduction_velo != 0:
+        time_reduction = grn_dist / time_reduction_velo
+    else:
+        time_reduction = 0
 
     ts_count = 0
     if before_p is not None:
@@ -245,7 +246,7 @@ def seek_qseis06(
             first_s,
             grn_dep_source,
             grn_dep_receiver,
-            green_dist,
+            grn_dist,
         )
 
 

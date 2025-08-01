@@ -9,14 +9,11 @@ from .read_qseis import (
     read_time_series_qseis06_ascii,
     synthesize_qseis06,
 )
-from .utils import (
-    shift_green2real_tpts,
-    read_nd,
-)
 from .create_qseis_bulk import create_order_ind
 from .focal_mechanism import check_convert_fm
 from .geo import rotate_symmetric_tensor_series
-from .pytaup import cal_first_p_s
+from .pytaup import read_tpts_table
+from .utils import read_nd, shift_green2real_tpts
 from .signal_process import resample
 
 
@@ -118,11 +115,6 @@ def seek_qseis06_strain_rate_diff(
     grn_dist = dist_range[0] + ind * delta_dist
     dr = grn_dist * k_dr * 1e3
     start_count = ind - ind_group * num_each_group
-
-    if time_reduction_velo != 0:
-        time_reduction = grn_dist / time_reduction_velo
-    else:
-        time_reduction = 0
 
     [M11, M12, M13, M22, M23, M33] = check_convert_fm(focal_mechanism=focal_mechanism)
 
@@ -254,14 +246,19 @@ def seek_qseis06_strain_rate_diff(
     seismograms = rotate_symmetric_tensor_series(strain_tensor.T, np.deg2rad(-az_deg)).T
 
     tpts_table = None
-    if (before_p is not None) or shift:
-        first_p_grn, first_s_grn = cal_first_p_s(
-            event_depth_km=event_depth_km,
-            receiver_depth_km=receiver_depth_km,
-            dist_km=grn_dist,
-            model_name=model_name,
+    if (before_p is not None) or shift or pad_zeros:
+        first_p_grn, first_s_grn = read_tpts_table(
+            path_green=path_green,
+            event_depth_km=grn_dep_source,
+            receiver_depth_km=grn_dep_receiver,
+            ind=ind,
         )
         tpts_table = {"p_onset": first_p_grn, "s_onset": first_s_grn}
+
+    if time_reduction_velo != 0:
+        time_reduction = grn_dist / time_reduction_velo
+    else:
+        time_reduction = 0
 
     ts_count = 0
     if before_p is not None:
