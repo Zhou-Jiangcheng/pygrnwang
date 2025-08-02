@@ -4,7 +4,7 @@ c
       integer*4 n
       real*8 z
       complex*16 hk(2,2)
-      logical*2 rsite
+      logical*4 rsite
 c
       include 'qsglobal.h'
 c

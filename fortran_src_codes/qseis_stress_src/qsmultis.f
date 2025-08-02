@@ -1,6 +1,6 @@
       subroutine qsmultis(grnexist)
       implicit none
-      logical*2 grnexist
+      logical*4 grnexist
       include 'qsglobal.h'
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 c     this program calculates convolution integral (summation)         c

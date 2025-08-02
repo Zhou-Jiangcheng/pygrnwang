@@ -9,7 +9,7 @@ c
       real*8 z
       complex*16 ck
       complex*16 y(4,nj),c(4,nj)
-      logical*2 dynamic,rsite
+      logical*4 dynamic,rsite
 c
       include 'qsglobal.h'
 c

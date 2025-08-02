@@ -19,8 +19,8 @@ c
       complex*16 cinc(4,6)
       complex*16 y1(4,2),yup(4,2),ylw(4,2),orth(2,2)
       complex*16 coef(4,4),cnorm(2),coefrs(2,2),brs(2,6)
-      logical*2 rsite
-      logical*2 dynamic(nzmax)
+      logical*4 rsite
+      logical*4 dynamic(nzmax)
 c
       complex*16 c2
 	data c2/(2.d0,0.d0)/

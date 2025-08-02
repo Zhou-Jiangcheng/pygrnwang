@@ -7,7 +7,7 @@ c     work space
 c
       integer*4 i,istp,nssel,runtime
       real*8 pi,srate
-      logical*2 grnexist
+      logical*4 grnexist
       integer*4 time
 c
 c     read input file file

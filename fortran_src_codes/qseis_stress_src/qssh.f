@@ -18,7 +18,7 @@ c
       complex*16 y0(2),b(2,6),b0(2,6)
       complex*16 y1(2),yup(2),ylw(2)
       complex*16 hk(2,2,nzmax),coef(2,2),cinc(6),c0
-      logical*2 rsite
+      logical*4 rsite
 c
 c===============================================================================
 c
