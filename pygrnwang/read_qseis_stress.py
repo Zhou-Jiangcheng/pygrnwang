@@ -285,11 +285,6 @@ def seek_qseis06_stress(
             model_name=model_name,
         )
 
-    # conv_shift = round(green_info["wavelet_duration"] / 2)
-    # if conv_shift != 0:
-    #     seismograms = np.roll(seismograms, -conv_shift)
-    #     seismograms[:, -conv_shift:] = 0
-
     seismograms_resample = np.zeros((6, round(sampling_num * srate / srate_grn)))
     for i in range(6):
         seismograms_resample[i] = resample(
