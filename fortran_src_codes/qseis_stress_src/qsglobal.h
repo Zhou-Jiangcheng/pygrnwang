@@ -14,8 +14,14 @@ c
 c     INDEX PARAMETERS FOR BESSEL FUNCTION TABLES
 c     ===========================================
 c
-      integer*4 nk0max,nbsjmax
-      parameter(nk0max=32768,nbsjmax=nk0max*8)
+      integer*4 nk0min,nk0max,nbsjmax
+      parameter(nk0min=500,nk0max=20000,nbsjmax=nk0max*8)
+c
+c     PARAMETERS FOR ESTIMATE WAVENUMBER
+c     ===========================================
+c
+      real*8 epswv,rd2r
+      parameter(epswv=1.0d-06,rd2r=5.0d-02)
 c
 c     INDEX PARAMETERS FOR SEISMOMETER CHARACTERISTICS
 c     ================================================

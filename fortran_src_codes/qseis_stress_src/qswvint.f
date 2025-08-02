@@ -20,9 +20,7 @@ c
       complex*16 jmm2,jmm1,jm0,jmp1,jmp2,drjm1,drjp1 ! bsj
       real*8 taper
 c
-      real*8 eps,rd2r
       complex*16 c2
-      data eps,rd2r/1.0d-05,5.0d-02/
       data c2/(2.d0,0.d0)/
 c
 c     ics = 1  when the azmuth-factor is cos(ms*theta) for poloidal mode
@@ -106,7 +104,7 @@ c
         enddo
         yabs=dsqrt(yabs)*k*dexp(-0.5d0*(k*rdisk(1))**2)
         ymax=dmax1(ymax,yabs)
-        if(yabs.gt.eps*ymax.and.yabs.gt.0.d0.and.
+        if(yabs.gt.epswv*ymax.and.yabs.gt.0.d0.and.
      &     ik1.lt.nk0max)then
           ik1=ik1+1
           goto 101
@@ -134,7 +132,7 @@ c
         enddo
         yabs=dsqrt(yabs)*k*dexp(-0.5d0*(k*rdisk(1))**2)
         ymax=dmax1(ymax,yabs)
-        if(yabs.gt.eps*ymax.and.yabs.gt.0.d0.and.
+        if(yabs.gt.epswv*ymax.and.yabs.gt.0.d0.and.
      &     ik2.lt.(nbsjmax+nk0max)/2)then
           ik2=ik2+1
           goto 102
@@ -167,7 +165,7 @@ c
       else
         print *,' Calculate Bessel functions for x up to ',
      &       dble(nbsj)*dk*r(nr)
-        print *,nbsj
+        print *,'nbsj',nbsj
         do ir=1,nr
           geospr(ir)=1.d0/(zdis*zdis+r(ir)*r(ir))**ndtrans
         enddo
@@ -202,7 +200,7 @@ c
      &           +(kcut2(i)-kcut1(i))*dsqrt(f**2+(pi*fi)**2)/fcut
         enddo
 c
-        nk2=min0(2+idint(kcut(4)/dk),nbsj-ndtrans)
+        nk2=min0(nint(nk0min/dt)+idint(kcut(4)/dk),nbsj-ndtrans)
         nk1=min0(1+idint(kcut(1)/dk),nk2)
 c
         ik1=max0(1,nk1-ndtrans)
