@@ -12,12 +12,10 @@ Wang, R., Heimann, S., Zhang, Y., Wang, H., & Dahm, T. (2017). Complete syntheti
 
 # Installation
 
-1. Install the requirments. (Debian 12, Python 3.11)
-
+1. Install the requirments.
 ```
-sudo apt install default-jdk
 conda create -n pygrnwang python=3.11
-conda install gfortran numpy scipy pandas tqdm jpype1 mpi4py -c conda-forge
+conda install openjdk jpype1 gfortran numpy scipy pandas tqdm mpi4py -c conda-forge
 git clone https://github.com/Zhou-Jiangcheng/pygrnwang.git
 cd pygrnwang
 pip install .
