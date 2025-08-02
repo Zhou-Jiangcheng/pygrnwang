@@ -1,5 +1,6 @@
 import os
 import math
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -170,52 +171,34 @@ def call_qseis_stress(
 
 def convert_pd2bin_qseis_stress(path_greenfunc, remove=False):
     for com in ["tr", "tz", "tv", "trr", "szz", "szr"]:
-        ex_com = pd.read_csv(
-            str(os.path.join(path_greenfunc, "ex.%s" % com)), sep="\\s+"
-        ).to_numpy()
-        ss_com = pd.read_csv(
-            str(os.path.join(path_greenfunc, "ss.%s" % com)), sep="\\s+"
-        ).to_numpy()
-        ds_com = pd.read_csv(
-            str(os.path.join(path_greenfunc, "ds.%s" % com)), sep="\\s+"
-        ).to_numpy()
-        cl_com = pd.read_csv(
-            str(os.path.join(path_greenfunc, "cl.%s" % com)), sep="\\s+"
-        ).to_numpy()
-        time_series_com = np.concatenate(
-            [
-                ex_com[:, 1:],
-                ss_com[:, 1:],
-                ds_com[:, 1:],
-                cl_com[:, 1:],
-            ]
-        )
-        time_series_com = np.array(time_series_com, dtype=np.float32)
-        np.save(os.path.join(path_greenfunc, "grn_%s.npy" % com), time_series_com)
-        if remove:
-            os.remove(os.path.join(path_greenfunc, "ex.%s" % com))
-            os.remove(os.path.join(path_greenfunc, "ss.%s" % com))
-            os.remove(os.path.join(path_greenfunc, "ds.%s" % com))
-            os.remove(os.path.join(path_greenfunc, "cl.%s" % com))
+        time_series_com = []
+        for stype in ["ex", "ss", "ds", "cl"]:
+            path_ascii = os.path.join(path_greenfunc, "%s.%s" % (stype, com))
+            if not os.path.exists(path_ascii):
+                warnings.warn("ascii file %s do not exist, skip" % path_ascii)
+                continue
+            stype_com = pd.read_csv(path_ascii, sep="\\s+").to_numpy()
+            time_series_com.append(stype_com[:, 1:])
+            if remove:
+                os.remove(path_ascii)
+        output_data = np.concatenate(
+            [time_series_com[_] for _ in range(4)], dtype=np.float32)
+        np.save(os.path.join(path_greenfunc, "grn_%s.npy" % com), output_data)
 
     for com in ["tt", "ttr", "szt"]:
-        ss_r = pd.read_csv(
-            str(os.path.join(path_greenfunc, "ss.%s" % com)), sep="\\s+"
-        ).to_numpy()
-        ds_r = pd.read_csv(
-            str(os.path.join(path_greenfunc, "ds.%s" % com)), sep="\\s+"
-        ).to_numpy()
-        time_series_com = np.concatenate(
-            [
-                ss_r[:, 1:],
-                ds_r[:, 1:],
-            ]
-        )
-        time_series_com = np.array(time_series_com, dtype=np.float32)
-        np.save(os.path.join(path_greenfunc, "grn_%s.npy" % com), time_series_com)
-        if remove:
-            os.remove(os.path.join(path_greenfunc, "ss.%s" % com))
-            os.remove(os.path.join(path_greenfunc, "ds.%s" % com))
+        time_series_com = []
+        for stype in ["ss", "ds"]:
+            path_ascii = os.path.join(path_greenfunc, "%s.%s" % (stype, com))
+            if not os.path.exists(path_ascii):
+                warnings.warn("ascii file %s do not exist, skip" % path_ascii)
+                continue
+            stype_com = pd.read_csv(path_ascii, sep="\\s+").to_numpy()
+            time_series_com.append(stype_com[:, 1:])
+            if remove:
+                os.remove(path_ascii)
+        output_data = np.concatenate(
+            [time_series_com[_] for _ in range(2)], dtype=np.float32)
+        np.save(os.path.join(path_greenfunc, "grn_%s.npy" % com), output_data)
 
 
 if __name__ == "__main__":
