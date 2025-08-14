@@ -17,7 +17,7 @@ Wang, R., Heimann, S., Zhang, Y., Wang, H., & Dahm, T. (2017). Complete syntheti
 
 ```
 conda create -n pygrnwang python=3.11
-conda install openjdk jpype1 gfortran numpy scipy pandas tqdm mpi4py -c conda-forge
+conda install gfortran numpy scipy pandas tqdm mpi4py -c conda-forge
 ```
 
 2. Install by pip.
