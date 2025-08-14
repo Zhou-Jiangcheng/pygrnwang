@@ -8,7 +8,6 @@ from multiprocessing import Pool
 
 from tqdm import tqdm
 from mpi4py import MPI
-import jpype
 
 from .create_qseis_stress import (
     create_dir_qseis_stress,

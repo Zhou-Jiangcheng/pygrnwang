@@ -9,7 +9,6 @@ from multiprocessing import Pool
 import numpy as np
 from tqdm import tqdm
 from mpi4py import MPI
-import jpype
 
 from .create_qseis import (
     create_dir_qseis06,
@@ -121,8 +120,6 @@ def pre_process_qseis06(
                 path_nd_without_Q,
                 check_finished_tpts_table,
             )
-    if jpype.isJVMStarted():
-        jpype.shutdownJVM()
 
     green_info = {
         "processes_num": processes_num,
@@ -308,8 +305,6 @@ def pre_process_qseis06_strain_rate(
                 path_nd_without_Q,
                 check_finished_tpts_table,
             )
-    if jpype.isJVMStarted():
-        jpype.shutdownJVM()
 
     green_info = {
         "processes_num": processes_num,

@@ -9,7 +9,6 @@ from multiprocessing import Pool
 
 import numpy as np
 from tqdm import tqdm
-import jpype
 from mpi4py import MPI
 
 from .create_qssp import (
@@ -299,8 +298,6 @@ def pre_process_qssp2020(
                 path_nd_without_Q,
                 check_finished_tpts_table,
             )
-    if jpype.isJVMStarted():
-        jpype.shutdownJVM()
 
     green_info = {
         "processes_num": processes_num,
