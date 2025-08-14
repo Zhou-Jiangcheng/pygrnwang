@@ -26,7 +26,7 @@ def read_or_create_model(model_name, npz_dir=None):
             raise ValueError('You should provide nd file, or create model_name.npz file first!')
     return model
 
-def remove_npz_file(model_name):
+def remove_obspy_taup_npz_file(model_name):
     if model_name[-3:] == '.nd':
         model_name = os.path.splitext(os.path.basename(model_name))[0]
     taup_data_dir = pathlib.Path(obspy.taup.__file__).parent / "data"

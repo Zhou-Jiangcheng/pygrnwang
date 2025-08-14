@@ -17,7 +17,7 @@ from .create_qseis import (
     call_qseis06,
     convert_pd2bin_qseis06,
 )
-from .obspy_taup import create_tpts_table
+from .obspy_taup import create_tpts_table, remove_obspy_taup_npz_file
 from .utils import group, convert_earth_model_nd2nd_without_Q
 
 
@@ -120,6 +120,7 @@ def pre_process_qseis06(
                 path_nd_without_Q,
                 check_finished_tpts_table,
             )
+    remove_obspy_taup_npz_file(model_name='noq.nd')
 
     green_info = {
         "processes_num": processes_num,
@@ -305,6 +306,7 @@ def pre_process_qseis06_strain_rate(
                 path_nd_without_Q,
                 check_finished_tpts_table,
             )
+    remove_obspy_taup_npz_file(model_name='noq.nd')
 
     green_info = {
         "processes_num": processes_num,

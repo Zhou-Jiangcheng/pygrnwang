@@ -15,7 +15,7 @@ from .create_qseis_stress import (
     call_qseis_stress,
     convert_pd2bin_qseis_stress,
 )
-from .obspy_taup import create_tpts_table, remove_npz_file
+from .obspy_taup import create_tpts_table, remove_obspy_taup_npz_file
 from .utils import group, convert_earth_model_nd2nd_without_Q
 
 
@@ -103,7 +103,7 @@ def pre_process_qseis_stress(
                 path_nd_without_Q,
                 check_finished_tpts_table,
             )
-    remove_npz_file(model_name=path_nd_without_Q)
+    remove_obspy_taup_npz_file(model_name=path_nd_without_Q)
 
     green_info = {
         "processes_num": processes_num,
