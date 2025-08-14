@@ -15,7 +15,7 @@ from .signal_process import resample
 def read_time_series_qseis06_stress_ascii(path_greenfunc, start_count):
     time_seris_list = []
     start_count = start_count + 1
-    for com in ["tr", "tz", "tv", "trr", "szz", "szr"]:
+    for com in ["szz", "szr", "srr", "stt"]:
         ex_com = pd.read_csv(
             os.path.join(path_greenfunc, "ex.%s" % com), sep="\\s+"
         ).to_numpy()  # type:ignore
@@ -39,7 +39,7 @@ def read_time_series_qseis06_stress_ascii(path_greenfunc, start_count):
         time_series_com = np.array(time_series_com, dtype=np.float32)
         time_seris_list.append(time_series_com)
 
-    for com in ["tt", "ttr", "szt"]:
+    for com in ["szt", "srt"]:
         ss_r = pd.read_csv(
             os.path.join(path_greenfunc, "ss.%s" % com), sep="\\s+"
         ).to_numpy()  # type:ignore
@@ -59,10 +59,10 @@ def read_time_series_qseis06_stress_ascii(path_greenfunc, start_count):
 
 def read_time_series_qseis06_stress_bin(path_greenfunc, start_count):
     time_series_list = []
-    for com in ["tr", "tz", "tv", "trr", "szz", "szr"]:
+    for com in ["szz", "szr", "srr", "stt"]:
         time_series_com = np.load(os.path.join(path_greenfunc, "grn_%s.npy" % com))
         time_series_list.append(time_series_com[:, start_count].reshape(4, -1))
-    for com in ["tt", "ttr", "szt"]:
+    for com in ["szt", "srt"]:
         time_series_com = np.load(os.path.join(path_greenfunc, "grn_%s.npy" % com))
         time_series_list.append(time_series_com[:, start_count].reshape(2, -1))
     return time_series_list
@@ -196,45 +196,25 @@ def seek_qseis06_stress(
     m1 = [exp, ss1 * sin_2az + ss2 * cos_2az, ds1 * cos_az + ds2 * sin_az, clvd]
     m2 = [ss1 * cos_2az - ss2 * sin_2az, ds1 * sin_az - ds2 * cos_az]
 
-    pm1_paz = [
-        exp,
-        ss1 * 2 * cos_2az + ss2 * (-2) * sin_2az,
-        ds1 * (-1) * sin_az + ds2 * cos_az,
-        clvd,
-    ]
-    pm2_paz = [
-        ss1 * (-2) * sin_2az - ss2 * 2 * cos_2az,
-        ds1 * cos_az - ds2 * (-1) * sin_az,
-    ]
+    # ["szz", "szr", "srr", "stt"]
+    s_zz = synthesize_rzv(time_series=time_series_list[0], m1=m1)
+    s_zr = synthesize_rzv(time_series=time_series_list[1], m1=m1)
+    s_rr = synthesize_rzv(time_series=time_series_list[2], m1=m1)
+    s_tt = synthesize_rzv(time_series=time_series_list[3], m1=m1)
 
-    # ['tr', 'tz', 'tv', 'trr', 'szz', 'szr', 'tt', 'ttr', 'szt']
-    ur = synthesize_rzv(time_series=time_series_list[0], m1=m1)
-    tv = synthesize_rzv(time_series=time_series_list[2], m1=m1)
-    pur_pr = synthesize_rzv(time_series=time_series_list[3], m1=m1)
-    sigma_zz = synthesize_rzv(time_series=time_series_list[4], m1=m1)
-    sigma_zr = synthesize_rzv(time_series=time_series_list[5], m1=m1)
+    # ["szt", "srt"]
+    s_zt = synthesize_t(time_series=time_series_list[4], m2=m2)
+    s_rt = synthesize_t(time_series=time_series_list[5], m2=m2)
 
-    ut = synthesize_t(time_series=time_series_list[6], m2=m2)
-    put_pr = synthesize_t(time_series=time_series_list[7], m2=m2)
-    sigma_zt = synthesize_t(time_series=time_series_list[8], m2=m2)
-
-    pur_pt = synthesize_przv_pt(time_series=time_series_list[0], pm1_paz=pm1_paz)
-    put_pt = synthesize_pt_pt(time_series=time_series_list[6], pm2_paz=pm2_paz)
-
-    [_, rho, vp, vs, _, _] = read_layerd_material(
-        os.path.join(path_greenfunc_sub, "layered_model.dat"), grn_dep_receiver
-    )
-    mu = vs**2 * rho
-    lam = vp**2 * rho - 2 * mu
-    r = dist_km * 1e3
-    # e_zz = (sigma_zz - lam * tv) / (2 * mu)
-    # pur_pr_indirect = tv - e_zz - (put_pt + ur) / r
-    sigma_rr = lam * tv + 2 * mu * pur_pr
-    sigma_tt = lam * tv + 2 * mu * (put_pt + ur) / r
-    sigma_rt = mu * (pur_pt / r + put_pr - ut / r)
+    # tv = synthesize_rzv(time_series=time_series_list[0], m1=m1)
+    # [_, rho, vp, vs, _, _] = read_layerd_material(
+    #     os.path.join(path_greenfunc_sub, "layered_model.dat"), grn_dep_receiver
+    # )
+    # mu = rho * vs**2
+    # lam = rho * vp**2 - 2 * mu
 
     sigma_tensor = np.array(
-        [sigma_tt, sigma_rt, -sigma_zt, sigma_rr, -sigma_zr, sigma_zz]
+        [s_tt, s_rt, -s_zt, s_rr, -s_zr, s_zz]
     )
     if rotate:
         seismograms = rotate_symmetric_tensor_series(sigma_tensor.T, az_rad).T

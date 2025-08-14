@@ -200,9 +200,10 @@ c
         outfile(5,istp)=outfile0(istp)(1:flen0)//'.szz'
         outfile(6,istp)=outfile0(istp)(1:flen0)//'.szr'
         outfile(7,istp)=outfile0(istp)(1:flen0)//'.szt'
-        outfile(8,istp)=outfile0(istp)(1:flen0)//'.trr'
-        outfile(9,istp)=outfile0(istp)(1:flen0)//'.ttr'
-        do i=5,9
+        outfile(8,istp)=outfile0(istp)(1:flen0)//'.stt'
+        outfile(9,istp)=outfile0(istp)(1:flen0)//'.srr'
+        outfile(10,istp)=outfile0(istp)(1:flen0)//'.srt'
+        do i=5,10
           flen(i,istp)=flen0+4
         enddo
 
@@ -737,7 +738,7 @@ c
       write(*,'(a)')' km'
 c
       do istp=1,7
-        do i=1,9
+        do i=1,10
           if(ssel(istp).ge.1)then
             fsel(i,istp)=1
           else
@@ -752,7 +753,7 @@ c
         if(ms(istp).eq.0)then
           fsel(3,istp)=0
           fsel(7,istp)=0
-          fsel(9,istp)=0
+          fsel(10,istp)=0
         endif
       enddo
 c

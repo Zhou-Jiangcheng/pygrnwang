@@ -176,7 +176,7 @@ c
 c
 c     green's functions
 c
-      complex*16 grns(nfmax,9,nrmax,7)
+      complex*16 grns(nfmax,10,nrmax,7)
       common /grnfcts/ grns
 c
 c     title text
@@ -189,7 +189,7 @@ c     input and output data files
 c
       character*110 inputfile
       common /inputdata/ inputfile
-      integer*4 ssel(7),fsel(9,7),flen(9,7)
-      character*113 outfile(9,7)
+      integer*4 ssel(7),fsel(10,7),flen(10,7)
+      character*113 outfile(10,7)
       common /outsel/ ssel,fsel,flen
       common /outdata/ outfile

@@ -170,7 +170,7 @@ def call_qseis_stress(
 
 
 def convert_pd2bin_qseis_stress(path_greenfunc, remove=False):
-    for com in ["tr", "tz", "tv", "trr", "szz", "szr"]:
+    for com in ["tr", "tz", "tv", "szz", "szr", "srr", "stt"]:
         time_series_com = []
         for stype in ["ex", "ss", "ds", "cl"]:
             path_ascii = os.path.join(path_greenfunc, "%s.%s" % (stype, com))
@@ -185,7 +185,7 @@ def convert_pd2bin_qseis_stress(path_greenfunc, remove=False):
             [time_series_com[_] for _ in range(4)], dtype=np.float32)
         np.save(os.path.join(path_greenfunc, "grn_%s.npy" % com), output_data)
 
-    for com in ["tt", "ttr", "szt"]:
+    for com in ["tt", "szt", "srt"]:
         time_series_com = []
         for stype in ["ss", "ds"]:
             path_ascii = os.path.join(path_greenfunc, "%s.%s" % (stype, com))

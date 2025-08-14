@@ -12,16 +12,16 @@ c
       real*8 fac,zdis,rsdis,thickness,wvlen
       real*8 kcut(4),kcut1(4),kcut2(4)
       real*8 rdisk(nrmax)
-      complex*16 carec,cbrec,ck,ck2,cdk,c2dk,cdk2,cfac,czdis2
+      complex*16 carec,cbrec,clar,cmur,ck,ck2,cdk,c2dk,cdk2,cfac,czdis2,cm
       complex*16 swap(nbsjmax+ndtransmax)
-      complex*16 y0(7,6,nbsjmax+ndtransmax)
-      complex*16 y(7,6,nbsjmax+ndtransmax)
-      complex*16 cy(6,6),yb(9),cics(6),cm2(7,6)
-      complex*16 jmm2,jmm1,jm0,jmp1,jmp2,drjm1,drjp1 ! bsj
+      complex*16 y0(9,6,nbsjmax+ndtransmax)
+      complex*16 y(10,6,nbsjmax+ndtransmax)
+      complex*16 cy(6,6),yb(9),cics(6),cm2(9,6)
+      complex*16 jmm2,jmm1,jm0,jmp1,jmp2 ! bsj
       real*8 taper
 c
-      complex*16 c2
-      data c2/(2.d0,0.d0)/
+      complex*16 c1,c2,c3
+      data c1,c2,c3/(1.d0,0.d0),(2.d0,0.d0),(3.d0,0.d0)/
 c
 c     ics = 1  when the azmuth-factor is cos(ms*theta) for poloidal mode
 c             (psv) and sin(ms*theta) for the toroidal mode (sh);
@@ -39,11 +39,15 @@ c
         cm2(5,istp)=dcmplx(dble(ms(istp)**2),0.d0)
         cm2(6,istp)=dcmplx(dble((ms(istp)-1)**2),0.d0)
         cm2(7,istp)=dcmplx(dble((ms(istp)+1)**2),0.d0)
+        cm2(8,istp)=cm2(1,istp)
+        cm2(9,istp)=cm2(1,istp)
       enddo
 c
       nrec=nno(lzr)
       carec=dcmplx(1.d0/(ro(nrec)*vp(nrec)**2),0.d0)
       cbrec=dcmplx(2.d0*(vs(nrec)/vp(nrec))**2,0.d0)
+      cmur=dcmplx(ro(nrec)*vs(nrec)**2,0.d0)
+      clar=dcmplx(ro(nrec)*vp(nrec)**2,0.d0)-2*cmur
 c
       l=min0(ls,lzr)
       n=nno(l)
@@ -212,11 +216,13 @@ c
           do istp=1,6
             y0(1,istp,ik)=cy(1,istp)
             y0(2,istp,ik)=( cy(3,istp)+cics(istp)*cy(5,istp))/c2
-            y0(3,istp,ik)=(-cy(3,istp)+cics(istp)*cy(5,istp))/c2
+            y0(3,istp,ik)=( cy(3,istp)-cics(istp)*cy(5,istp))/c2
             y0(4,istp,ik)=carec*cy(2,istp)-cbrec*ck*cy(3,istp)
             y0(5,istp,ik)=cy(2,istp)
             y0(6,istp,ik)=( cy(4,istp)+cics(istp)*cy(6,istp))/c2
-            y0(7,istp,ik)=(-cy(4,istp)+cics(istp)*cy(6,istp))/c2
+            y0(7,istp,ik)=( cy(4,istp)-cics(istp)*cy(6,istp))/c2
+            y0(8,istp,ik)=ck*cy(3,istp)
+            y0(9,istp,ik)=ck*cy(5,istp)
           enddo
         enddo
 c
@@ -226,7 +232,7 @@ c
           do ik=ik1,ik2
             k=dble(ik)*dk
             do istp=1,6
-              do i=1,7
+              do i=1,9
                 y(i,istp,ik)=y0(i,istp,ik)
      &                   *dcmplx(dexp(-0.5d0*(k*rdisk(ir))**2),0.d0)
               enddo
@@ -236,7 +242,7 @@ c
             ik1=max0(1,nk1-ndtrans)+idtrans
             ik2=nk2+ndtrans-idtrans
             do istp=1,6
-              do i=1,7
+              do i=1,9
                 do ik=ik1-1,ik2+1
                   swap(ik)=y(i,istp,ik)
                 enddo
@@ -260,7 +266,7 @@ c
      &                 *taper(k,kcut(1),kcut(2),kcut(3),kcut(4)),0.d0)
 c
             do istp=1,6
-              do i=1,7
+              do i=1,9
                 y(i,istp,ik)=y(i,istp,ik)*cfac
               enddo
               jmm1 = dcmplx(bsj(ik,ms(istp)-1,ir),0.d0)
@@ -268,8 +274,7 @@ c
               jmp1 = dcmplx(bsj(ik,ms(istp)+1,ir),0.d0)
               jmm2 = dcmplx(bsj(ik,ms(istp)-2,ir),0.d0)
               jmp2 = dcmplx(bsj(ik,ms(istp)+2,ir),0.d0)
-              drjm1=(jmm2-jm0)/c2
-              drjp1=(jm0-jmp2)/c2
+              cm=dcmplx(ms(istp), 0.d0)
 c
               yb(1)=y(1,istp,ik)*jm0
               yb(2)=y(2,istp,ik)*jmm1
@@ -278,24 +283,43 @@ c
               yb(5)=y(5,istp,ik)*jm0
               yb(6)=y(6,istp,ik)*jmm1
               yb(7)=y(7,istp,ik)*jmp1
-              yb(8)=y(2,istp,ik)*ck*drjm1+y(3,istp,ik)*ck*drjp1
-              yb(9)=-cics(istp)*(y(2,istp,ik)*ck*drjm1-y(3,istp,ik)*ck*drjp1)
-    !           yb(8)=-ck*(y(2,istp,ik)-y(3,istp,ik))*jm0
-    !  &              -((yb(2)+yb(3))+
-    !  &               cics(istp)*dcmplx(ms(istp),0.d0)*(-cics(istp)*(yb(2)-yb(3))))/r(ir)
-    !           yb(9)=ck*(y(2,istp,ik)+y(3,istp,ik))/cics(istp)*jm0
-    !  &              -(cics(istp)*dcmplx(ms(istp),0.d0)*(yb(2)+yb(3))+
-    !  &               (-cics(istp)*(yb(2)-yb(3))))/r(ir)
+              yb(8)=y(8,istp,ik)*jm0
+              yb(9)=y(9,istp,ik)*jm0
 c
               grns(lf,1,ir,istp)=grns(lf,1,ir,istp)+yb(1)                          ! tz
-              grns(lf,2,ir,istp)=grns(lf,2,ir,istp)+yb(2)+yb(3)                    ! tr
-              grns(lf,3,ir,istp)=grns(lf,3,ir,istp)-cics(istp)*(yb(2)-yb(3))       ! tt
-              grns(lf,4,ir,istp)=grns(lf,4,ir,istp)+yb(4)                          ! tv=(ezz+err+ett)
-              grns(lf,5,ir,istp)=grns(lf,5,ir,istp)+yb(5)                          ! szz stress
-              grns(lf,6,ir,istp)=grns(lf,6,ir,istp)+yb(6)+yb(7)                    ! szr stress
-              grns(lf,7,ir,istp)=grns(lf,7,ir,istp)-cics(istp)*(yb(6)-yb(7))       ! szt stress
-              grns(lf,8,ir,istp)=grns(lf,8,ir,istp)+yb(8)                          ! trr=ptr/pr
-              grns(lf,9,ir,istp)=grns(lf,9,ir,istp)+yb(9)                          ! ttr=ptt/pr
+              grns(lf,2,ir,istp)=grns(lf,2,ir,istp)+yb(2)-yb(3)                    ! tr
+              grns(lf,3,ir,istp)=grns(lf,3,ir,istp)-cics(istp)*(yb(2)+yb(3))       ! tt
+              grns(lf,4,ir,istp)=grns(lf,4,ir,istp)+yb(4)                          ! ezz+err+ett
+              grns(lf,5,ir,istp)=grns(lf,5,ir,istp)+yb(5)                          ! szz
+              grns(lf,6,ir,istp)=grns(lf,6,ir,istp)+yb(6)-yb(7)                    ! szr
+              grns(lf,7,ir,istp)=grns(lf,7,ir,istp)-cics(istp)*(yb(6)+yb(7))       ! szt
+              if (r(ir).gt.0.d0)then
+                grns(lf,8,ir,istp)=grns(lf,8,ir,istp)+clar*yb(4)+2*cmur*(-         ! stt
+     &               ((cm-c1)*yb(2)+(cm+c1)*yb(3))/dcmplx(r(ir),0.d0))
+                grns(lf,9,ir,istp)=grns(lf,9,ir,istp)+clar*yb(4)+2*cmur*(-yb(8)+   ! srr
+     &               ((cm-c1)*yb(2)+(cm+c1)*yb(3))/dcmplx(r(ir),0.d0))
+                grns(lf,10,ir,istp)=grns(lf,10,ir,istp)+2*cmur*(yb(9)/c2-          ! srt
+     &              (cics(istp)*cm*(yb(2)-yb(3))+
+     &              (-cics(istp)*(yb(2)+yb(3))))/dcmplx(r(ir),0.d0))
+              else if(ms(istp).eq.0.d0)then
+                grns(lf,8,ir,istp)=grns(lf,8,ir,istp)+clar*yb(4)+2*cmur*(          ! stt
+     &               -ck/c2*(y(2,istp,ik)+y(3,istp,ik)))
+                grns(lf,9,ir,istp)=grns(lf,9,ir,istp)+clar*yb(4)+2*cmur*(          ! srr
+     &               -y(8,istp,ik)+ck/c2*(y(2,istp,ik)+y(3,istp,ik)))
+                grns(lf,10,ir,istp)=grns(lf,10,ir,istp)+2*cmur*(                   ! srt
+     &              y(9,istp,ik)/c2+cics(istp)*ck/c2*(y(2,istp,ik)+y(3,istp,ik)))
+              else if(ms(istp).eq.1.d0)then
+                grns(lf,8,ir,istp)=dcmplx(0.d0, 0.d0)                              ! stt
+                grns(lf,9,ir,istp)=dcmplx(0.d0, 0.d0)                              ! srr
+                grns(lf,10,ir,istp)=dcmplx(0.d0, 0.d0)                             ! srt
+              else if(ms(istp).eq.2.d0)then
+                grns(lf,8,ir,istp)=grns(lf,8,ir,istp)+2*cmur*(                     ! stt
+     &               -ck/c2*y(2,istp,ik))
+                grns(lf,9,ir,istp)=grns(lf,9,ir,istp)+2*cmur*(                     ! srr
+     &               +ck/c2*y(2,istp,ik))
+                grns(lf,10,ir,istp)=grns(lf,10,ir,istp)+2*cmur*(                   ! srt
+     &              -cics(istp)*ck/c2*y(2,istp,ik))
+              endif
             enddo
           enddo
         enddo
