@@ -18,7 +18,7 @@ from .create_qseis import (
     call_qseis06,
     convert_pd2bin_qseis06,
 )
-from .pytaup import create_tpts_table
+from .obspy_taup import create_tpts_table
 from .utils import group, convert_earth_model_nd2nd_without_Q
 
 
@@ -106,7 +106,7 @@ def pre_process_qseis06(
                 order=0,
             )
 
-    path_nd_without_Q = os.path.join(path_green, "noQ.nd")
+    path_nd_without_Q = os.path.join(path_green, "noq.nd")
     convert_earth_model_nd2nd_without_Q(path_nd, path_nd_without_Q)
 
     # creating tp and ts tables
@@ -292,7 +292,7 @@ def pre_process_qseis06_strain_rate(
                             order=order_ind,
                         )
 
-    path_nd_without_Q = os.path.join(path_green, "noQ.nd")
+    path_nd_without_Q = os.path.join(path_green, "noq.nd")
     if path_nd is not None:
         convert_earth_model_nd2nd_without_Q(path_nd, path_nd_without_Q)
 

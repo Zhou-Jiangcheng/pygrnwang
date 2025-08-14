@@ -82,7 +82,7 @@ def pre_process_spgrn2020(
     with open(os.path.join(path_green, "group_list.pkl"), "wb") as fw:
         pickle.dump(group_list, fw)  # type: ignore
 
-    path_nd_without_Q = os.path.join(path_green, "noQ.nd")
+    path_nd_without_Q = os.path.join(path_green, "noq.nd")
     convert_earth_model_nd2nd_without_Q(path_nd, path_nd_without_Q)
 
     params = {

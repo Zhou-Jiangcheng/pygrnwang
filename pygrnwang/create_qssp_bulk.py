@@ -20,7 +20,7 @@ from .create_qssp import (
     convert_pd2bin_qssp2020,
 )
 from .utils import group, convert_earth_model_nd2nd_without_Q
-from .pytaup import create_tpts_table
+from .obspy_taup import create_tpts_table
 
 
 def pre_process_spec(
@@ -284,7 +284,7 @@ def pre_process_qssp2020(
         physical_dispersion,
     )
 
-    path_nd_without_Q = os.path.join(path_green, "noQ.nd")
+    path_nd_without_Q = os.path.join(path_green, "noq.nd")
     convert_earth_model_nd2nd_without_Q(path_nd, path_nd_without_Q)
 
     # creating tp and ts tables

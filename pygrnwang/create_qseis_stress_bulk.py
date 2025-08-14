@@ -16,7 +16,7 @@ from .create_qseis_stress import (
     call_qseis_stress,
     convert_pd2bin_qseis_stress,
 )
-from .pytaup import create_tpts_table
+from .obspy_taup import create_tpts_table, remove_npz_file
 from .utils import group, convert_earth_model_nd2nd_without_Q
 
 
@@ -89,7 +89,7 @@ def pre_process_qseis_stress(
                 earth_model_layer_num=earth_model_layer_num,
             )
 
-    path_nd_without_Q = os.path.join(path_green, "noQ.nd")
+    path_nd_without_Q = os.path.join(path_green, "noq.nd")
     convert_earth_model_nd2nd_without_Q(path_nd, path_nd_without_Q)
 
     # creating tp and ts tables
@@ -104,8 +104,7 @@ def pre_process_qseis_stress(
                 path_nd_without_Q,
                 check_finished_tpts_table,
             )
-    if jpype.isJVMStarted():
-        jpype.shutdownJVM()
+    remove_npz_file(model_name=path_nd_without_Q)
 
     green_info = {
         "processes_num": processes_num,

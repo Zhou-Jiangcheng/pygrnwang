@@ -48,7 +48,7 @@ def pre_process_edgrn2(
             earth_model_layer_num,
         )
 
-    path_nd_without_Q = os.path.join(path_green, "noQ.nd")
+    path_nd_without_Q = os.path.join(path_green, "noq.nd")
     convert_earth_model_nd2nd_without_Q(path_nd, path_nd_without_Q)
 
     green_info = {

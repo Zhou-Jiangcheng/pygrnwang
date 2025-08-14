@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 
 from .signal_process import linear_interp
-from .pytaup import cal_first_p_s
+from .obspy_taup import cal_first_p_s
 
 
 def read_source_array(source_inds, path_input, shift2corner=False, source_shapes=None):
