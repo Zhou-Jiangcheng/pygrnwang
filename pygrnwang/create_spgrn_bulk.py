@@ -5,7 +5,10 @@ import platform
 import json
 import datetime
 
-from mpi4py import MPI
+try:
+    from mpi4py import MPI
+except:
+    pass
 from multiprocessing import Pool
 from .create_spgrn import (
     create_dir_spgrn2020,

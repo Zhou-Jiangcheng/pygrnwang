@@ -8,7 +8,10 @@ from multiprocessing import Pool
 
 import numpy as np
 from tqdm import tqdm
-from mpi4py import MPI
+try:
+    from mpi4py import MPI
+except:
+    pass
 import jpype
 
 from .create_qseis import (

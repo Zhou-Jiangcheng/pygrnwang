@@ -10,7 +10,10 @@ from multiprocessing import Pool
 import numpy as np
 from tqdm import tqdm
 import jpype
-from mpi4py import MPI
+try:
+    from mpi4py import MPI
+except:
+    pass
 
 from .create_qssp import (
     mt_com_list,

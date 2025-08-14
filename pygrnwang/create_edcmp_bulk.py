@@ -8,7 +8,10 @@ import math
 
 import numpy as np
 from tqdm import tqdm
-from mpi4py import MPI
+try:
+    from mpi4py import MPI
+except:
+    pass
 from multiprocessing import Pool
 
 from .create_edcmp import create_inp_edcmp2, call_edcmp2

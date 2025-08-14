@@ -6,7 +6,10 @@ import json
 import datetime
 
 from tqdm import tqdm
-from mpi4py import MPI
+try:
+    from mpi4py import MPI
+except:
+    pass
 from multiprocessing import Pool
 
 from .create_edgrn import create_inp_edgrn2, call_edgrn2
