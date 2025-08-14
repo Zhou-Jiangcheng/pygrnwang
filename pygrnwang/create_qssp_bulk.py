@@ -19,7 +19,7 @@ from .create_qssp import (
     convert_pd2bin_qssp2020,
 )
 from .utils import group, convert_earth_model_nd2nd_without_Q
-from .obspy_taup import create_tpts_table
+from .obspy_taup import create_tpts_table, remove_npz_file
 
 
 def pre_process_spec(
@@ -298,6 +298,7 @@ def pre_process_qssp2020(
                 path_nd_without_Q,
                 check_finished_tpts_table,
             )
+    remove_npz_file(model_name='noq.nd')
 
     green_info = {
         "processes_num": processes_num,
