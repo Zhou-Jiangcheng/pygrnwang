@@ -48,7 +48,7 @@ class CustomBuildPy(_build_py):
                 compile_command = (
                     f"gfortran {fortran_src_dir}/*.f -O3 "
                     f"-ffixed-line-length-none -std=legacy "
-                    f"-fPIC -Wl,--no-relax -o {output_binary}"
+                    f"-o {output_binary}" # -fPIC -Wl,--no-relax  can be added in linux if needed
                 )
             else:
                 compile_command = (

@@ -10,6 +10,7 @@ from multiprocessing import Pool
 import numpy as np
 from tqdm import tqdm
 import jpype
+
 try:
     from mpi4py import MPI
 except:
@@ -344,7 +345,9 @@ def pre_process_qssp2020(
         file.write(json_str)
 
 
-def create_grnlib_qssp2020_sequential(path_green, cal_spec=True, check_finished=False):
+def create_grnlib_qssp2020_sequential(
+    path_green, cal_spec=True, check_finished=False, convert_pd2bin=True, remove_pd=True
+):
     if cal_spec:
         with open(os.path.join(path_green, "group_list_spec.pkl"), "rb") as fr:
             group_list_spec = pickle.load(fr)
@@ -365,12 +368,14 @@ def create_grnlib_qssp2020_sequential(path_green, cal_spec=True, check_finished=
             item[i] = item[i] + [path_green, check_finished]
             call_qssp2020(*item[i])
 
-    convert_pd2bin_qssp2020_all(path_green)
-    remove_dat_files(path_green)
+    if convert_pd2bin:
+        convert_pd2bin_qssp2020_all(path_green)
+    if remove_pd:
+        remove_dat_files(path_green)
 
 
-def create_grnlib_qssp2020_parallel_single_node(
-    path_green, cal_spec=True, check_finished=False
+def create_grnlib_qssp2020_parallel(
+    path_green, cal_spec=True, check_finished=False, convert_pd2bin=True, remove_pd=True
 ):
     if cal_spec:
         with open(os.path.join(path_green, "group_list_spec.pkl"), "rb") as fr:
@@ -399,6 +404,11 @@ def create_grnlib_qssp2020_parallel_single_node(
         r.get()
         pool.close()
         pool.join()
+
+    if convert_pd2bin:
+        convert_pd2bin_qssp2020_all(path_green)
+    if remove_pd:
+        remove_dat_files(path_green)
 
 
 def create_grnlib_qssp2020_spec_parallel_multi_nodes(path_green, check_finished=False):
