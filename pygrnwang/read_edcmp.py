@@ -42,7 +42,7 @@ def interpolate_values(xmin, xmax, nx, ymin, ymax, ny, v_array, obs_array):
 def seek_edcmp2(
     path_green: str,
     output_type: str,
-    obs_array: np.array,
+    obs_array: np.ndarray,
     geo_coordinate=True,
 ):
     """
