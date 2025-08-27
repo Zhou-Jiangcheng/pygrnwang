@@ -156,7 +156,7 @@ def create_grnlib_spgrn2020_sequential(path_green, check_finished=False):
     print("run time:%s" % str(e - s))
 
 
-def create_grnlib_spgrn2020_parallel_single_node(path_green, check_finished=False):
+def create_grnlib_spgrn2020_parallel(path_green, check_finished=False):
     s = datetime.datetime.now()
     with open(os.path.join(path_green, "group_list.pkl"), "rb") as fr:
         group_list = pickle.load(fr)

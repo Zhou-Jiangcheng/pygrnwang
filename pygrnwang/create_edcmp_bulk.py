@@ -169,7 +169,7 @@ def compute_static_stress_edcmp2_sequential(path_green, check_finished=False):
     # print("run time:%s" % str(e - s))
 
 
-def compute_static_stress_edcmp2_parallel_single_node(path_green, check_finished=False):
+def compute_static_stress_edcmp2_parallel(path_green, check_finished=False):
     # s = datetime.datetime.now()
     with open(os.path.join(path_green, "group_list_edcmp.pkl"), "rb") as fr:
         group_list_edcmp = pickle.load(fr)

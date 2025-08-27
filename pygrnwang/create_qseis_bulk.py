@@ -379,7 +379,7 @@ def create_grnlib_qseis06_sequential(
         convert_pd2bin_qseis06_all(path_green, remove_pd)
 
 
-def create_grnlib_qseis06_parallel_single_node(
+def create_grnlib_qseis06_parallel(
     path_green, check_finished=False, convert_pd2bin=True, remove_pd=True
 ):
     with open(os.path.join(path_green, "group_list.pkl"), "rb") as fr:

@@ -91,7 +91,7 @@ def create_grnlib_edgrn2_sequential(path_green, check_finished=False):
     # return e - s
 
 
-def create_grnlib_edgrn2_parallel_single_node(path_green, check_finished=False):
+def create_grnlib_edgrn2_parallel(path_green, check_finished=False):
     s = datetime.datetime.now()
     with open(os.path.join(path_green, "group_list_edgrn.pkl"), "rb") as fr:
         group_list_edgrn = pickle.load(fr)
