@@ -46,6 +46,7 @@ def seek_edcmp2(
     geo_coordinate=True,
 ):
     """
+    ee en ez nn nz zz
     :param path_green: the root dir of Green's function lib
     :param output_type: 'disp','strain','stress','tilt'
     :param obs_array:
@@ -119,4 +120,13 @@ def seek_edcmp2(
             x_min, x_max, nx, y_min, y_max, ny, v_dep_i, obs_array_dep_i
         )
         values_output[inds_i] = v_interp_dep_i
-    return values_output
+    values_output_enz = np.zeros_like(values_output)
+    # nn ee zz ne -ez -nz
+    # ee en ez nn nz zz
+    values_output_enz[:, 0] = values_output[:, 1]
+    values_output_enz[:, 1] = values_output[:, 3]
+    values_output_enz[:, 2] = -values_output[:, 4]
+    values_output_enz[:, 3] = values_output[:, 0]
+    values_output_enz[:, 4] = -values_output[:, 5]
+    values_output_enz[:, 5] = values_output[:, 2]
+    return values_output_enz
