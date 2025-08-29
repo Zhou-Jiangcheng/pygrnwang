@@ -291,13 +291,13 @@ c
 	    endif
 c
 	    if(dis.gt.r2)then
-	      print *,' Warning: too large distances ignored!'
+c	      print *,' Warning: too large distances ignored!'
 	      nwarn=nwarn+1
 	    else if(pzs(ips).lt.z1)then
-	      print *,' Warning: too shallow sources ignored!'
+c	      print *,' Warning: too shallow sources ignored!'
 	      nwarn=nwarn+1
 	    else if(pzs(ips).gt.z2)then
-	      print *,' Warning: too deep sources ignored!'
+c	      print *,' Warning: too deep sources ignored!'
 	      nwarn=nwarn+1
 	    else
 	      iz=idint((pzs(ips)-z1)/dz)+1
