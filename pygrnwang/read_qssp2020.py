@@ -4,7 +4,7 @@ import json
 import numpy as np
 import pandas as pd
 
-from .create_qssp import mt_com_list
+from .create_qssp2020 import mt_com_list
 from .utils import (
     shift_green2real_tpts,
     create_rotate_z_mat,
@@ -94,7 +94,7 @@ def seek_raw_qssp2020(
     else:
         raise ValueError(
             "output_type must in  disp | velo | acce | strain | strain_rate | "
-            "stress | stress_rate | rotation | rotation_rate | gravitation | gravimeter"
+            "stress | stress_rate | rota | rota_rate | gravitation | gravimeter"
         )
 
     for i_rtp in range(6):

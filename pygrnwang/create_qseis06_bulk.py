@@ -8,13 +8,14 @@ from multiprocessing import Pool
 
 import numpy as np
 from tqdm import tqdm
+
 try:
     from mpi4py import MPI
 except:
     pass
 import jpype
 
-from .create_qseis import (
+from .create_qseis06 import (
     create_dir_qseis06,
     create_inp_qseis06,
     create_inp_qseis06_points,
@@ -23,6 +24,11 @@ from .create_qseis import (
 )
 from .pytaup import create_tpts_table
 from .utils import group, convert_earth_model_nd2nd_without_Q
+
+
+# 新增：imap_unordered 的打包调用助手
+def _call_qseis06_star(args):
+    return call_qseis06(*args)
 
 
 def create_order_ind(order, diff_accu_order):
@@ -62,9 +68,9 @@ def pre_process_qseis06(
     print("preprocessing")
     os.makedirs(path_green, exist_ok=True)
     if platform.system() == "Windows":
-        path_bin_call = os.path.join(path_green, "qseis_stress.exe")
+        path_bin_call = os.path.join(path_green, "qseis06.exe")
     else:
-        path_bin_call = os.path.join(path_green, "qseis_stress.bin")
+        path_bin_call = os.path.join(path_green, "qseis06.bin")
     shutil.copy(path_bin, path_bin_call)
 
     N_dist, N_dist_group = None, None
@@ -200,9 +206,9 @@ def pre_process_qseis06_strain_rate(
     if diff_accu_order not in [2, 4, 6, 8]:
         raise ValueError("diff_accu_order must be in [2,4,6,8]")
     if platform.system() == "Windows":
-        path_bin_call = os.path.join(path_green, "qseis_stress.exe")
+        path_bin_call = os.path.join(path_green, "qseis06.exe")
     else:
-        path_bin_call = os.path.join(path_green, "qseis_stress.bin")
+        path_bin_call = os.path.join(path_green, "qseis06.bin")
     shutil.copy(path_bin, path_bin_call)
 
     N_dist, N_dist_group = None, None
@@ -384,15 +390,28 @@ def create_grnlib_qseis06_parallel(
 ):
     with open(os.path.join(path_green, "group_list.pkl"), "rb") as fr:
         group_list = pickle.load(fr)
-    for item in tqdm(group_list, desc="Computing Green's Func Lib"):
-        # print("computing " + str(item))
-        for i in range(len(item)):
-            item[i] = item[i] + [path_green, check_finished]
-        pool = Pool()
-        r = pool.starmap_async(call_qseis06, item)
-        r.get()
-        pool.close()
-        pool.join()
+    # 展平任务
+    tasks = []
+    for grp in group_list:
+        for item in grp:
+            tasks.append(tuple(item + [path_green, check_finished]))
+
+    # 尝试读取进程数
+    processes = None
+    try:
+        with open(os.path.join(path_green, "green_lib_info.json"), "r") as fr:
+            processes = json.load(fr).get("processes_num", None)
+    except Exception:
+        pass
+
+    with Pool(processes=processes) as pool:
+        for _ in tqdm(
+            pool.imap_unordered(_call_qseis06_star, tasks, chunksize=1),
+            total=len(tasks),
+            desc="Computing Green's Func Lib",
+        ):
+            pass
+
     if convert_pd2bin:
         convert_pd2bin_qseis06_all(path_green, remove_pd)
 

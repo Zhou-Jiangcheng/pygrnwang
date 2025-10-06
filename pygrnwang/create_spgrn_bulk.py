@@ -4,6 +4,7 @@ import shutil
 import platform
 import json
 import datetime
+from tqdm import tqdm  # 新增
 
 try:
     from mpi4py import MPI
@@ -17,6 +18,11 @@ from .create_spgrn import (
 )
 from .read_green_info_spgrn2020 import read_green_info_spgrn2020
 from .utils import group, convert_earth_model_nd2nd_without_Q
+
+
+# 新增：imap_unordered 的打包调用助手
+def _call_spgrn2020_star(args):
+    return call_spgrn2020(*args)
 
 
 def pre_process_spgrn2020(
@@ -160,15 +166,28 @@ def create_grnlib_spgrn2020_parallel(path_green, check_finished=False):
     s = datetime.datetime.now()
     with open(os.path.join(path_green, "group_list.pkl"), "rb") as fr:
         group_list = pickle.load(fr)
-    for item in group_list:
-        print("computing " + str(item) + " km")
-        for i in range(len(item)):
-            item[i] = item[i] + [path_green, check_finished]
-        pool = Pool()
-        r = pool.starmap_async(call_spgrn2020, item)
-        r.get()
-        pool.close()
-        pool.join()
+    # 展平任务
+    tasks = []
+    for grp in group_list:
+        for item in grp:
+            tasks.append(tuple(item + [path_green, check_finished]))
+
+    # 读取进程数（可选）
+    processes = None
+    try:
+        with open(os.path.join(path_green, "green_lib_info.json"), "r") as fr:
+            processes = json.load(fr).get("processes_num", None)
+    except Exception:
+        pass
+
+    with Pool(processes=processes) as pool:
+        for _ in tqdm(
+            pool.imap_unordered(_call_spgrn2020_star, tasks, chunksize=1),
+            total=len(tasks),
+            desc="Computing SPGRN2020 library",
+        ):
+            pass
+
     update_green_info_lib_json(path_green, group_list[0][0][0], group_list[0][0][1])
     e = datetime.datetime.now()
     print("run time:" + str(e - s))

@@ -6,14 +6,18 @@ import json
 import datetime
 
 from tqdm import tqdm
+from multiprocessing import Pool
 try:
     from mpi4py import MPI
 except:
     pass
-from multiprocessing import Pool
 
 from .create_edgrn import create_inp_edgrn2, call_edgrn2
 from .utils import group, convert_earth_model_nd2nd_without_Q
+
+
+def _call_edgrn2_star(args):
+    return call_edgrn2(*args)
 
 
 def pre_process_edgrn2(
@@ -79,7 +83,7 @@ def pre_process_edgrn2(
 
 
 def create_grnlib_edgrn2_sequential(path_green, check_finished=False):
-    # s = datetime.datetime.now()
+    s = datetime.datetime.now()
     with open(os.path.join(path_green, "group_list_edgrn.pkl"), "rb") as fr:
         group_list_edgrn = pickle.load(fr)
     for item in tqdm(group_list_edgrn, desc="Computing Green's function library"):
@@ -87,25 +91,34 @@ def create_grnlib_edgrn2_sequential(path_green, check_finished=False):
             # print("computing " + str(item[i]) + " km")
             call_edgrn2(item[i], path_green, check_finished)
     e = datetime.datetime.now()
-    # print("run time:%s" % str(e - s))
-    # return e - s
+    print("run time:%s" % str(e - s))
+    return e - s
 
 
 def create_grnlib_edgrn2_parallel(path_green, check_finished=False):
     s = datetime.datetime.now()
     with open(os.path.join(path_green, "group_list_edgrn.pkl"), "rb") as fr:
         group_list_edgrn = pickle.load(fr)
-    for item in tqdm(group_list_edgrn, desc="Computing Green's function library"):
-        # print("computing " + str(item) + " km")
-        for i in range(len(item)):
-            item[i] = [item[i]] + [path_green, check_finished]
-        pool = Pool()
-        r = pool.starmap_async(call_edgrn2, item)
-        r.get()
-        pool.close()
-        pool.join()
+    tasks = []
+    for grp in group_list_edgrn:
+        for d in grp:
+            tasks.append((d, path_green, check_finished))
+
+    processes = None
+    try:
+        with open(os.path.join(path_green, "green_lib_info.json"), "r") as fr:
+            processes = json.load(fr).get("processes_num", None)
+    except Exception:
+        pass
+
+    with Pool(processes=processes) as pool:
+        for _ in tqdm(
+            pool.imap_unordered(_call_edgrn2_star, tasks, chunksize=1),
+            total=len(tasks),
+            desc="Computing Green's function library",
+        ):
+            pass
     e = datetime.datetime.now()
-    # print("run time:" + str(e - s))
     return e - s
 
 

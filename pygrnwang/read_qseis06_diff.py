@@ -3,12 +3,12 @@ import json
 
 import numpy as np
 
-from .read_qseis import (
+from .read_qseis06 import (
     read_time_series_qseis06_bin,
     read_time_series_qseis06_ascii,
     synthesize_qseis06,
 )
-from .create_qseis_bulk import create_order_ind
+from .create_qseis06_bulk import create_order_ind
 from .focal_mechanism import check_convert_fm
 from .geo import rotate_symmetric_tensor_series
 from .pytaup import read_tpts_table

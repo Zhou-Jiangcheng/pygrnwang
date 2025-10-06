@@ -5,18 +5,23 @@ import pickle
 import json
 import datetime
 import math
+from multiprocessing import Pool
 
 import numpy as np
 from tqdm import tqdm
+
 try:
     from mpi4py import MPI
 except:
     pass
-from multiprocessing import Pool
 
 from .create_edcmp import create_inp_edcmp2, call_edcmp2
 from .utils import group
 from .geo import d2km, convert_sub_faults_geo2ned, cal_max_dist_from_2d_points
+
+
+def _call_edcmp2_star(args):
+    return call_edcmp2(*args)
 
 
 def pre_process_edcmp2(
@@ -170,19 +175,30 @@ def compute_static_stress_edcmp2_sequential(path_green, check_finished=False):
 
 
 def compute_static_stress_edcmp2_parallel(path_green, check_finished=False):
-    # s = datetime.datetime.now()
+    s = datetime.datetime.now()
     with open(os.path.join(path_green, "group_list_edcmp.pkl"), "rb") as fr:
         group_list_edcmp = pickle.load(fr)
-    for item in tqdm(group_list_edcmp, desc="Computing static stress"):
-        for i in range(len(item)):
-            item[i] = [item[i]] + [path_green, check_finished]
-        pool = Pool()
-        r = pool.starmap_async(call_edcmp2, item)
-        r.get()
-        pool.close()
-        pool.join()
-    # e = datetime.datetime.now()
-    # print("run time:" + str(e - s))
+    tasks = []
+    for grp in group_list_edcmp:
+        for d in grp:
+            tasks.append((d, path_green, check_finished))
+
+    processes = None
+    try:
+        with open(os.path.join(path_green, "green_lib_info.json"), "r") as fr:
+            processes = json.load(fr).get("processes_num", None)
+    except Exception:
+        pass
+
+    with Pool(processes=processes) as pool:
+        for _ in tqdm(
+            pool.imap_unordered(_call_edcmp2_star, tasks, chunksize=1),
+            total=len(tasks),
+            desc="Computing static stress",
+        ):
+            pass
+    e = datetime.datetime.now()
+    return e - s
 
 
 def create_grnlib_edcmp2_parallel_multi_nodes(path_green, check_finished=False):

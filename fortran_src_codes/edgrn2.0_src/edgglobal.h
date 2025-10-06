@@ -9,7 +9,7 @@ c	  nrmax: max. no of traces;
 c	  nzsmax: max. no of source depth samples.
 c
       integer nzmax,lmax,nrmax,nzsmax
-      parameter(nzmax=1002,lmax=1000,nrmax=20001,nzsmax=1001)
+      parameter(nzmax=1002,lmax=1000,nrmax=10001,nzsmax=401)
 c
 c	index parameters for bessel function table
 c

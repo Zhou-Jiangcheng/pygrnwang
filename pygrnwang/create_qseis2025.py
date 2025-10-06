@@ -6,16 +6,16 @@ import numpy as np
 import pandas as pd
 
 from .utils import convert_earth_model_nd2inp, call_exe
-from .qseis_stress_inp import s as str_inp
+from .qseis2025inp import s as str_inp
 
 
-def create_dir_qseis_stress(
-    path_green,
-    event_depth,
-    receiver_depth,
-    dist_range,
-    delta_dist,
-    N_each_group=500,
+def create_dir_qseis2025(
+        path_green,
+        event_depth,
+        receiver_depth,
+        dist_range,
+        delta_dist,
+        N_each_group=500,
 ):
     sub_dir = str(
         os.path.join(path_green, "%.2f" % event_depth, "%.2f" % receiver_depth)
@@ -27,28 +27,31 @@ def create_dir_qseis_stress(
     return N_dist, N_dist_group
 
 
-def create_inp_qseis_stress(
-    path_green,
-    event_depth,
-    receiver_depth,
-    dist_range,
-    delta_dist,
-    N_dist,
-    N_dist_group,
-    N_each_group,
-    time_window,
-    sampling_interval,
-    slowness_int_algorithm=0,
-    slowness_window=None,
-    time_reduction_velo=0,
-    wavenumber_sampling_rate=12,
-    anti_alias=0.01,
-    free_surface=True,
-    wavelet_duration=4,
-    wavelet_type=1,
-    flat_earth_transform=True,
-    path_nd=None,
-    earth_model_layer_num=None,
+def create_inp_qseis2025(
+        path_green,
+        event_depth,
+        receiver_depth,
+        dist_range,
+        delta_dist,
+        N_dist,
+        N_dist_group,
+        N_each_group,
+        time_window,
+        sampling_interval,
+        output_observables,
+        slowness_int_algorithm=0,
+        eps_estimate_wavenumber=1e-6,
+        source_radius_ratio=0.05,
+        slowness_window=None,
+        time_reduction_velo=0,
+        wavenumber_sampling_rate=12,
+        anti_alias=0.01,
+        free_surface=True,
+        wavelet_duration=4,
+        wavelet_type=1,
+        flat_earth_transform=True,
+        path_nd=None,
+        earth_model_layer_num=None,
 ):
     path_sub_dir = str(
         os.path.join(path_green, "%.2f" % event_depth, "%.2f" % receiver_depth)
@@ -58,7 +61,7 @@ def create_inp_qseis_stress(
     lines = str_inp.split("\n")
     lines = [line + "\n" for line in lines]
 
-    lines_earth = lines[207:-22]
+    lines_earth = lines[209:-22]
     lines_end = lines[-22:]
 
     # SOURCE PARAMETERS
@@ -75,33 +78,37 @@ def create_inp_qseis_stress(
     lines[47] = "%d %f\n" % (1, time_reduction_velo)
 
     # WAVENUMBER INTEGRATION PARAMETERS
-    lines[66] = "%d\n" % slowness_int_algorithm
+    lines[73] = "%d\n" % slowness_int_algorithm
+    lines[74] = "%f %f\n" % (eps_estimate_wavenumber, source_radius_ratio)
     if slowness_window is not None:
-        lines[67] = "%f %f %f %f\n" % (
+        lines[75] = "%f %f %f %f\n" % (
             slowness_window[0],
             slowness_window[1],
             slowness_window[2],
             slowness_window[3],
         )
     else:
-        lines[67] = "0.0 0.0 0.0 0.0\n"
-    lines[68] = "%f\n" % wavenumber_sampling_rate
-    lines[69] = "%f\n" % anti_alias
+        lines[75] = "0.0 0.0 0.0 0.0\n"
+    lines[76] = "%f\n" % wavenumber_sampling_rate
+    lines[77] = "%f\n" % anti_alias
 
     # OPTIONS FOR PARTIAL SOLUTIONS
     if free_surface:
-        lines[103] = "0\n"
+        lines[111] = "0\n"
     else:
-        lines[103] = "1\n"
+        lines[111] = "1\n"
 
     # SOURCE TIME FUNCTION (WAVELET) PARAMETERS (Note 3)
-    lines[124] = "%d %d\n" % (wavelet_duration, wavelet_type)
+    lines[132] = "%d %d\n" % (wavelet_duration, wavelet_type)
+
+    # OUTPUT FILES FOR GREEN'S FUNCTIONS (Note 4)
+    lines[181] = " ".join(["%d" % output_observables[_] for _ in range(5)]) + "\n"
 
     # GLOBAL MODEL PARAMETERS (Note 5)
     if flat_earth_transform:
-        lines[191] = "1\n"
+        lines[217] = "1\n"
     else:
-        lines[191] = "0\n"
+        lines[217] = "0\n"
 
     if path_nd is not None:
         lines_earth = convert_earth_model_nd2inp(
@@ -111,8 +118,8 @@ def create_inp_qseis_stress(
         earth_model_layer_num = len(lines_earth)
     else:
         lines_earth = lines_earth[:earth_model_layer_num]
-    lines[200] = "%d\n" % earth_model_layer_num
-    lines = lines[:207] + lines_earth + lines_end
+    lines[226] = "%d\n" % earth_model_layer_num
+    lines = lines[:227] + lines_earth + lines_end
 
     for n in range(N_dist_group - 1):
         lines[44] = "%d\n" % N_each_group
@@ -136,8 +143,8 @@ def create_inp_qseis_stress(
     return path_inp
 
 
-def call_qseis_stress(
-    event_depth, receiver_depth, n_group, path_green, check_finished=False
+def call_qseis2025(
+        event_depth, receiver_depth, n_group, path_green, check_finished=False
 ):
     sub_sub_dir = str(
         os.path.join(
@@ -152,9 +159,9 @@ def call_qseis_stress(
     path_finished = os.path.join(sub_sub_dir, ".finished")
 
     if (
-        check_finished
-        and os.path.exists(path_finished)
-        and len(os.listdir(sub_sub_dir)) > 2
+            check_finished
+            and os.path.exists(path_finished)
+            and len(os.listdir(sub_sub_dir)) > 2
     ):
         with open(path_finished, "r") as fr:
             output = fr.readlines()
@@ -164,41 +171,58 @@ def call_qseis_stress(
         path_green=path_green,
         path_inp=path_inp,
         path_finished=path_finished,
-        name="qseis_stress",
+        name="qseis2025",
     )
     return output
 
 
-def convert_pd2bin_qseis_stress(path_greenfunc, remove=False):
-    for com in ["tr", "tz", "tv", "szz", "szr", "srr", "stt"]:
+def convert_pd2bin_qseis2025(path_greenfunc, remove=False):
+    for com in [
+        "tr",
+        "tz",
+        "tv",
+        "ezz",
+        "ezr",
+        "err",
+        "ett",
+        "szz",
+        "szr",
+        "srr",
+        "stt",
+        "ot",
+    ]:
         time_series_com = []
         for stype in ["ex", "ss", "ds", "cl"]:
             path_ascii = os.path.join(path_greenfunc, "%s.%s" % (stype, com))
             if not os.path.exists(path_ascii):
-                warnings.warn("ascii file %s do not exist, skip" % path_ascii)
+                # warnings.warn("ascii file %s do not exist, skip" % path_ascii)
                 continue
             stype_com = pd.read_csv(path_ascii, sep="\\s+").to_numpy()
             time_series_com.append(stype_com[:, 1:])
             if remove:
                 os.remove(path_ascii)
-        output_data = np.concatenate(
-            [time_series_com[_] for _ in range(4)], dtype=np.float32)
-        np.save(os.path.join(path_greenfunc, "grn_%s.npy" % com), output_data)
+        if len(time_series_com) == 4:
+            output_data = np.concatenate(
+                [time_series_com[_] for _ in range(4)], dtype=np.float32
+            )
+            np.save(str(os.path.join(path_greenfunc, "grn_%s.npy" % com)), output_data)
 
-    for com in ["tt", "szt", "srt"]:
+    for com in ["tt", "ezt", "ert", "szt", "srt", "oz", "or"]:
         time_series_com = []
         for stype in ["ss", "ds"]:
             path_ascii = os.path.join(path_greenfunc, "%s.%s" % (stype, com))
             if not os.path.exists(path_ascii):
-                warnings.warn("ascii file %s do not exist, skip" % path_ascii)
+                # warnings.warn("ascii file %s do not exist, skip" % path_ascii)
                 continue
             stype_com = pd.read_csv(path_ascii, sep="\\s+").to_numpy()
             time_series_com.append(stype_com[:, 1:])
             if remove:
                 os.remove(path_ascii)
-        output_data = np.concatenate(
-            [time_series_com[_] for _ in range(2)], dtype=np.float32)
-        np.save(os.path.join(path_greenfunc, "grn_%s.npy" % com), output_data)
+        if len(time_series_com) == 2:
+            output_data = np.concatenate(
+                [time_series_com[_] for _ in range(2)], dtype=np.float32
+            )
+            np.save(os.path.join(path_greenfunc, "grn_%s.npy" % com), output_data)
 
 
 if __name__ == "__main__":

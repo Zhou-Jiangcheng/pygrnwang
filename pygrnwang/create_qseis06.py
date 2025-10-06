@@ -4,7 +4,7 @@ import math
 import numpy as np
 import pandas as pd
 
-from .qseis_stress_inp import s as str_inp
+from .qseis06inp import s as str_inp
 from .utils import convert_earth_model_nd2inp, call_exe
 
 
@@ -264,7 +264,7 @@ def call_qseis06(
         path_green=path_green,
         path_inp=path_inp,
         path_finished=path_finished,
-        name="qseis_stress",
+        name="qseis06",
     )
     return output
 

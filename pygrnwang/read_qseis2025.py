@@ -6,27 +6,60 @@ import pandas as pd
 import scipy.signal as signal
 
 from .focal_mechanism import check_convert_fm
-from .geo import rotate_symmetric_tensor_series
+from .geo import rotate_rtz_to_enz, rotate_symmetric_tensor_series
 from .pytaup import read_tpts_table
 from .utils import read_layerd_material, shift_green2real_tpts
 from .signal_process import resample
 
+# Define output type lists
+one_com_list = ["volume"]
+three_com_list = ["disp", "velo"]
+rota_com_list = ["rota", "rota_rate"]
+six_com_list = ["strain", "strain_rate", "stress", "stress_rate"]
 
-def read_time_series_qseis06_stress_ascii(path_greenfunc, start_count):
+
+def get_outfile_name_list(output_type):
+    if output_type == "volume":
+        name_list_psv = ["tv"]
+        name_list_sh = []
+    elif output_type == "disp" or output_type == "velo":
+        name_list_psv = ["tz", "tr"]
+        name_list_sh = ["tt"]
+    elif output_type == "strain" or output_type == "strain_rate":
+        name_list_psv = ["ezz", "ezr", "err", "ett"]
+        name_list_sh = ["ezt", "ert"]
+    elif output_type == "stress" or output_type == "stress_rate":
+        name_list_psv = ["szz", "szr", "srr", "stt"]
+        name_list_sh = ["szt", "srt"]
+    elif output_type == "rota" or output_type == "rota_rate":
+        name_list_psv = ["ot"]
+        name_list_sh = ["oz", "or"]
+    else:
+        raise ValueError(
+            "output_type must in  disp | velo | strain | strain_rate | "
+            "stress | stress_rate | rota | rota_rate"
+        )
+    return name_list_psv, name_list_sh
+
+
+def read_time_series_qseis2025_ascii(
+        path_greenfunc, start_count, output_type="disp"
+):
     time_seris_list = []
     start_count = start_count + 1
-    for com in ["szz", "szr", "srr", "stt"]:
+    name_list_psv, name_list_sh = get_outfile_name_list(output_type)
+    for com in name_list_psv:
         ex_com = pd.read_csv(
-            os.path.join(path_greenfunc, "ex.%s" % com), sep="\\s+"
+            str(os.path.join(path_greenfunc, "ex.%s" % com)), sep="\\s+"
         ).to_numpy()  # type:ignore
         ss_com = pd.read_csv(
-            os.path.join(path_greenfunc, "ss.%s" % com), sep="\\s+"
+            str(os.path.join(path_greenfunc, "ss.%s" % com)), sep="\\s+"
         ).to_numpy()  # type:ignore
         ds_com = pd.read_csv(
-            os.path.join(path_greenfunc, "ds.%s" % com), sep="\\s+"
+            str(os.path.join(path_greenfunc, "ds.%s" % com)), sep="\\s+"
         ).to_numpy()  # type:ignore
         cl_com = pd.read_csv(
-            os.path.join(path_greenfunc, "cl.%s" % com), sep="\\s+"
+            str(os.path.join(path_greenfunc, "cl.%s" % com)), sep="\\s+"
         ).to_numpy()  # type:ignore
         time_series_com = np.concatenate(
             [
@@ -38,8 +71,7 @@ def read_time_series_qseis06_stress_ascii(path_greenfunc, start_count):
         ).reshape(4, -1)
         time_series_com = np.array(time_series_com, dtype=np.float32)
         time_seris_list.append(time_series_com)
-
-    for com in ["szt", "srt"]:
+    for com in name_list_sh:
         ss_r = pd.read_csv(
             os.path.join(path_greenfunc, "ss.%s" % com), sep="\\s+"
         ).to_numpy()  # type:ignore
@@ -54,27 +86,32 @@ def read_time_series_qseis06_stress_ascii(path_greenfunc, start_count):
         ).reshape(2, -1)
         time_series_com = np.array(time_series_com, dtype=np.float32)
         time_seris_list.append(time_series_com)
-    return time_seris_list
+    return name_list_psv, name_list_sh, time_seris_list
 
 
-def read_time_series_qseis06_stress_bin(path_greenfunc, start_count):
+def read_time_series_qseis2025_bin(
+        path_greenfunc,
+        start_count,
+        output_type,
+):
     time_series_list = []
-    for com in ["szz", "szr", "srr", "stt"]:
+    name_list_psv, name_list_sh = get_outfile_name_list(output_type)
+    for com in name_list_psv:
         time_series_com = np.load(os.path.join(path_greenfunc, "grn_%s.npy" % com))
         time_series_list.append(time_series_com[:, start_count].reshape(4, -1))
-    for com in ["szt", "srt"]:
+    for com in name_list_sh:
         time_series_com = np.load(os.path.join(path_greenfunc, "grn_%s.npy" % com))
         time_series_list.append(time_series_com[:, start_count].reshape(2, -1))
-    return time_series_list
+    return name_list_psv, name_list_sh, time_series_list
 
 
 def synthesize_rzv(time_series, m1):
     # ex,ss,ds,cl
     rzv = (
-        time_series[0] * m1[0]
-        + time_series[1] * m1[1]
-        + time_series[2] * m1[2]
-        + time_series[3] * m1[3]
+            time_series[0] * m1[0]
+            + time_series[1] * m1[1]
+            + time_series[2] * m1[2]
+            + time_series[3] * m1[3]
     )
     return rzv
 
@@ -84,42 +121,23 @@ def synthesize_t(time_series, m2):
     return t
 
 
-def synthesize_przv_pt(time_series, pm1_paz):
-    m1 = pm1_paz
-    rt = (
-        time_series[0] * m1[0]
-        + time_series[1] * m1[1]
-        + time_series[2] * m1[2]
-        + time_series[3] * m1[3]
-    )
-    return rt
-
-
-def synthesize_pt_pt(time_series, pm2_paz):
-    m2 = pm2_paz
-    t = time_series[0] * m2[0] + time_series[1] * m2[1]
-    return t
-
-
-def seek_qseis06_stress(
-    path_green,
-    event_depth_km,
-    receiver_depth_km,
-    az_deg,
-    dist_km,
-    focal_mechanism,
-    srate,
-    output_type="stress",
-    rotate=True,
-    before_p=None,
-    pad_zeros=False,
-    shift=False,
-    only_seismograms=True,
-    model_name="ak135fc",
-    green_info=None,
+def seek_qseis2025(
+        path_green,
+        event_depth_km,
+        receiver_depth_km,
+        az_deg,
+        dist_km,
+        focal_mechanism,
+        srate,
+        output_type,
+        rotate=True,
+        before_p=None,
+        pad_zeros=False,
+        shift=False,
+        only_seismograms=True,
+        model_name="ak135fc",
+        green_info=None,
 ):
-    if output_type not in ["stress", "stress_rate"]:
-        raise ValueError("output_type must be stress or stress_rate")
     if green_info is None:
         with open(os.path.join(path_green, "green_lib_info.json"), "r") as fr:
             green_info = json.load(fr)
@@ -155,12 +173,20 @@ def seek_qseis06_stress(
 
     path_greenfunc_sub = os.path.join(path_greenfunc, "%d_0" % ind_group)
     if os.path.exists(os.path.join(path_greenfunc_sub, "grn_szt.npy")):
-        time_series_list = read_time_series_qseis06_stress_bin(
-            path_greenfunc=path_greenfunc_sub, start_count=start_count
+        name_list_psv, name_list_sh, time_series_list = (
+            read_time_series_qseis2025_bin(
+                path_greenfunc=path_greenfunc_sub,
+                start_count=start_count,
+                output_type=output_type,
+            )
         )
     else:
-        time_series_list = read_time_series_qseis06_stress_ascii(
-            path_greenfunc=path_greenfunc_sub, start_count=start_count
+        name_list_psv, name_list_sh, time_series_list = (
+            read_time_series_qseis2025_ascii(
+                path_greenfunc=path_greenfunc_sub,
+                start_count=start_count,
+                output_type=output_type,
+            )
         )
     """
     Note 4:
@@ -196,30 +222,54 @@ def seek_qseis06_stress(
     m1 = [exp, ss1 * sin_2az + ss2 * cos_2az, ds1 * cos_az + ds2 * sin_az, clvd]
     m2 = [ss1 * cos_2az - ss2 * sin_2az, ds1 * sin_az - ds2 * cos_az]
 
-    # ["szz", "szr", "srr", "stt"]
-    s_zz = synthesize_rzv(time_series=time_series_list[0], m1=m1)
-    s_zr = synthesize_rzv(time_series=time_series_list[1], m1=m1)
-    s_rr = synthesize_rzv(time_series=time_series_list[2], m1=m1)
-    s_tt = synthesize_rzv(time_series=time_series_list[3], m1=m1)
+    # p-sv
+    # ["tv,
+    # "tr", "tz",
+    # "ezz", "ezr", "err", "ett",
+    # "szz", "szr", "srr", "stt",
+    # "ot"]
+    # sh
+    # ["tt",
+    # "ezt", "ert",
+    # "szt", "srt",
+    # "oz", "or"]
+    if output_type in one_com_list:
+        uv = synthesize_rzv(time_series=time_series_list[0], m1=m1)
+        seismograms = np.array(uv)
+    elif output_type in three_com_list:
+        uz = -synthesize_rzv(time_series=time_series_list[0], m1=m1)
+        ur = synthesize_rzv(time_series=time_series_list[1], m1=m1)
+        ut = -synthesize_t(time_series=time_series_list[2], m2=m2)
+        if rotate:
+            seismograms = rotate_rtz_to_enz(az_deg, r=ur, t=ut, z=uz)
+        else:
+            seismograms = np.array([ur, ut, uz])
+    elif output_type in rota_com_list:
+        omega_t = -synthesize_rzv(time_series=time_series_list[0], m1=m1)
+        omega_z = -synthesize_t(time_series=time_series_list[1], m2=m2)
+        omega_r = synthesize_t(time_series=time_series_list[2], m2=m2)
+        if rotate:
+            seismograms = rotate_rtz_to_enz(az_deg, r=omega_r, t=omega_t, z=omega_z)
+        else:
+            seismograms = np.array([omega_r, omega_t, omega_z])
+    elif output_type in six_com_list:
+        s_zz = synthesize_rzv(time_series=time_series_list[0], m1=m1)
+        s_zr = synthesize_rzv(time_series=time_series_list[1], m1=m1)
+        s_rr = synthesize_rzv(time_series=time_series_list[2], m1=m1)
+        s_tt = synthesize_rzv(time_series=time_series_list[3], m1=m1)
+        s_zt = synthesize_t(time_series=time_series_list[4], m2=m2)
+        s_rt = synthesize_t(time_series=time_series_list[5], m2=m2)
 
-    # ["szt", "srt"]
-    s_zt = synthesize_t(time_series=time_series_list[4], m2=m2)
-    s_rt = synthesize_t(time_series=time_series_list[5], m2=m2)
-
-    # tv = synthesize_rzv(time_series=time_series_list[0], m1=m1)
-    # [_, rho, vp, vs, _, _] = read_layerd_material(
-    #     os.path.join(path_greenfunc_sub, "layered_model.dat"), grn_dep_receiver
-    # )
-    # mu = rho * vs**2
-    # lam = rho * vp**2 - 2 * mu
-
-    sigma_tensor = np.array(
-        [s_tt, s_rt, -s_zt, s_rr, -s_zr, s_zz]
-    )
-    if rotate:
-        seismograms = rotate_symmetric_tensor_series(sigma_tensor.T, az_rad).T
+        sigma_tensor = np.array([s_tt, s_rt, -s_zt, s_rr, -s_zr, s_zz])
+        if rotate:
+            seismograms = rotate_symmetric_tensor_series(sigma_tensor.T, az_rad).T
+        else:
+            seismograms = sigma_tensor
     else:
-        seismograms = sigma_tensor
+        raise ValueError(
+            "output_type must in  disp | velo | strain | strain_rate | "
+            "stress | stress_rate | rota | rota_rate"
+        )
 
     tpts_table = None
     if (before_p is not None) or shift or pad_zeros:
@@ -265,22 +315,24 @@ def seek_qseis06_stress(
             model_name=model_name,
         )
 
-    seismograms_resample = np.zeros((6, round(sampling_num * srate / srate_grn)))
-    for i in range(6):
+    seismograms_resample = np.zeros(
+        (len(seismograms), round(sampling_num * srate / srate_grn))
+    )
+    for i in range(len(seismograms)):
         seismograms_resample[i] = resample(
             seismograms[i], srate_old=srate_grn, srate_new=srate, zero_phase=True
         )
-    if wavelet_type == 1 and output_type == "stress":
+    if (wavelet_type == 1) and ("rate" not in output_type):
         seismograms_resample = np.cumsum(seismograms_resample, axis=1) / srate
-    elif wavelet_type == 2 and output_type == "stress_rate":
+    elif (wavelet_type == 2) and (("rate" in output_type) or (output_type == "velo")):
         seismograms_resample = (
-            signal.convolve(
-                seismograms_resample.T,
-                np.array([1, -1])[:, None],
-                mode="same",
-                method="auto",
-            ).T
-            / srate
+                signal.convolve(
+                    seismograms_resample.T,
+                    np.array([1, -1])[:, None],
+                    mode="same",
+                    method="auto",
+                ).T
+                / srate
         )
 
     if only_seismograms:
