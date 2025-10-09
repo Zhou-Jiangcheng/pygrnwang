@@ -53,6 +53,8 @@ def create_inp_qseis2025(
         path_nd=None,
         earth_model_layer_num=None,
 ):
+    dist_range = dist_range.copy()
+    output_observables = output_observables.copy()
     path_sub_dir = str(
         os.path.join(path_green, "%.2f" % event_depth, "%.2f" % receiver_depth)
     )
