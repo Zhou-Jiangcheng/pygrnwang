@@ -358,7 +358,7 @@ def create_grnlib_qssp2020_sequential(
             group_list_spec = pickle.load(fr)
         for item in tqdm(
                 group_list_spec,
-                desc="Compute the Green's function library in the transformed domain.",
+                desc="Compute the Green\'s function library in the transformed domain.",
         ):
             for i in range(len(item)):
                 item[i] = item[i] + [path_green, check_finished]
@@ -367,7 +367,7 @@ def create_grnlib_qssp2020_sequential(
     with open(os.path.join(path_green, "group_list_func.pkl"), "rb") as fr:
         group_list_func = pickle.load(fr)
     for item in tqdm(
-            group_list_func, desc="Compute the Green’s function library in the time domain."
+            group_list_func, desc="Compute the Green\'s function library in the time domain."
     ):
         for i in range(len(item)):
             item[i] = item[i] + [path_green, check_finished]
@@ -384,7 +384,6 @@ def create_grnlib_qssp2020_parallel(
 ):
     tasks = []
 
-    # spec 阶段任务
     if cal_spec:
         with open(os.path.join(path_green, "group_list_spec.pkl"), "rb") as fr:
             group_list_spec = pickle.load(fr)
@@ -392,7 +391,6 @@ def create_grnlib_qssp2020_parallel(
             for item in grp:
                 tasks.append(tuple(item + [path_green, check_finished]))
 
-    # 读取进程数（可选）
     processes = None
     try:
         with open(os.path.join(path_green, "green_lib_info.json"), "r") as fr:
@@ -400,29 +398,26 @@ def create_grnlib_qssp2020_parallel(
     except Exception:
         pass
 
-    # 单 Pool + 全局进度条
     with Pool(processes=processes) as pool:
         for _ in tqdm(
                 pool.imap_unordered(_call_qssp2020_star, tasks, chunksize=1),
                 total=len(tasks),
-                desc="Compute QSSP2020 Green’s libraries (Spec)",
+                desc="Compute QSSP2020 Green\'s library in the transformed domain.",
         ):
             pass
 
     tasks = []
-    # func 阶段任务
     with open(os.path.join(path_green, "group_list_func.pkl"), "rb") as fr:
         group_list_func = pickle.load(fr)
     for grp in group_list_func:
         for item in grp:
             tasks.append(tuple(item + [path_green, check_finished]))
 
-    # 单 Pool + 全局进度条
     with Pool(processes=processes) as pool:
         for _ in tqdm(
                 pool.imap_unordered(_call_qssp2020_star, tasks, chunksize=1),
                 total=len(tasks),
-                desc="Compute QSSP2020 Green’s libraries (Time)",
+                desc="Compute QSSP2020 Green\'s function library in the time domain.",
         ):
             pass
 

@@ -1,0 +1,52 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: edcmp2 - Win32 Release--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOKUME~1\wang\LOKALE~1\Temp\RSPCF.tmp" with contents
+[
+/compile_only /nologo /warn:nofileopt /module:"Release/" /object:"Release/" 
+"C:\WANG\edgrn+cmp-update2.0\edcmpf77_2.0\getdata.f"
+"C:\WANG\edgrn+cmp-update2.0\edcmpf77_2.0\edcoutput.f"
+"C:\WANG\edgrn+cmp-update2.0\edcmpf77_2.0\edcmain.f"
+"C:\WANG\edgrn+cmp-update2.0\edcmpf77_2.0\edcgrn.f"
+"C:\WANG\edgrn+cmp-update2.0\edcmpf77_2.0\edcdisc.f"
+"C:\WANG\edgrn+cmp-update2.0\edcmpf77_2.0\dc3d.f"
+"C:\WANG\edgrn+cmp-update2.0\edcmpf77_2.0\dc3d0.f"
+"C:\WANG\edgrn+cmp-update2.0\edcmpf77_2.0\okada.f"
+]
+Creating temporary file "C:\DOKUME~1\wang\LOKALE~1\Temp\RSPD0.tmp" with contents
+[
+kernel32.lib /nologo /subsystem:console /incremental:no /pdb:"Release/edcmp2.pdb" /machine:I386 /out:"Release/edcmp2.exe" 
+".\Release\okada.obj"
+".\Release\dc3d0.obj"
+".\Release\dc3d.obj"
+".\Release\edcdisc.obj"
+".\Release\edcgrn.obj"
+".\Release\edcmain.obj"
+".\Release\edcoutput.obj"
+".\Release\getdata.obj"
+]
+Creating command line "link.exe @C:\DOKUME~1\wang\LOKALE~1\Temp\RSPD0.tmp"
+<h3>Output Window</h3>
+Compiling Fortran...
+C:\WANG\edgrn+cmp-update2.0\edcmpf77_2.0\getdata.f
+C:\WANG\edgrn+cmp-update2.0\edcmpf77_2.0\edcoutput.f
+C:\WANG\edgrn+cmp-update2.0\edcmpf77_2.0\edcmain.f
+C:\WANG\edgrn+cmp-update2.0\edcmpf77_2.0\edcgrn.f
+C:\WANG\edgrn+cmp-update2.0\edcmpf77_2.0\edcdisc.f
+C:\WANG\edgrn+cmp-update2.0\edcmpf77_2.0\dc3d.f
+C:\WANG\edgrn+cmp-update2.0\edcmpf77_2.0\dc3d0.f
+C:\WANG\edgrn+cmp-update2.0\edcmpf77_2.0\okada.f
+Linking...
+
+
+
+<h3>Results</h3>
+edcmp2.exe - 0 error(s), 0 warning(s)
+</pre>
+</body>
+</html>
