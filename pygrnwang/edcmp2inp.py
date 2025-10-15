@@ -55,10 +55,10 @@ s = """#========================================================================
 #    dispfile, strainfile, stressfile, tiltfile, losfile
 #
 #    Note that all file or directory names should not be longer than 80
-#    characters. Directories must be ended by / (unix) or \ (dos)!
+#    characters. Directories must be ended by (unix) or (dos)!
 #===============================================================================
-'./'
-1          1          1           1
+''
+0          0          1           0
 'hs.disp'  'hs.strain'  'hs.stress'  'hs.tilt'
 #===============================================================================
 # RECTANGLAR DISLOCATION SOURCES
@@ -70,19 +70,19 @@ s = """#========================================================================
 #    length (strike direction) [m], and width (dip direction) [m],
 #    strike [deg], dip [deg], and rake [deg];
 # 3. ... for the 2. source ...
-# ...
-#                   N
-#                  /
-#                 /| strike
-#         Ref:-> @------------------------
-#                |\        p .            \ W
-#                :-\      i .              \ i
-#                |  \    l .                \ d
-#                :90 \  S .                  \ t
-#                |-dip\  .                    \ h
-#                :     \. | rake               \ 
-#                Z      -------------------------
-#                              L e n g t h
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
 #
 #    Note that if one of the parameters length and width = 0, then a line source
 #    will be considered and the dislocation parameter Slip has the unit m^2; if
@@ -118,7 +118,7 @@ s = """#========================================================================
 #    fundamental Green's functions: grndir, grnfiles(3);
 #
 #    Note that all file or directory names should not be longer than 80
-#    characters. Directories must be ended by / (unix) or \ (dos)!
+#    characters. Directories must be ended by (unix) or (dos)!
 #
 #    ELSE (homogeneous model) THEN
 #
@@ -126,7 +126,7 @@ s = """#========================================================================
 #    model: zrec [m], lambda [Pa], mu [Pa]
 #===============================================================================
 #  1
-#  '../edgrnfcts_bam/'  'edgrnhs.ss'  'edgrnhs.ds'  'edgrnhs.cl'
+#  ''  'edgrnhs.ss'  'edgrnhs.ds'  'edgrnhs.cl'
 0
 0.00d+00  30516224000  33701888000
 #================================end of input==================================="""

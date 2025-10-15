@@ -57,9 +57,9 @@ s = """#========================================================================
 #
 # 1. output directory, the three file names for fundamental Green's functions
 #    Note that all file or directory names should not be longer than 80
-#    characters. Directories must be ended by / (unix) or \ (dos)!
+#    characters. Directories must be ended by (unix) or (dos)!
 #------------------------------------------------------------------------------
-'./'  'edgrn.ss'  'edgrn.ds'  'edgrn.cl'  |char: outputs,grnfile(3);
+''  'edgrn.ss'  'edgrn.ds'  'edgrn.cl'  |char: outputs,grnfile(3);
 #------------------------------------------------------------------------------
 #
 #	MULTILAYERED MODEL PARAMETERS
