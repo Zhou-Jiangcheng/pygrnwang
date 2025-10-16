@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pygrnwang"
-version = "1.0.1"
+version = "1.0.2"
 description = "A Python library for computing Coulomb Failure Stress Change."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -36,6 +36,3 @@ include = ["pygrnwang*"]
 
 [tool.setuptools.package-data]
 pygrnwang = ["exec/*.jar"]
-
-[tool.setuptools.exclude-package-data]
-dyncfs = ["exec/*.bin", "exec/*.exe", "exec/*.o", "exec/*.out"]
