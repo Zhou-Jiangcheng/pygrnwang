@@ -1,3 +1,39 @@
 [build-system]
-requires = ["setuptools>=64", "wheel"]
+requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "pygrnwang"
+version = "1.0.0"
+description = "A Python library for computing Coulomb Failure Stress Change."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { file = "LICENSE" }
+authors = [{ name = "Zhou Jiangcheng", email = "zhoujcpku@outlook.com" }]
+dependencies = [
+    "numpy>=2.3.3",
+    "matplotlib>=3.9.2",
+    "scipy>=1.16.2",
+    "pandas>=2.2.3",
+    "jpype1>=1.5.2",
+    "tqdm>=4.67.1",
+    "mpi4py>=3.1.4"
+]
+
+[project.scripts]
+pygrnwang = "pygrnwang.main:main"
+
+[project.urls]
+Homepage = "https://github.com/Zhou-Jiangcheng/pygrnwang"
+
+[tool.setuptools]
+package-dir = { "" = "." }
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["pygrnwang*"]
+
+[tool.setuptools.package-data]
+pygrnwang = ["exec/*"]
+

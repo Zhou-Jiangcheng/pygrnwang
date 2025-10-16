@@ -2,16 +2,25 @@ import os
 import platform
 import shutil
 import subprocess
-from setuptools import setup, find_packages
+from setuptools import setup
 from setuptools.command.build_py import build_py as _build_py
 
 project_root = os.path.dirname(os.path.abspath(__file__))
-
-req_file = os.path.join(project_root, "requirements.txt")
-with open(req_file, encoding="utf-8") as f:
-    requirements = [line.strip() for line in f if line.strip() and not line.startswith("#")]
-
 platform_exec = "exe" if platform.system() == "Windows" else "bin"
+
+def _compile_dir(src_dir: str, out_bin: str, extra_flags: list[str]) -> None:
+    cmd = "gfortran ./*.f -O3 %s -o %s" % (
+        " ".join("%s" % extra_flags[_] for _ in range(len(extra_flags))),
+        out_bin,
+    )
+    print(src_dir)
+    print(cmd)
+    proc = subprocess.run(cmd, cwd=src_dir, shell=True, text=True, capture_output=True)
+    if proc.returncode != 0:
+        raise RuntimeError(
+            f"[pygrnwang] Fortran compile failed for {src_dir}\n"
+            f"Error:\n{proc.stderr or proc.stdout}"
+        )
 
 
 class CustomBuildPy(_build_py):
@@ -19,11 +28,15 @@ class CustomBuildPy(_build_py):
         _build_py.run(self)
 
         if not shutil.which("gfortran"):
-            raise ValueError("Please install gfortran and ensure that "
-                             "command 'gfortran' can be directly called")
-        if not shutil.which("jar"):
-            raise ValueError("Please install java and ensure that "
-                             "command 'jar' can be directly called")
+            raise ValueError(
+                r"Please install gfortran and ensure "
+                r"that command \'gfortran\' can be directly called"
+            )
+        if not shutil.which("java"):
+            raise ValueError(
+                r"Please install java and ensure that "
+                r"command \'java\' can be directly called"
+            )
 
         exec_dir = os.path.join(project_root, "pygrnwang", "exec")
         os.makedirs(exec_dir, exist_ok=True)
@@ -38,46 +51,19 @@ class CustomBuildPy(_build_py):
             "qseis2025_src": f"qseis2025.{platform_exec}",
         }
 
-        fortran_flags = "-O3"
         for src_folder, bin_name in fortran_subdirs.items():
             fortran_src_dir = os.path.join(fortran_src_root, src_folder)
             output_binary = os.path.join(exec_dir, bin_name)
-            extra = ""
-            if src_folder == "qseis2025_src":
-                extra = " -ffixed-line-length-none"
-            compile_command = f'gfortran "{fortran_src_dir}"/*.f {fortran_flags}{extra} -o "{output_binary}"'
-            print(f"[pygrnwang] Compiling {src_folder} -> {output_binary}")
-            result = subprocess.run(compile_command, shell=True)
-            if result.returncode != 0:
-                raise RuntimeError(f"Fortran compilation failed for {src_folder}")
 
-setup(
-    name="pygrnwang",
-    version="1.0.0",
-    author="Zhou Jiangcheng",
-    author_email="zhoujcpku@outlook.com",
-    description="This Python package serves as the frontend for calculating and building "
-                "Green's function libraries for synthetic seismograms.",
-    long_description=open("README.md", encoding="utf-8").read(),
-    long_description_content_type="text/markdown",
-    url="https://github.com/Zhou-Jiangcheng/pygrnwang",
-    packages=find_packages(),
-    include_package_data=True,
-    package_data={
-        "pygrnwang": ["exec/*"],
-    },
-    # Pass the dependencies read from requirements.txt to install_requires
-    install_requires=requirements,
-    classifiers=[
-        "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: MIT License",
-        "Operating System :: OS Independent",
-    ],
-    python_requires=">=3.9",
-    entry_points={
-        "console_scripts": [
-            "pygrnwang=pygrnwang.main:main",
-        ],
-    },
-    cmdclass={"build_py": CustomBuildPy},  # type:ignore
-)
+            extra = []
+            env_fflags = os.environ.get("PYGRNWANG_FFLAGS", "")
+            if env_fflags:
+                extra += env_fflags.split()
+            if src_folder == "qseis2025_src":
+                extra += ["-ffixed-line-length-none"]
+
+            print(f"[pygrnwang] Compiling {src_folder} -> {output_binary}")
+            _compile_dir(fortran_src_dir, output_binary, extra)
+
+
+setup(cmdclass={"build_py": CustomBuildPy})  # type:ignore
