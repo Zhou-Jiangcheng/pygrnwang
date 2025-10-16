@@ -9,6 +9,12 @@ from setuptools import setup, Distribution
 project_root = os.path.dirname(os.path.abspath(__file__))
 platform_exec = "exe" if platform.system() == "Windows" else "bin"
 
+
+class BinaryDistribution(Distribution):
+    def has_ext_modules(self):
+        return True
+
+
 def _compile_dir(src_dir: str, out_bin: str, extra_flags: list[str]) -> None:
     cmd = "gfortran ./*.f -O3 %s -o %s" % (
         " ".join("%s" % extra_flags[_] for _ in range(len(extra_flags))),
