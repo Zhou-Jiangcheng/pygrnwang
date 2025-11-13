@@ -95,6 +95,7 @@ def pre_process_spgrn2020(
     convert_earth_model_nd2nd_without_Q(path_nd, path_nd_without_Q)
 
     params = {
+        "processes_num": processes_num,
         "path_green": path_green,
         "path_bin": path_bin,
         "event_depth_list": event_depth_list,
