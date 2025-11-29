@@ -112,7 +112,7 @@ def pre_process_spgrn2020(
         "source_radius": source_radius,
         "cal_gf": cal_gf,
         "time_window": time_window,
-        "sampling_num": round(time_window / sampling_interval + 1),
+        # "sampling_num": round(time_window / sampling_interval + 1),
         "green_before_p": green_before_p,
         "source_duration": source_duration,
         "dist_range": dist_range,
@@ -154,11 +154,11 @@ def create_grnlib_spgrn2020_sequential(path_green, check_finished=False):
     s = datetime.datetime.now()
     with open(os.path.join(path_green, "group_list.pkl"), "rb") as fr:
         group_list = pickle.load(fr)
+    update_green_info_lib_json(path_green, group_list[0][0][0], group_list[0][0][1])
     for item in group_list:
         for i in range(len(item)):
             print("computing " + str(item[i]))
             call_spgrn2020(item[i][0], item[i][1], path_green, check_finished)
-    update_green_info_lib_json(path_green, group_list[0][0][0], group_list[0][0][1])
     e = datetime.datetime.now()
     print("run time:%s" % str(e - s))
 
@@ -167,6 +167,7 @@ def create_grnlib_spgrn2020_parallel(path_green, check_finished=False):
     s = datetime.datetime.now()
     with open(os.path.join(path_green, "group_list.pkl"), "rb") as fr:
         group_list = pickle.load(fr)
+    update_green_info_lib_json(path_green, group_list[0][0][0], group_list[0][0][1])
     # 展平任务
     tasks = []
     for grp in group_list:
@@ -188,8 +189,6 @@ def create_grnlib_spgrn2020_parallel(path_green, check_finished=False):
             desc="Computing SPGRN2020 library",
         ):
             pass
-
-    update_green_info_lib_json(path_green, group_list[0][0][0], group_list[0][0][1])
     e = datetime.datetime.now()
     print("run time:" + str(e - s))
 
@@ -198,6 +197,7 @@ def create_grnlib_spgrn2020_parallel_multi_nodes(path_green, check_finished=Fals
     s = datetime.datetime.now()
     with open(os.path.join(path_green, "group_list.pkl"), "rb") as fr:
         group_list = pickle.load(fr)
+    update_green_info_lib_json(path_green, group_list[0][0][0], group_list[0][0][1])
     for ind_group in range(len(group_list)):
         comm = MPI.COMM_WORLD
         processes_num = comm.Get_size()
@@ -214,7 +214,6 @@ def create_grnlib_spgrn2020_parallel_multi_nodes(path_green, check_finished=Fals
             path_green=path_green,
             check_finished=check_finished,
         )
-    update_green_info_lib_json(path_green, group_list[0][0][0], group_list[0][0][1])
     e = datetime.datetime.now()
     print("run time:" + str(e - s))
 

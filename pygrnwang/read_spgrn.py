@@ -2,6 +2,7 @@ import os
 import json
 
 import numpy as np
+from scipy import signal
 
 from .read_tpts_table import read_tpts_table
 from .utils import shift_green2real_tpts
@@ -33,16 +34,16 @@ def synthesize_spgrn2020(az_in_deg, time_series, focal_mechanism):
     m1 = [exp, ss1 * sin_2az + ss2 * cos_2az, ds1 * cos_az + ds2 * sin_az, clvd]
     m2 = [ss1 * cos_2az - ss2 * sin_2az, ds1 * sin_az - ds2 * cos_az]
     z = (
-        time_series[0] * m1[0]
-        + time_series[2] * m1[1]
-        + time_series[5] * m1[2]
-        + time_series[8] * m1[3]
+            time_series[0] * m1[0]
+            + time_series[2] * m1[1]
+            + time_series[5] * m1[2]
+            + time_series[8] * m1[3]
     )
     r = (
-        time_series[1] * m1[0]
-        + time_series[3] * m1[1]
-        + time_series[6] * m1[2]
-        + time_series[9] * m1[3]
+            time_series[1] * m1[0]
+            + time_series[3] * m1[1]
+            + time_series[6] * m1[2]
+            + time_series[9] * m1[3]
     )
     t = time_series[4] * m2[0] + time_series[7] * m2[1]
 
@@ -75,24 +76,26 @@ def read_time_series_spgrn2020(path_grn_data, dist_in_km, green_info):
 
 
 def seek_spgrn2020(
-    path_green,
-    event_depth_km,
-    receiver_depth_km,
-    az_deg,
-    dist_km,
-    focal_mechanism,
-    srate,
-    rotate=True,
-    before_p=20,
-    pad_zeros=False,
-    shift=False,
-    only_seismograms=True,
-    model_name="ak135",
-    green_info=None,
+        path_green,
+        output_type,
+        event_depth_km,
+        receiver_depth_km,
+        az_deg,
+        dist_km,
+        focal_mechanism,
+        srate,
+        rotate=True,
+        before_p=20,
+        pad_zeros=False,
+        shift=False,
+        only_seismograms=True,
+        model_name="ak135",
+        green_info=None,
 ):
     """
 
     :param path_green:
+    :param output_type: 'disp'/'velo'/'acce'
     :param event_depth_km:
     :param receiver_depth_km:
     :param az_deg:
@@ -105,15 +108,21 @@ def seek_spgrn2020(
     :param shift:
     :param only_seismograms: only return seismograms
     :param model_name: earth model name in obspy TaupModel
-    :return:
+    :return: (
+            seismograms_resample,
+            tpts_table,
+            first_p,
+            first_s,
+            grn_dep_source,
+            grn_dep_receiver,
+            grn_dist,
+        )
     """
     if green_info is None:
         with open(os.path.join(path_green, "green_lib_info.json"), "r") as fr:
             green_info = json.load(fr)
     srate_grn = 1 / green_info["sampling_interval"]
-    sampling_num = (
-        round(green_info["time_window"] / green_info["sampling_interval"]) + 1
-    )
+    sampling_num = green_info['samples_num']
     green_before_p = green_info["green_before_p"]
     grn_dep_list = green_info["event_depth_list"]
     grn_receiver_list = green_info["receiver_depth_list"]
@@ -188,17 +197,31 @@ def seek_spgrn2020(
     #     seismograms = np.roll(seismograms, -conv_shift)
     #     seismograms[:, -conv_shift:] = 0
 
-    seismograms_resasmple = np.zeros((3, round(sampling_num * srate / srate_grn)))
+    len_after_resample = round(sampling_num * srate / srate_grn)
+    seismograms_resample = np.zeros((3, len_after_resample))
     for i in range(3):
-        seismograms_resasmple[i] = resample(
+        seismograms_resample[i] = resample(
             seismograms[i], srate_old=srate_grn, srate_new=srate, zero_phase=True
+        )[:len_after_resample]
+
+    if output_type == "disp":
+        seismograms_resample = np.cumsum(seismograms_resample, axis=1) / srate
+    elif output_type == "acce":
+        seismograms_resample = (
+                signal.convolve(
+                    seismograms_resample.T,
+                    np.array([1, -1])[:, None],
+                    mode="same",
+                    method="auto",
+                ).T
+                / srate
         )
 
     if only_seismograms:
-        return seismograms_resasmple
+        return seismograms_resample
     else:
         return (
-            seismograms_resasmple,
+            seismograms_resample,
             tpts_table,
             first_p,
             first_s,

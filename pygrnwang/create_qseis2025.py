@@ -46,7 +46,7 @@ def create_inp_qseis2025(
         time_reduction_velo=0,
         wavenumber_sampling_rate=12,
         anti_alias=0.01,
-        free_surface=True,
+        free_surface=0,
         wavelet_duration=4,
         wavelet_type=1,
         flat_earth_transform=True,
@@ -98,10 +98,7 @@ def create_inp_qseis2025(
     lines[77] = "%f\n" % anti_alias
 
     # OPTIONS FOR PARTIAL SOLUTIONS
-    if free_surface:
-        lines[111] = "0\n"
-    else:
-        lines[111] = "1\n"
+    lines[111] = "%d\n" % free_surface
 
     # SOURCE TIME FUNCTION (WAVELET) PARAMETERS (Note 3)
     lines[132] = "%d %d\n" % (wavelet_duration, wavelet_type)

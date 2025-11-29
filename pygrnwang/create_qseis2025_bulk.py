@@ -47,7 +47,7 @@ def pre_process_qseis2025(
         time_reduction_velo=0,
         wavenumber_sampling_rate=12,
         anti_alias=0.01,
-        free_surface=True,
+        free_surface=0,
         wavelet_duration=0,
         wavelet_type=1,
         flat_earth_transform=True,

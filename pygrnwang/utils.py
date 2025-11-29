@@ -203,7 +203,7 @@ def convert_earth_model_nd2nd_without_Q(path_nd, path_output):
     return lines_new
 
 
-def read_nd(path_nd):
+def read_nd(path_nd, with_Q=False):
     with open(path_nd, "r") as fr:
         lines = fr.readlines()
     lines_new = []
@@ -212,9 +212,11 @@ def read_nd(path_nd):
         if len(temp) > 1:
             for j in range(len(temp)):
                 lines_new.append(float(temp[j]))
-    nd_model = np.array(lines_new).reshape(-1, 4)
+    if with_Q:
+        nd_model = np.array(lines_new).reshape(-1, 6)
+    else:
+        nd_model = np.array(lines_new).reshape(-1, 4)
     return nd_model
-
 
 def read_material_nd(model_name, depth):
     if model_name == "ak135fc":
