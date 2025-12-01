@@ -219,9 +219,9 @@ def mt2plane(mt):
                     phi = np.pi / 2
         else:
             if delta == np.pi / 2:
-                warnings.warn(
-                    "n is horizontal. The part directed by n is set as the hanging wall of the fault."
-                )
+                # warnings.warn(
+                #     "n is horizontal. The part directed by n is set as the hanging wall of the fault."
+                # )
                 if n_in[0] == 0:
                     if n_in[1] == 1:
                         phi = 0
@@ -246,7 +246,12 @@ def mt2plane(mt):
 
         cos_lambda = d_in[0] * np.cos(phi) + d_in[1] * np.sin(phi)
         sin_lambda_cos_delta = d_in[0] * np.sin(phi) - d_in[1] * np.cos(phi)
-        lambda_ = np.arccos(cos_lambda)
+        if cos_lambda>1:
+            lambda_ = np.pi/2
+        elif cos_lambda<-1:
+            lambda_ = -np.pi/2
+        else:
+            lambda_ = np.arccos(cos_lambda)
         if sin_lambda_cos_delta < 0:
             lambda_ = -lambda_
         # elif np.abs(sin_lambda_cos_delta) <= threshold:

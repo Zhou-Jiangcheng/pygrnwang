@@ -146,7 +146,7 @@ def seek_qssp2020(
     rotate=True,
     only_seismograms=True,
     output_type="disp",
-    model_name="ak135",
+    model_name="ak135fc",
     green_info=None,
 ):
     """
