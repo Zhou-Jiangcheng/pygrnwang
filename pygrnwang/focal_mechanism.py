@@ -246,10 +246,10 @@ def mt2plane(mt):
 
         cos_lambda = d_in[0] * np.cos(phi) + d_in[1] * np.sin(phi)
         sin_lambda_cos_delta = d_in[0] * np.sin(phi) - d_in[1] * np.cos(phi)
-        if cos_lambda>1:
-            lambda_ = np.pi/2
-        elif cos_lambda<-1:
-            lambda_ = -np.pi/2
+        if cos_lambda > 1:
+            lambda_ = np.pi / 2
+        elif cos_lambda < -1:
+            lambda_ = -np.pi / 2
         else:
             lambda_ = np.arccos(cos_lambda)
         if sin_lambda_cos_delta < 0:

@@ -11,25 +11,38 @@ from .utils import create_rotate_z_mat, read_material_nd
 from .geo import rotate_rtz_to_enz
 
 
-def read_edcmp_raw(path_green, output_type,
-                   grn_event_depth, grn_obs_depth, mt_ind):
-    df = pd.read_csv(
-        str(
-            os.path.join(
-                path_green, "edcmp2",
-                "%.2f" % grn_event_depth,
-                "%.2f" % grn_obs_depth,
-                "%d" % mt_ind,
-                "hs.%s" % output_type
-            )
-        ),
-        skiprows=3,
-        sep="\\s+",
-        header=None,
+def read_edcmp_raw(path_green, output_type, grn_event_depth, grn_obs_depth, mt_ind):
+    path_npy = str(
+        os.path.join(
+            path_green,
+            "edcmp2",
+            "%.2f" % grn_event_depth,
+            "%.2f" % grn_obs_depth,
+            "%d" % mt_ind,
+            "%s.npy" % output_type,
+        )
     )
-    # Ux_m, Uy_m, Uz_m
-    # Sxx_Pa Syy_Pa Szz_Pa Sxy_Pa Syz_Pa Szx_Pa
-    values_raw = df.to_numpy()[:, 2:]
+    if os.path.exists(path_npy):
+        values_raw = np.load(path_npy)
+    else:
+        df = pd.read_csv(
+            str(
+                os.path.join(
+                    path_green,
+                    "edcmp2",
+                    "%.2f" % grn_event_depth,
+                    "%.2f" % grn_obs_depth,
+                    "%d" % mt_ind,
+                    "hs.%s" % output_type,
+                )
+            ),
+            skiprows=3,
+            sep="\\s+",
+            header=None,
+        )
+        # Ux_m, Uy_m, Uz_m
+        # Sxx_Pa Syy_Pa Szz_Pa Sxy_Pa Syz_Pa Szx_Pa
+        values_raw = df.to_numpy()[:, 2:]
     return values_raw
 
 
@@ -52,7 +65,7 @@ def seek_edcmp2(
         focal_mechanism,
         rotate=True,
         check_convert_pure_dp=True,
-        output_type: str = 'disp',
+        output_type: str = "disp",
         times_mu: bool = False,
         model_name="ak135",
         green_info=None,
@@ -67,23 +80,30 @@ def seek_edcmp2(
     if green_info is None:
         with open(os.path.join(path_green, "green_lib_info.json"), "r") as fr:
             green_info = json.load(fr)
-    grn_source_depth_range = green_info['grn_source_depth_range']
-    grn_source_delta_depth = green_info['grn_source_delta_depth']
+    grn_source_depth_range = green_info["grn_source_depth_range"]
+    grn_source_delta_depth = green_info["grn_source_delta_depth"]
     event_depth_list = np.arange(
         grn_source_depth_range[0],
         grn_source_depth_range[1] + grn_source_delta_depth,
-        grn_source_delta_depth)
+        grn_source_delta_depth,
+    )
     obs_depth_list = green_info["obs_depth_list"]
     if not isinstance(obs_depth_list, list):
         obs_depth_list = [obs_depth_list]
     obs_depth_list = np.array(obs_depth_list)
 
-    grn_dist_range = green_info['grn_dist_range']
-    grn_dist_delta = green_info['grn_delta_dist']
-    dist_list = np.arange(grn_dist_range[0], grn_dist_range[1] + grn_dist_delta, grn_dist_delta)
+    grn_dist_range = green_info["grn_dist_range"]
+    grn_dist_delta = green_info["grn_delta_dist"]
+    dist_list = np.arange(
+        grn_dist_range[0], grn_dist_range[1] + grn_dist_delta, grn_dist_delta
+    )
 
-    grn_event_depth = event_depth_list[np.argmin(np.abs(event_depth_list - event_depth_km))]
-    grn_obs_depth = obs_depth_list[np.argmin(np.abs(obs_depth_list - receiver_depth_km))]
+    grn_event_depth = event_depth_list[
+        np.argmin(np.abs(event_depth_list - event_depth_km))
+    ]
+    grn_obs_depth = obs_depth_list[
+        np.argmin(np.abs(obs_depth_list - receiver_depth_km))
+    ]
     grn_dist_ind = np.argmin(np.abs(dist_list - dist_km))
 
     if output_type == "disp":
@@ -123,14 +143,16 @@ def seek_edcmp2(
             output_type=output_type,
             grn_event_depth=grn_event_depth,
             grn_obs_depth=grn_obs_depth,
-            mt_ind=i)
+            mt_ind=i,
+        )
         v_ned_green_north = v_ned_green_north + v_raw[grn_dist_ind] * mt_dp[i]
     v_raw = read_edcmp_raw(
         path_green=path_green,
         output_type=output_type,
         grn_event_depth=grn_event_depth,
         grn_obs_depth=grn_obs_depth,
-        mt_ind=3)
+        mt_ind=3,
+    )
     v_ned_green_north = v_ned_green_north + v_raw[grn_dist_ind] * mt_dp[0]
 
     v_rtz = np.zeros_like(v_ned_green_north)

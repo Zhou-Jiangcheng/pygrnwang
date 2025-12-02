@@ -1,4 +1,4 @@
-s="""# This is the input file of FORTRAN77 program "qseis06" for calculation of
+s = """# This is the input file of FORTRAN77 program "qseis06" for calculation of
 # synthetic seismograms based on a layered halfspace earth model.
 #
 # by

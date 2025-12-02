@@ -15,7 +15,7 @@ try:
 except:
     pass
 
-from .create_edcmp import create_inp_edcmp2, call_edcmp2
+from .create_edcmp import create_inp_edcmp2, call_edcmp2, convert_edcmp2
 from .utils import group
 from .geo import d2km, convert_sub_faults_geo2ned, cal_max_dist_from_2d_points
 
@@ -68,7 +68,10 @@ def pre_process_edcmp2(
 
     item_list = []
     event_depth_list = np.arange(
-        grn_source_depth_range[0], grn_source_depth_range[1] + grn_source_delta_depth, grn_source_delta_depth)
+        grn_source_depth_range[0],
+        grn_source_depth_range[1] + grn_source_delta_depth,
+        grn_source_delta_depth,
+    )
     for event_depth in event_depth_list:
         for obs_depth in obs_depth_list:
             for mt_ind in range(5):
@@ -88,8 +91,13 @@ def pre_process_edcmp2(
 
     # Update the green_info dictionary with new observation and model parameters.
     green_info["layered"] = layered
-    green_info["lam"] = lam
-    green_info["mu"] = mu
+    if layered:
+        green_info["lam"] = None
+        green_info["mu"] = None
+    else:
+        green_info["lam"] = lam
+        green_info["mu"] = mu
+    green_info["output_observables"] = output_observables
     json_str = json.dumps(green_info, indent=4, ensure_ascii=False)
     with open(
             os.path.join(path_green, "green_lib_info.json"), "w", encoding="utf-8"
@@ -168,3 +176,34 @@ def create_grnlib_edcmp2_parallel_multi_nodes(path_green, check_finished=False):
         )
     e = datetime.datetime.now()
     print("run time:" + str(e - s))
+
+
+def convert_pd2np_edcmp2_all(path_green, remove=False):
+    print("converting ascii files to npy files")
+    with open(os.path.join(path_green, "green_lib_info.json"), "r") as fr:
+        green_info = json.load(fr)
+    grn_source_depth_range = green_info["grn_source_depth_range"]
+    grn_source_delta_depth = green_info["grn_source_delta_depth"]
+    event_depth_list = np.arange(
+        grn_source_depth_range[0],
+        grn_source_depth_range[1] + grn_source_delta_depth,
+        grn_source_delta_depth,
+    )
+    obs_depth_list = green_info["obs_depth_list"]
+    output_observables = np.nonzero(np.array(green_info["output_observables"]))[0]
+    for i in range(len(event_depth_list)):
+        for j in range(len(obs_depth_list)):
+            for mt_ind in range(5):
+                path_sub_dir = os.path.join(
+                    path_green,
+                    "edcmp2",
+                    "%.2f" % event_depth_list[i],
+                    "%.2f" % obs_depth_list[j],
+                    "%d" % mt_ind,
+                )
+                for o in output_observables:
+                    convert_edcmp2(
+                        path_sub_dir=path_sub_dir,
+                        output_type_ind=output_observables[o],
+                        remove=remove,
+                    )

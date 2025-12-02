@@ -7,6 +7,7 @@ import datetime
 
 from tqdm import tqdm
 from multiprocessing import Pool
+
 try:
     from mpi4py import MPI
 except:

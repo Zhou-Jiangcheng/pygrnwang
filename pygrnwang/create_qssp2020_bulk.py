@@ -33,35 +33,35 @@ def _call_qssp2020_star(args):
 
 
 def pre_process_spec(
-        processes_num,
-        path_green,
-        path_bin,
-        event_depth_list,
-        receiver_depth_list,
-        spec_time_window,
-        sampling_interval,
-        max_frequency,
-        max_slowness,
-        anti_alias,
-        turning_point_filter,
-        turning_point_d1,
-        turning_point_d2,
-        free_surface_filter,
-        gravity_fc,
-        gravity_harmonic,
-        cal_sph,
-        cal_tor,
-        min_harmonic,
-        max_harmonic,
-        source_radius,
-        source_duration,
-        time_window,
-        time_reduction,
-        dist_range,
-        delta_dist,
-        path_nd=None,
-        earth_model_layer_num=None,
-        physical_dispersion=0,
+    processes_num,
+    path_green,
+    path_bin,
+    event_depth_list,
+    receiver_depth_list,
+    spec_time_window,
+    sampling_interval,
+    max_frequency,
+    max_slowness,
+    anti_alias,
+    turning_point_filter,
+    turning_point_d1,
+    turning_point_d2,
+    free_surface_filter,
+    gravity_fc,
+    gravity_harmonic,
+    cal_sph,
+    cal_tor,
+    min_harmonic,
+    max_harmonic,
+    source_radius,
+    source_duration,
+    time_window,
+    time_reduction,
+    dist_range,
+    delta_dist,
+    path_nd=None,
+    earth_model_layer_num=None,
+    physical_dispersion=0,
 ):
     if platform.system() == "Windows":
         path_bin_call = os.path.join(path_green, "qssp2020.exe")
@@ -114,36 +114,36 @@ def pre_process_spec(
 
 
 def pre_process_func(
-        processes_num,
-        path_green,
-        path_bin,
-        event_depth_list,
-        receiver_depth_list,
-        spec_time_window,
-        sampling_interval,
-        max_frequency,
-        max_slowness,
-        anti_alias,
-        turning_point_filter,
-        turning_point_d1,
-        turning_point_d2,
-        free_surface_filter,
-        gravity_fc,
-        gravity_harmonic,
-        cal_sph,
-        cal_tor,
-        min_harmonic,
-        max_harmonic,
-        source_radius,
-        source_duration,
-        output_observables: list,
-        time_window,
-        time_reduction,
-        dist_range,
-        delta_dist,
-        path_nd=None,
-        earth_model_layer_num=None,
-        physical_dispersion=0,
+    processes_num,
+    path_green,
+    path_bin,
+    event_depth_list,
+    receiver_depth_list,
+    spec_time_window,
+    sampling_interval,
+    max_frequency,
+    max_slowness,
+    anti_alias,
+    turning_point_filter,
+    turning_point_d1,
+    turning_point_d2,
+    free_surface_filter,
+    gravity_fc,
+    gravity_harmonic,
+    cal_sph,
+    cal_tor,
+    min_harmonic,
+    max_harmonic,
+    source_radius,
+    source_duration,
+    output_observables: list,
+    time_window,
+    time_reduction,
+    dist_range,
+    delta_dist,
+    path_nd=None,
+    earth_model_layer_num=None,
+    physical_dispersion=0,
 ):
     if platform.system() == "Windows":
         path_bin_call = os.path.join(path_green, "qssp2020.exe")
@@ -196,37 +196,37 @@ def pre_process_func(
 
 
 def pre_process_qssp2020(
-        processes_num,
-        path_green,
-        path_bin,
-        event_depth_list,
-        receiver_depth_list,
-        spec_time_window,
-        sampling_interval,
-        max_frequency,
-        max_slowness,
-        anti_alias,
-        turning_point_filter,
-        turning_point_d1,
-        turning_point_d2,
-        free_surface_filter,
-        gravity_fc,
-        gravity_harmonic,
-        cal_sph,
-        cal_tor,
-        min_harmonic,
-        max_harmonic,
-        source_radius,
-        source_duration,
-        output_observables: list,
-        time_window,
-        time_reduction,
-        dist_range,
-        delta_dist,
-        path_nd=None,
-        earth_model_layer_num=None,
-        physical_dispersion=0,
-        check_finished_tpts_table=False,
+    processes_num,
+    path_green,
+    path_bin,
+    event_depth_list,
+    receiver_depth_list,
+    spec_time_window,
+    sampling_interval,
+    max_frequency,
+    max_slowness,
+    anti_alias,
+    turning_point_filter,
+    turning_point_d1,
+    turning_point_d2,
+    free_surface_filter,
+    gravity_fc,
+    gravity_harmonic,
+    cal_sph,
+    cal_tor,
+    min_harmonic,
+    max_harmonic,
+    source_radius,
+    source_duration,
+    output_observables: list,
+    time_window,
+    time_reduction,
+    dist_range,
+    delta_dist,
+    path_nd=None,
+    earth_model_layer_num=None,
+    physical_dispersion=0,
+    check_finished_tpts_table=False,
 ):
     print("Preprocessing")
     pre_process_spec(
@@ -345,20 +345,20 @@ def pre_process_qssp2020(
     }
     json_str = json.dumps(green_info, indent=4, ensure_ascii=False)
     with open(
-            os.path.join(path_green, "green_lib_info.json"), "w", encoding="utf-8"
+        os.path.join(path_green, "green_lib_info.json"), "w", encoding="utf-8"
     ) as file:
         file.write(json_str)
 
 
 def create_grnlib_qssp2020_sequential(
-        path_green, cal_spec=True, check_finished=False, convert_pd2bin=True, remove_pd=True
+    path_green, cal_spec=True, check_finished=False, convert_pd2bin=True, remove_pd=True
 ):
     if cal_spec:
         with open(os.path.join(path_green, "group_list_spec.pkl"), "rb") as fr:
             group_list_spec = pickle.load(fr)
         for item in tqdm(
-                group_list_spec,
-                desc="Compute the Green\'s function library in the transformed domain.",
+            group_list_spec,
+            desc="Compute the Green's function library in the transformed domain.",
         ):
             for i in range(len(item)):
                 item[i] = item[i] + [path_green, check_finished]
@@ -367,7 +367,7 @@ def create_grnlib_qssp2020_sequential(
     with open(os.path.join(path_green, "group_list_func.pkl"), "rb") as fr:
         group_list_func = pickle.load(fr)
     for item in tqdm(
-            group_list_func, desc="Compute the Green\'s function library in the time domain."
+        group_list_func, desc="Compute the Green's function library in the time domain."
     ):
         for i in range(len(item)):
             item[i] = item[i] + [path_green, check_finished]
@@ -380,7 +380,7 @@ def create_grnlib_qssp2020_sequential(
 
 
 def create_grnlib_qssp2020_parallel(
-        path_green, cal_spec=True, check_finished=False, convert_pd2bin=True, remove_pd=True
+    path_green, cal_spec=True, check_finished=False, convert_pd2bin=True, remove_pd=True
 ):
     tasks = []
 
@@ -400,9 +400,9 @@ def create_grnlib_qssp2020_parallel(
 
     with Pool(processes=processes) as pool:
         for _ in tqdm(
-                pool.imap_unordered(_call_qssp2020_star, tasks, chunksize=1),
-                total=len(tasks),
-                desc="Compute QSSP2020 Green\'s library in the transformed domain.",
+            pool.imap_unordered(_call_qssp2020_star, tasks, chunksize=1),
+            total=len(tasks),
+            desc="Compute QSSP2020 Green's library in the transformed domain.",
         ):
             pass
 
@@ -415,9 +415,9 @@ def create_grnlib_qssp2020_parallel(
 
     with Pool(processes=processes) as pool:
         for _ in tqdm(
-                pool.imap_unordered(_call_qssp2020_star, tasks, chunksize=1),
-                total=len(tasks),
-                desc="Compute QSSP2020 Green\'s function library in the time domain.",
+            pool.imap_unordered(_call_qssp2020_star, tasks, chunksize=1),
+            total=len(tasks),
+            desc="Compute QSSP2020 Green's function library in the time domain.",
         ):
             pass
 

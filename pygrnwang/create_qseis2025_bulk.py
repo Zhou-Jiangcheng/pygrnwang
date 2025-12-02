@@ -29,31 +29,31 @@ def _call_qseis2025_star(args):
 
 
 def pre_process_qseis2025(
-        processes_num,
-        path_green,
-        path_bin,
-        event_depth_list,
-        receiver_depth_list,
-        dist_range,
-        delta_dist,
-        N_each_group,
-        time_window,
-        sampling_interval,
-        output_observables,
-        slowness_int_algorithm=0,
-        eps_estimate_wavenumber=1e-6,
-        source_radius_ratio=0.05,
-        slowness_window=None,
-        time_reduction_velo=0,
-        wavenumber_sampling_rate=12,
-        anti_alias=0.01,
-        free_surface=0,
-        wavelet_duration=0,
-        wavelet_type=1,
-        flat_earth_transform=True,
-        path_nd=None,
-        earth_model_layer_num=None,
-        check_finished_tpts_table=False,
+    processes_num,
+    path_green,
+    path_bin,
+    event_depth_list,
+    receiver_depth_list,
+    dist_range,
+    delta_dist,
+    N_each_group,
+    time_window,
+    sampling_interval,
+    output_observables,
+    slowness_int_algorithm=0,
+    eps_estimate_wavenumber=1e-6,
+    source_radius_ratio=0.05,
+    slowness_window=None,
+    time_reduction_velo=0,
+    wavenumber_sampling_rate=12,
+    anti_alias=0.01,
+    free_surface=0,
+    wavelet_duration=0,
+    wavelet_type=1,
+    flat_earth_transform=True,
+    path_nd=None,
+    earth_model_layer_num=None,
+    check_finished_tpts_table=False,
 ):
     print("Preprocessing")
     os.makedirs(path_green, exist_ok=True)
@@ -148,7 +148,7 @@ def pre_process_qseis2025(
     }
     json_str = json.dumps(green_info, indent=4, ensure_ascii=False)
     with open(
-            os.path.join(path_green, "green_lib_info.json"), "w", encoding="utf-8"
+        os.path.join(path_green, "green_lib_info.json"), "w", encoding="utf-8"
     ) as file:
         file.write(json_str)
 
@@ -157,7 +157,7 @@ def pre_process_qseis2025(
         for receiver_dep in receiver_depth_list:
             for nn in range(N_dist_group):
                 inp_list.append([event_dep, receiver_dep, nn])
-    #inp_list_sorted = sorted(inp_list, key=lambda x: abs(x[0] - x[1]))
+    # inp_list_sorted = sorted(inp_list, key=lambda x: abs(x[0] - x[1]))
     group_list = group(inp_list, processes_num)
     with open(os.path.join(path_green, "group_list.pkl"), "wb") as fw:
         pickle.dump(group_list, fw)  # type: ignore
@@ -165,7 +165,7 @@ def pre_process_qseis2025(
 
 
 def create_grnlib_qseis2025_sequential(
-        path_green, check_finished=False, convert_pd2bin=True, remove_pd=True
+    path_green, check_finished=False, convert_pd2bin=True, remove_pd=True
 ):
     with open(os.path.join(path_green, "group_list.pkl"), "rb") as fr:
         group_list = pickle.load(fr)
@@ -179,7 +179,7 @@ def create_grnlib_qseis2025_sequential(
 
 
 def create_grnlib_qseis2025_parallel(
-        path_green, check_finished=False, convert_pd2bin=True, remove_pd=True
+    path_green, check_finished=False, convert_pd2bin=True, remove_pd=True
 ):
     with open(os.path.join(path_green, "group_list.pkl"), "rb") as fr:
         group_list = pickle.load(fr)
@@ -197,9 +197,9 @@ def create_grnlib_qseis2025_parallel(
 
     with Pool(processes=processes) as pool:
         for _ in tqdm(
-                pool.imap_unordered(_call_qseis2025_star, tasks, chunksize=1),
-                total=len(tasks),
-                desc="Compute QSEIS2025 Green\'s library in the transformed domain.",
+            pool.imap_unordered(_call_qseis2025_star, tasks, chunksize=1),
+            total=len(tasks),
+            desc="Compute QSEIS2025 Green's library in the transformed domain.",
         ):
             pass
 
@@ -227,7 +227,7 @@ def convert_pd2bin_qseis2025_all(path_green, remove=False):
 
 
 def create_grnlib_qseis2025_parallel_multi_nodes(
-        path_green, check_finished=False, convert_pd2bin=True, remove_pd=True
+    path_green, check_finished=False, convert_pd2bin=True, remove_pd=True
 ):
     s = datetime.datetime.now()
     with open(os.path.join(path_green, "group_list.pkl"), "rb") as fr:

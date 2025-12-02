@@ -10,12 +10,12 @@ from .qseis2025inp import s as str_inp
 
 
 def create_dir_qseis2025(
-        path_green,
-        event_depth,
-        receiver_depth,
-        dist_range,
-        delta_dist,
-        N_each_group=500,
+    path_green,
+    event_depth,
+    receiver_depth,
+    dist_range,
+    delta_dist,
+    N_each_group=500,
 ):
     sub_dir = str(
         os.path.join(path_green, "%.2f" % event_depth, "%.2f" % receiver_depth)
@@ -28,30 +28,30 @@ def create_dir_qseis2025(
 
 
 def create_inp_qseis2025(
-        path_green,
-        event_depth,
-        receiver_depth,
-        dist_range,
-        delta_dist,
-        N_dist,
-        N_dist_group,
-        N_each_group,
-        time_window,
-        sampling_interval,
-        output_observables,
-        slowness_int_algorithm=0,
-        eps_estimate_wavenumber=1e-6,
-        source_radius_ratio=0.05,
-        slowness_window=None,
-        time_reduction_velo=0,
-        wavenumber_sampling_rate=12,
-        anti_alias=0.01,
-        free_surface=0,
-        wavelet_duration=4,
-        wavelet_type=1,
-        flat_earth_transform=True,
-        path_nd=None,
-        earth_model_layer_num=None,
+    path_green,
+    event_depth,
+    receiver_depth,
+    dist_range,
+    delta_dist,
+    N_dist,
+    N_dist_group,
+    N_each_group,
+    time_window,
+    sampling_interval,
+    output_observables,
+    slowness_int_algorithm=0,
+    eps_estimate_wavenumber=1e-6,
+    source_radius_ratio=0.05,
+    slowness_window=None,
+    time_reduction_velo=0,
+    wavenumber_sampling_rate=12,
+    anti_alias=0.01,
+    free_surface=0,
+    wavelet_duration=4,
+    wavelet_type=1,
+    flat_earth_transform=True,
+    path_nd=None,
+    earth_model_layer_num=None,
 ):
     dist_range = dist_range.copy()
     output_observables = output_observables.copy()
@@ -146,7 +146,7 @@ def create_inp_qseis2025(
 
 
 def call_qseis2025(
-        event_depth, receiver_depth, n_group, path_green, check_finished=False
+    event_depth, receiver_depth, n_group, path_green, check_finished=False
 ):
     sub_sub_dir = str(
         os.path.join(
@@ -161,9 +161,9 @@ def call_qseis2025(
     path_finished = os.path.join(sub_sub_dir, ".finished")
 
     if (
-            check_finished
-            and os.path.exists(path_finished)
-            and len(os.listdir(sub_sub_dir)) > 2
+        check_finished
+        and os.path.exists(path_finished)
+        and len(os.listdir(sub_sub_dir)) > 2
     ):
         with open(path_finished, "r") as fr:
             output = fr.readlines()

@@ -42,9 +42,7 @@ def get_outfile_name_list(output_type):
     return name_list_psv, name_list_sh
 
 
-def read_time_series_qseis2025_ascii(
-        path_greenfunc, start_count, output_type="disp"
-):
+def read_time_series_qseis2025_ascii(path_greenfunc, start_count, output_type="disp"):
     time_seris_list = []
     start_count = start_count + 1
     name_list_psv, name_list_sh = get_outfile_name_list(output_type)
@@ -90,9 +88,9 @@ def read_time_series_qseis2025_ascii(
 
 
 def read_time_series_qseis2025_bin(
-        path_greenfunc,
-        start_count,
-        output_type,
+    path_greenfunc,
+    start_count,
+    output_type,
 ):
     time_series_list = []
     name_list_psv, name_list_sh = get_outfile_name_list(output_type)
@@ -108,10 +106,10 @@ def read_time_series_qseis2025_bin(
 def synthesize_rzv(time_series, m1):
     # ex,ss,ds,cl
     rzv = (
-            time_series[0] * m1[0]
-            + time_series[1] * m1[1]
-            + time_series[2] * m1[2]
-            + time_series[3] * m1[3]
+        time_series[0] * m1[0]
+        + time_series[1] * m1[1]
+        + time_series[2] * m1[2]
+        + time_series[3] * m1[3]
     )
     return rzv
 
@@ -122,21 +120,21 @@ def synthesize_t(time_series, m2):
 
 
 def seek_qseis2025(
-        path_green,
-        event_depth_km,
-        receiver_depth_km,
-        az_deg,
-        dist_km,
-        focal_mechanism,
-        srate,
-        output_type,
-        rotate=True,
-        before_p=None,
-        pad_zeros=False,
-        shift=False,
-        only_seismograms=True,
-        model_name="ak135fc",
-        green_info=None,
+    path_green,
+    event_depth_km,
+    receiver_depth_km,
+    az_deg,
+    dist_km,
+    focal_mechanism,
+    srate,
+    output_type,
+    rotate=True,
+    before_p=None,
+    pad_zeros=False,
+    shift=False,
+    only_seismograms=True,
+    model_name="ak135fc",
+    green_info=None,
 ):
     if green_info is None:
         with open(os.path.join(path_green, "green_lib_info.json"), "r") as fr:
@@ -173,12 +171,10 @@ def seek_qseis2025(
 
     path_greenfunc_sub = os.path.join(path_greenfunc, "%d_0" % ind_group)
     if os.path.exists(os.path.join(path_greenfunc_sub, "grn_szt.npy")):
-        name_list_psv, name_list_sh, time_series_list = (
-            read_time_series_qseis2025_bin(
-                path_greenfunc=path_greenfunc_sub,
-                start_count=start_count,
-                output_type=output_type,
-            )
+        name_list_psv, name_list_sh, time_series_list = read_time_series_qseis2025_bin(
+            path_greenfunc=path_greenfunc_sub,
+            start_count=start_count,
+            output_type=output_type,
         )
     else:
         name_list_psv, name_list_sh, time_series_list = (
@@ -326,13 +322,13 @@ def seek_qseis2025(
         seismograms_resample = np.cumsum(seismograms_resample, axis=1) / srate
     elif (wavelet_type == 2) and (("rate" in output_type) or (output_type == "velo")):
         seismograms_resample = (
-                signal.convolve(
-                    seismograms_resample.T,
-                    np.array([1, -1])[:, None],
-                    mode="same",
-                    method="auto",
-                ).T
-                / srate
+            signal.convolve(
+                seismograms_resample.T,
+                np.array([1, -1])[:, None],
+                mode="same",
+                method="auto",
+            ).T
+            / srate
         )
 
     if only_seismograms:
