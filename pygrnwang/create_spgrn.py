@@ -7,7 +7,6 @@ from .utils import convert_earth_model_nd2inp
 
 
 def create_dir_spgrn2020(event_depth, receiver_depth, path_green):
-    # 新建文件夹并返回路径,若文件夹已存在则直接返回路径
     os.makedirs(os.path.join(path_green, "GreenFunc"), exist_ok=True)
     os.makedirs(os.path.join(path_green, "GreenSpec"), exist_ok=True)
     path_func = os.path.join(

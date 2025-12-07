@@ -162,7 +162,7 @@ cython_debug/
 .idea/
 
 # vscode
-.vscode
+.vscode/
 
 # exe files
 *.exe
