@@ -9,12 +9,12 @@ jar_path = os.path.join(
     "TauP-2.6.1.jar",
 )
 if not jpype.isJVMStarted():
-    jpype.startJVM(classpath=[jar_path])
+    jpype.startJVM("--enable-native-access=ALL-UNNAMED", classpath=[jar_path])
 from edu.sc.seis.TauP import TauP_Time  # type: ignore
 
 
 def taup_time_java(
-    event_depth_km, dist_km, phases_list, receiver_depth_km=0, model_name="ak135"
+        event_depth_km, dist_km, phases_list, receiver_depth_km=0, model_name="ak135"
 ):
     ttobj = TauP_Time(model_name)
     ttobj.setSourceDepth(event_depth_km)
@@ -72,13 +72,13 @@ def cal_first_p_s(event_depth_km, dist_km, receiver_depth_km=0, model_name="ak13
 
 
 def create_tpts_table(
-    path_green,
-    event_depth_km,
-    receiver_depth_km,
-    dist_range,
-    delta_dist,
-    model_name="ak135",
-    check_finished=False,
+        path_green,
+        event_depth_km,
+        receiver_depth_km,
+        dist_range,
+        delta_dist,
+        model_name="ak135",
+        check_finished=False,
 ):
     path_tp_table = os.path.join(
         path_green,
@@ -93,9 +93,9 @@ def create_tpts_table(
         "ts_table.bin",
     )
     if (
-        check_finished
-        and os.path.exists(path_tp_table)
-        and os.path.exists(path_ts_table)
+            check_finished
+            and os.path.exists(path_tp_table)
+            and os.path.exists(path_ts_table)
     ):
         return
     dist_kms = np.linspace(

@@ -123,7 +123,7 @@ def cartesian_2_spherical(x, y, z):
     :param z:
     :return: r, phi, theta ( , rad, rad)
     """
-    r = np.sqrt(x**2 + y**2 + z**2)
+    r = np.sqrt(x ** 2 + y ** 2 + z ** 2)
     theta = np.arccos(z / r)
     if x != 0:
         phi_x = np.arctan(y / x)
@@ -283,7 +283,7 @@ def select_df_geo(df: pd.DataFrame, lat_range, lon_range, time_range) -> pd.Data
         & (df["lat"] <= lat_range[1])
         & (df["time"] >= time_range[0])
         & (df["time"] <= time_range[1])
-    ]
+        ]
     return df_filtered
 
 
@@ -305,7 +305,7 @@ def geographic_centroid(points):
     y_mean = y.mean()
     z_mean = z.mean()
 
-    centroid_lat_rad = np.arctan2(z_mean, np.sqrt(x_mean**2 + y_mean**2))
+    centroid_lat_rad = np.arctan2(z_mean, np.sqrt(x_mean ** 2 + y_mean ** 2))
     centroid_lon_rad = np.arctan2(y_mean, x_mean)
 
     centroid_lat_deg = np.rad2deg(centroid_lat_rad)
@@ -325,7 +325,7 @@ def cal_max_dist_from_2d_points(A: np.ndarray, B: np.ndarray):
     differences = A[:, np.newaxis, :] - B[np.newaxis, :, :]
 
     # Square the differences and sum across columns (to get squared distances)
-    squared_distances = np.sum(differences**2, axis=2)
+    squared_distances = np.sum(differences ** 2, axis=2)
 
     # Take the square root to get Euclidean distances
     distances = np.sqrt(squared_distances)

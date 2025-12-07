@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 
 from .geo import d2m
+from .qssp2020inp import s as str_inp
 from .utils import convert_earth_model_nd2inp, call_exe
 
 mt_com_list = ["mrr", "mtt", "mpp", "mrt", "mrp", "mtp"]
@@ -60,36 +61,36 @@ def create_locs(points, time_reduction):
 
 
 def create_inp_qssp2020(
-    mt_com,
-    path_green,
-    event_depth,
-    receiver_depth,
-    spec_time_window,
-    sampling_interval,
-    max_frequency,
-    max_slowness,
-    anti_alias,
-    turning_point_filter,
-    turning_point_d1,
-    turning_point_d2,
-    free_surface_filter,
-    gravity_fc,
-    gravity_harmonic,
-    cal_sph,
-    cal_tor,
-    min_harmonic,
-    max_harmonic,
-    source_radius,
-    cal_gf,
-    source_duration,
-    output_observables: list,
-    time_window,
-    time_reduction,
-    dist_range,
-    delta_dist,
-    path_nd=None,
-    earth_model_layer_num=None,
-    physical_dispersion=0,
+        mt_com,
+        path_green,
+        event_depth,
+        receiver_depth,
+        spec_time_window,
+        sampling_interval,
+        max_frequency,
+        max_slowness,
+        anti_alias,
+        turning_point_filter,
+        turning_point_d1,
+        turning_point_d2,
+        free_surface_filter,
+        gravity_fc,
+        gravity_harmonic,
+        cal_sph,
+        cal_tor,
+        min_harmonic,
+        max_harmonic,
+        source_radius,
+        cal_gf,
+        source_duration,
+        output_observables: list,
+        time_window,
+        time_reduction,
+        dist_range,
+        delta_dist,
+        path_nd=None,
+        earth_model_layer_num=None,
+        physical_dispersion=0,
 ):
     path_func = str(
         os.path.join(
@@ -110,15 +111,9 @@ def create_inp_qssp2020(
             "",
         )
     )
-    path_inp = os.path.join(path_green, "qssp2020.inp")
-    if os.path.exists(path_inp):
-        with open(path_inp, "r") as fr:
-            lines = fr.readlines()
-    else:
-        from .qssp2020inp import s
 
-        lines = s.split("\n")
-        lines = [line + "\n" for line in lines]
+    lines = str_inp.split("\n")
+    lines = [line + "\n" for line in lines]
     last_line = [lines[-1]]
     lines_earth_head = lines[141:155]
     lines_earth = lines[155:-1]
@@ -150,9 +145,9 @@ def create_inp_qssp2020(
         ind_mt = mt_com_list.index(mt_com)
         mt[ind_mt] = 1
     lines[112] = (
-        "1.0 "
-        + " ".join("%f" % mt[_] for _ in range(6))
-        + " 0.0 0.0 %.2f 0.0 %f\n" % (event_depth, source_duration)
+            "1.0 "
+            + " ".join("%f" % mt[_] for _ in range(6))
+            + " 0.0 0.0 %.2f 0.0 %f\n" % (event_depth, source_duration)
     )
     lines[135] = " ".join(["%d" % output_observables[_] for _ in range(11)]) + "\n"
     lines[136] = "'%s'\n" % path_func
@@ -160,11 +155,14 @@ def create_inp_qssp2020(
     lines[138] = "0 0 0\n"
     lines[139] = "0 %f\n" % max_slowness
 
-    points = create_points(dist_range=dist_range, delta_dist=delta_dist)
-    n_locs = len(points)
+    if mt_com == "spec":
+        n_locs = 0
+    else:
+        points = create_points(dist_range=dist_range, delta_dist=delta_dist)
+        n_locs = len(points)
+        lines_locs = create_locs(points=points, time_reduction=time_reduction)
+        lines = lines + lines_locs
     lines[140] = "%s\n" % n_locs
-    lines_locs = create_locs(points=points, time_reduction=time_reduction)
-    lines = lines + lines_locs
 
     if path_nd is not None:
         lines_earth = convert_earth_model_nd2inp(
@@ -193,7 +191,7 @@ def create_inp_qssp2020(
 
 
 def call_qssp2020(
-    event_depth, receiver_depth, mt_com, path_green, check_finished=False
+        event_depth, receiver_depth, mt_com, path_green, check_finished=False
 ):
     os.chdir(path_green)
     if mt_com == "spec":
@@ -223,9 +221,9 @@ def call_qssp2020(
     sub_dir = os.path.dirname(path_inp)
     path_finished = os.path.join(sub_dir, ".finished")
     if (
-        check_finished
-        and os.path.exists(path_finished)
-        and len(os.listdir(sub_dir)) > 2
+            check_finished
+            and os.path.exists(path_finished)
+            and len(os.listdir(sub_dir)) > 2
     ):
         with open(path_finished, "r") as fr:
             output = fr.readlines()
