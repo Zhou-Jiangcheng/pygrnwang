@@ -6,7 +6,12 @@ import numpy as np
 from scipy.interpolate import RegularGridInterpolator
 import pandas as pd
 
-from .focal_mechanism import check_convert_fm, mt2full_mt_matrix, plane2mt, mt2plane
+from .focal_mechanism import (
+    check_convert_fm,
+    tensor2full_tensor_matrix,
+    plane2mt,
+    mt2plane,
+)
 from .utils import create_rotate_z_mat, read_material_nd
 from .geo import rotate_rtz_to_enz
 
@@ -57,25 +62,24 @@ def interpolate_values(xmin, xmax, nx, ymin, ymax, ny, v_array, obs_array):
 
 
 def seek_edcmp2(
-        path_green: str,
-        event_depth_km,
-        receiver_depth_km,
-        az_deg,
-        dist_km,
-        focal_mechanism,
-        rotate=True,
-        check_convert_pure_dp=True,
-        output_type: str = "disp",
-        times_mu: bool = False,
-        model_name="ak135",
-        green_info=None,
+    path_green: str,
+    event_depth_km,
+    receiver_depth_km,
+    az_deg,
+    dist_km,
+    focal_mechanism,
+    rotate=True,
+    check_convert_pure_dp=True,
+    output_type: str = "disp",
+    times_mu: bool = False,
+    model_name="ak135",
+    green_info=None,
 ):
     """
     ee en ez nn nz zz
     :param path_green: the root dir of Green's function lib
     :param output_type: 'disp','strain','stress','tilt','mu_disp'
     :param times_mu: Whether to times mu (=rho*beta**2) in the result
-    :return values at obs_array
     """
     if green_info is None:
         with open(os.path.join(path_green, "green_lib_info.json"), "r") as fr:
@@ -119,7 +123,7 @@ def seek_edcmp2(
 
     A_rotate = create_rotate_z_mat(gamma=np.deg2rad(az_deg))
     focal_mechanism = check_convert_fm(focal_mechanism)
-    mt_ned_full = mt2full_mt_matrix(mt=focal_mechanism, flag="ned")
+    mt_ned_full = tensor2full_tensor_matrix(mt=focal_mechanism, flag="ned")
     mt_rotate = A_rotate.T @ mt_ned_full @ A_rotate
     mt = np.array(
         [
@@ -169,6 +173,6 @@ def seek_edcmp2(
         material_row = read_material_nd(model_name=model_name, depth=grn_event_depth)
         beta = material_row[2]
         rho = material_row[3]
-        mu_pa = rho * beta ** 2 * 1e9
+        mu_pa = rho * beta**2 * 1e9
         v = v / mu_pa
     return v

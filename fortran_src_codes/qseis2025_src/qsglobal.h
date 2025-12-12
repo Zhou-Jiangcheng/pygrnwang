@@ -6,9 +6,9 @@ c     nrmax: max. number of traces;
 c     nfmax: max. number of frequency samples
 c
       integer*4 nzmax,lmax,nrmax,nfmax,ndtransmax
-      parameter(lmax=10000)
+      parameter(lmax=500)
       parameter(nzmax=lmax+2)
-      parameter(nrmax=901,nfmax=16384)
+      parameter(nrmax=101,nfmax=8192)
       parameter(ndtransmax=4)
 c
 c     INDEX PARAMETERS FOR SEISMOMETER CHARACTERISTICS

@@ -31,7 +31,7 @@ def convert_mt_axis(mt, convert_flag):
     return mt
 
 
-def mt2full_mt_matrix(mt, flag="ned") -> np.ndarray:
+def tensor2full_tensor_matrix(mt, flag="ned") -> np.ndarray:
     """
     create full moment tensor matrix from 6 components.
     :param mt: in NED axis, [M11, M12, M13, M22, M23, M33].
@@ -157,7 +157,7 @@ def mt2plane(mt):
 
     return: [pl1, pl2, n1, d1, n2, d2, t, b, p, eigenvalues]
     """
-    M = mt2full_mt_matrix(mt)
+    M = tensor2full_tensor_matrix(mt)
     [eigenvalues, eigenvectors] = np.linalg.eig(M)
 
     index = eigenvalues.argsort()

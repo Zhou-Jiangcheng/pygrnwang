@@ -149,3 +149,4 @@ def convert_edcmp2(path_sub_dir, output_type_ind, remove=False):
     )
     if remove:
         os.remove(fname_df)
+    return values_raw

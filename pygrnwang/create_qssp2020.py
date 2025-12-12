@@ -61,36 +61,36 @@ def create_locs(points, time_reduction):
 
 
 def create_inp_qssp2020(
-        mt_com,
-        path_green,
-        event_depth,
-        receiver_depth,
-        spec_time_window,
-        sampling_interval,
-        max_frequency,
-        max_slowness,
-        anti_alias,
-        turning_point_filter,
-        turning_point_d1,
-        turning_point_d2,
-        free_surface_filter,
-        gravity_fc,
-        gravity_harmonic,
-        cal_sph,
-        cal_tor,
-        min_harmonic,
-        max_harmonic,
-        source_radius,
-        cal_gf,
-        source_duration,
-        output_observables: list,
-        time_window,
-        time_reduction,
-        dist_range,
-        delta_dist,
-        path_nd=None,
-        earth_model_layer_num=None,
-        physical_dispersion=0,
+    mt_com,
+    path_green,
+    event_depth,
+    receiver_depth,
+    spec_time_window,
+    sampling_interval,
+    max_frequency,
+    max_slowness,
+    anti_alias,
+    turning_point_filter,
+    turning_point_d1,
+    turning_point_d2,
+    free_surface_filter,
+    gravity_fc,
+    gravity_harmonic,
+    cal_sph,
+    cal_tor,
+    min_harmonic,
+    max_harmonic,
+    source_radius,
+    cal_gf,
+    source_duration,
+    output_observables: list,
+    time_window,
+    time_reduction,
+    dist_range,
+    delta_dist,
+    path_nd=None,
+    earth_model_layer_num=None,
+    physical_dispersion=0,
 ):
     path_func = str(
         os.path.join(
@@ -145,9 +145,9 @@ def create_inp_qssp2020(
         ind_mt = mt_com_list.index(mt_com)
         mt[ind_mt] = 1
     lines[112] = (
-            "1.0 "
-            + " ".join("%f" % mt[_] for _ in range(6))
-            + " 0.0 0.0 %.2f 0.0 %f\n" % (event_depth, source_duration)
+        "1.0 "
+        + " ".join("%f" % mt[_] for _ in range(6))
+        + " 0.0 0.0 %.2f 0.0 %f\n" % (event_depth, source_duration)
     )
     lines[135] = " ".join(["%d" % output_observables[_] for _ in range(11)]) + "\n"
     lines[136] = "'%s'\n" % path_func
@@ -191,7 +191,7 @@ def create_inp_qssp2020(
 
 
 def call_qssp2020(
-        event_depth, receiver_depth, mt_com, path_green, check_finished=False
+    event_depth, receiver_depth, mt_com, path_green, check_finished=False
 ):
     os.chdir(path_green)
     if mt_com == "spec":
@@ -221,9 +221,9 @@ def call_qssp2020(
     sub_dir = os.path.dirname(path_inp)
     path_finished = os.path.join(sub_dir, ".finished")
     if (
-            check_finished
-            and os.path.exists(path_finished)
-            and len(os.listdir(sub_dir)) > 2
+        check_finished
+        and os.path.exists(path_finished)
+        and len(os.listdir(sub_dir)) > 2
     ):
         with open(path_finished, "r") as fr:
             output = fr.readlines()
