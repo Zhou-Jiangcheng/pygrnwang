@@ -19,7 +19,7 @@ def read_source_array(source_inds, path_input, shift2corner=False, source_shapes
         ).to_numpy()
         if shift2corner:
             mu_strike = (
-                    source_plane[source_shapes[ind_src][1], :3] - source_plane[0, :3]
+                source_plane[source_shapes[ind_src][1], :3] - source_plane[0, :3]
             )
             mu_dip = source_plane[1, :3] - source_plane[0, :3]
             source_plane[:, :3] = source_plane[:, :3] - mu_strike / 2 - mu_dip / 2
@@ -33,7 +33,7 @@ def read_source_array(source_inds, path_input, shift2corner=False, source_shapes
 def group(inp_list, num_in_each_group):
     group_list = []
     for i in range(len(inp_list) // num_in_each_group):
-        group_list.append(inp_list[i * num_in_each_group: (i + 1) * num_in_each_group])
+        group_list.append(inp_list[i * num_in_each_group : (i + 1) * num_in_each_group])
     rest = len(inp_list) % num_in_each_group
     if rest != 0:
         group_list.append(inp_list[-rest:])
@@ -41,14 +41,14 @@ def group(inp_list, num_in_each_group):
 
 
 def shift_green2real_tpts(
-        seismograms,
-        tpts_table,
-        green_before_p,
-        srate,
-        event_depth_km,
-        dist_in_km,
-        receiver_depth_km=0,
-        model_name="ak135",
+    seismograms,
+    tpts_table,
+    green_before_p,
+    srate,
+    event_depth_km,
+    dist_in_km,
+    receiver_depth_km=0,
+    model_name="ak135",
 ):
     first_p, first_s = cal_first_p_s(
         event_depth_km=event_depth_km,
@@ -96,7 +96,7 @@ def cal_max_dist_from_2d_points(A: np.ndarray, B: np.ndarray):
     differences = A[:, np.newaxis, :] - B[np.newaxis, :, :]
 
     # Square the differences and sum across columns (to get squared distances)
-    squared_distances = np.sum(differences ** 2, axis=2)
+    squared_distances = np.sum(differences**2, axis=2)
 
     # Take the square root to get Euclidean distances
     distances = np.sqrt(squared_distances)
