@@ -109,7 +109,6 @@ def call_edcmp2(obs_depth, path_green, check_finished=False):
         return output
 
     output = call_exe(
-        path_green=path_green,
         path_inp=path_inp,
         path_finished=path_finished,
         name="edcmp2",

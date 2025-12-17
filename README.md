@@ -26,5 +26,9 @@ conda install openjdk jpype1 gfortran numpy scipy pandas tqdm mpi4py -c conda-fo
 ```
 git clone https://github.com/Zhou-Jiangcheng/pygrnwang.git
 cd pygrnwang
-pip install .
+pip install . --no-build-isolation
+```
+or for develop mode
+```
+pip install -e . --no-build-isolation
 ```

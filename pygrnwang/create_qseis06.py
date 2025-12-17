@@ -261,7 +261,6 @@ def call_qseis06(
         return output
 
     output = call_exe(
-        path_green=path_green,
         path_inp=path_inp,
         path_finished=path_finished,
         name="qseis06",

@@ -35,11 +35,6 @@ def pre_process_edgrn2(
     earth_model_layer_num=None,
 ):
     # print("preprocessing edgrn2")
-    if platform.system() == "Windows":
-        path_bin_call = os.path.join(path_green, "edgrn2.exe")
-    else:
-        path_bin_call = os.path.join(path_green, "edgrn2.bin")
-    shutil.copy(path_bin, path_bin_call)
 
     for obs_depth in obs_depth_list:
         sub_sub_dir = str(os.path.join(path_green, "edgrn2", "%.2f" % obs_depth))

@@ -63,11 +63,6 @@ def pre_process_spec(
     earth_model_layer_num=None,
     physical_dispersion=0,
 ):
-    if platform.system() == "Windows":
-        path_bin_call = os.path.join(path_green, "qssp2020.exe")
-    else:
-        path_bin_call = os.path.join(path_green, "qssp2020.bin")
-    shutil.copy(path_bin, path_bin_call)
 
     item_list_spec = []
     for event_depth in event_depth_list:
@@ -145,12 +140,6 @@ def pre_process_func(
     earth_model_layer_num=None,
     physical_dispersion=0,
 ):
-    if platform.system() == "Windows":
-        path_bin_call = os.path.join(path_green, "qssp2020.exe")
-    else:
-        path_bin_call = os.path.join(path_green, "qssp2020.bin")
-    if not os.path.exists(path_bin_call):
-        shutil.copy(path_bin, path_bin_call)
     item_list_func = []
     for event_depth in event_depth_list:
         for receiver_depth in receiver_depth_list:

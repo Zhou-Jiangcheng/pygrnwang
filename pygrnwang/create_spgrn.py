@@ -1,9 +1,10 @@
 import os
+import sys
 import subprocess
 import platform
 
 from .spgrn2020inp import s as str_inp
-from .utils import convert_earth_model_nd2inp
+from .utils import call_exe, convert_earth_model_nd2inp
 
 
 def create_dir_spgrn2020(event_depth, receiver_depth, path_green):
@@ -100,39 +101,32 @@ def create_inp_spgrn2020(
 
 def call_spgrn2020(event_depth, receiver_depth, path_green, check_finished=False):
     # print(event_depth, receiver_depth, path_green, check_finished)
-    # os.chdir(path_green)
-    path_inp = str(
+    sub_sub_dir = str(
         os.path.join(
             path_green,
             "GreenFunc",
             "%.2f" % event_depth,
             "%.2f" % receiver_depth,
-            "grn.inp",
         )
     )
+    os.chdir(sub_sub_dir)
+    path_inp = os.path.join(sub_sub_dir, "grn.inp")
+    path_finished = os.path.join(sub_sub_dir, ".finished")
 
-    sub_dir = os.path.dirname(path_inp)
-    path_finished = os.path.join(sub_dir, ".finished")
-    if check_finished and os.path.exists(path_finished):
-        return None
+    if (
+        check_finished
+        and os.path.exists(path_finished)
+        and len(os.listdir(sub_sub_dir)) > 2
+    ):
+        with open(path_finished, "r") as fr:
+            output = fr.readlines()
+        return output
 
-    if platform.system() == "Windows":
-        spgrn_process = subprocess.Popen(
-            [os.path.join(path_green, "spgrn2020.exe")],
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-        )
-        spgrn_process.communicate(str.encode(path_inp))
-    else:
-        spgrn_process = subprocess.Popen(
-            [os.path.join(path_green, "spgrn2020.bin")],
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-        )
-        spgrn_process.communicate(str.encode(path_inp))
-
-    with open(path_finished, "w") as fw:
-        fw.writelines([])
+    output = call_exe(
+        path_inp=path_inp,
+        path_finished=path_finished,
+        name="spgrn2020",
+    )
 
 
 if __name__ == "__main__":

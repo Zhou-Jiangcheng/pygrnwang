@@ -51,13 +51,6 @@ def pre_process_spgrn2020(
     earth_model_layer_num=None,
     physical_dispersion=0,
 ):
-    if platform.system() == "Windows":
-        path_bin_call = os.path.join(path_green, "spgrn2020.exe")
-    else:
-        path_bin_call = os.path.join(path_green, "spgrn2020.bin")
-    if not os.path.exists(path_bin_call):
-        shutil.copy(path_bin, path_bin_call)
-
     item_list = []
     for event_depth in event_depth_list:
         for receiver_depth in receiver_depth_list:

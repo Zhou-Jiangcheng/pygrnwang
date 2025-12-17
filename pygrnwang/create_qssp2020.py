@@ -230,7 +230,6 @@ def call_qssp2020(
         return output
 
     output = call_exe(
-        path_green=path_green,
         path_inp=path_inp,
         path_finished=path_finished,
         name="qssp2020",

@@ -3,7 +3,7 @@ include LICENSE
 recursive-include fortran_src_codes  *.f *.for *.f90 *.F *.F90
 recursive-include fortran_src_codes  *.inc *.INC *.par *.PAR *.dat *.DAT *.txt *.cfg *.in *.h *.H
 recursive-include pygrnwang/exec *.jar
-exclude pygrnwang/exec/*.bin
-exclude pygrnwang/exec/*.exe
+#exclude pygrnwang/exec/*.bin
+#exclude pygrnwang/exec/*.exe
 exclude pygrnwang/exec/*.out
 exclude pygrnwang/exec/*.o

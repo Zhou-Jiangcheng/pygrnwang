@@ -55,13 +55,6 @@ def pre_process_edcmp2(
     # Print status (commented out)
     # print("preprocessing edcmp2")
 
-    # Determine the correct binary filename based on the operating system.
-    if platform.system() == "Windows":
-        path_bin_call = os.path.join(path_green, "edcmp2.exe")
-    else:
-        path_bin_call = os.path.join(path_green, "edcmp2.bin")
-    shutil.copy(path_bin, path_bin_call)
-
     # Load the current Green's function library information.
     with open(os.path.join(path_green, "green_lib_info.json"), "r") as fr:
         green_info = json.load(fr)

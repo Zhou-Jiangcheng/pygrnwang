@@ -1,4 +1,5 @@
 import os
+import sys
 import hashlib
 import subprocess
 import platform
@@ -163,14 +164,14 @@ def call_qssp2020_read(path_green, path_inp, check_finished=False):
 
     if platform.system() == "Windows":
         spgrn_process = subprocess.Popen(
-            [os.path.join(path_green, "qssp2020.exe")],
+            [os.path.join(sys.exec_prefix, 'bin', "qssp2020.exe")],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
         )
         spgrn_process.communicate(str.encode(path_inp))
     else:
         spgrn_process = subprocess.Popen(
-            [os.path.join(path_green, "qssp2020.bin")],
+            [os.path.join(sys.exec_prefix, 'bin', "qssp2020.bin")],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
         )

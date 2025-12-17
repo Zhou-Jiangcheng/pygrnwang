@@ -170,7 +170,6 @@ def call_qseis2025(
         return output
 
     output = call_exe(
-        path_green=path_green,
         path_inp=path_inp,
         path_finished=path_finished,
         name="qseis2025",

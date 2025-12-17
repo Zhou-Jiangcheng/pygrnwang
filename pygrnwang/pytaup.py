@@ -1,12 +1,13 @@
 import os
+import sys
 
 import numpy as np
 import jpype.imports  # use jpype to call java class
 
 jar_path = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)),
-    "exec",
-    "TauP-2.6.1.jar",
+    sys.exec_prefix,
+    "bin",
+    "TauP.jar",
 )
 if not jpype.isJVMStarted():
     jpype.startJVM("--enable-native-access=ALL-UNNAMED", classpath=[jar_path])

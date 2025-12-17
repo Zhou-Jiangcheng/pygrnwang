@@ -8,7 +8,7 @@ c
       integer*4 nzmax,lmax,nrmax,nfmax,ndtransmax
       parameter(lmax=500)
       parameter(nzmax=lmax+2)
-      parameter(nrmax=101,nfmax=8192)
+      parameter(nrmax=101,nfmax=4096)
       parameter(ndtransmax=4)
 c
 c     INDEX PARAMETERS FOR SEISMOMETER CHARACTERISTICS

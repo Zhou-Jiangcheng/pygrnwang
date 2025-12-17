@@ -1,4 +1,5 @@
 import os
+import sys
 import platform
 import subprocess
 
@@ -298,9 +299,9 @@ def reshape_sub_faults(sub_faults, num_strike, num_dip):
     return X, Y, Z
 
 
-def call_exe(path_green, path_inp, path_finished, name):
+def call_exe(path_inp, path_finished, name):
     name_exe = "%s.exe" % name if platform.system() == "Windows" else "%s.bin" % name
-    path_exe = os.path.join(path_green, name_exe)
+    path_exe = os.path.join(sys.exec_prefix, 'bin', name_exe)
     proc = subprocess.Popen(
         [path_exe],
         stdin=subprocess.PIPE,

@@ -57,11 +57,6 @@ def pre_process_qseis2025(
 ):
     print("Preprocessing")
     os.makedirs(path_green, exist_ok=True)
-    if platform.system() == "Windows":
-        path_bin_call = os.path.join(path_green, "qseis2025.exe")
-    else:
-        path_bin_call = os.path.join(path_green, "qseis2025.bin")
-    shutil.copy(path_bin, path_bin_call)
 
     N_dist, N_dist_group = None, None
     for event_depth in event_depth_list:
