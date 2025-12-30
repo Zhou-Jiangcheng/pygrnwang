@@ -46,12 +46,18 @@ def install_binaries(target_exec_dir):
     
     if not shutil.which("gfortran"):
         raise ValueError(r"Please install gfortran.")
+    if not shutil.which("jar"):
+        raise ValueError(r"Please install openjdk.")
     
     # Ensure the output directory exists
     os.makedirs(target_exec_dir, exist_ok=True)
 
     # Get the bin directory of the current conda environment
-    env_bin_dir = os.path.join(sys.exec_prefix, 'bin')
+    if platform.system() == "Windows":
+        env_bin_dir = os.path.join(sys.exec_prefix, 'Scripts')
+    else:
+        env_bin_dir = os.path.join(sys.exec_prefix, 'bin')
+        
     print(f"[pygrnwang] Target environment bin: {env_bin_dir}")
 
     # 1. Compile Fortran
