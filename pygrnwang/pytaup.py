@@ -4,19 +4,10 @@ import sys
 import numpy as np
 import jpype.imports  # use jpype to call java class
 
-jar_path = os.path.join(
-    sys.exec_prefix,
-    "bin",
-    "TauP.jar",
-)
-if not os.path.exists(jar_path):
-    if sys.platform == "win32":
-        _env_jar = os.path.join(sys.exec_prefix, 'Scripts', 'TauP.jar')
-    else:
-        _env_jar = os.path.join(sys.exec_prefix, 'bin', 'TauP.jar')
-        
-    if os.path.exists(_env_jar):
-        jar_path = _env_jar
+if sys.platform == "win32":
+    jar_path = os.path.join(sys.exec_prefix, 'Scripts', 'TauP.jar')
+else:
+    jar_path = os.path.join(sys.exec_prefix, 'bin', 'TauP.jar')
 
 if not os.path.exists(jar_path):
     print(f"TauP.jar not found in {sys.exec_prefix}/bin or {sys.exec_prefix}/Scripts")
