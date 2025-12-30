@@ -1,10 +1,11 @@
 import os
 import sys
+import platform
 
 import numpy as np
 import jpype.imports  # use jpype to call java class
 
-if sys.platform == "win32":
+if platform.system() == "Windows":
     jar_path = os.path.join(sys.exec_prefix, 'Scripts', 'TauP.jar')
 else:
     jar_path = os.path.join(sys.exec_prefix, 'bin', 'TauP.jar')
