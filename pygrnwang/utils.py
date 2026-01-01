@@ -300,8 +300,12 @@ def reshape_sub_faults(sub_faults, num_strike, num_dip):
 
 
 def call_exe(path_inp, path_finished, name):
-    name_exe = "%s.exe" % name if platform.system() == "Windows" else "%s.bin" % name
-    path_exe = os.path.join(sys.exec_prefix, 'bin', name_exe)
+    if platform.system() == "Windows":
+        name_exe = "%s.exe" % name
+        path_exe = os.path.join(sys.exec_prefix, 'Scripts', name_exe)
+    else:
+        name_exe = "%s.exe" % name
+        path_exe = os.path.join(sys.exec_prefix, 'bin', name_exe)
     proc = subprocess.Popen(
         [path_exe],
         stdin=subprocess.PIPE,
