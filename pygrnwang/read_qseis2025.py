@@ -14,7 +14,7 @@ from .signal_process import resample
 
 # Define output type lists
 one_com_list = ["volume"]
-three_com_list = ["disp", "velo"]
+three_com_list = ["disp", "velo", "acce"]
 rota_com_list = ["rota", "rota_rate"]
 six_com_list = ["strain", "strain_rate", "stress", "stress_rate"]
 
@@ -23,7 +23,7 @@ def get_outfile_name_list(output_type):
     if output_type == "volume":
         name_list_psv = ["tv"]
         name_list_sh = []
-    elif output_type == "disp" or output_type == "velo":
+    elif output_type == "disp" or output_type == "velo" or output_type == "acce":
         name_list_psv = ["tz", "tr"]
         name_list_sh = ["tt"]
     elif output_type == "strain" or output_type == "strain_rate":
@@ -89,9 +89,9 @@ def read_time_series_qseis2025_ascii(path_greenfunc, start_count, output_type="d
 
 
 def read_time_series_qseis2025_bin(
-    path_greenfunc,
-    start_count,
-    output_type,
+        path_greenfunc,
+        start_count,
+        output_type,
 ):
     time_series_list = []
     name_list_psv, name_list_sh = get_outfile_name_list(output_type)
@@ -107,10 +107,10 @@ def read_time_series_qseis2025_bin(
 def synthesize_rzv(time_series, m1):
     # ex,ss,ds,cl
     rzv = (
-        time_series[0] * m1[0]
-        + time_series[1] * m1[1]
-        + time_series[2] * m1[2]
-        + time_series[3] * m1[3]
+            time_series[0] * m1[0]
+            + time_series[1] * m1[1]
+            + time_series[2] * m1[2]
+            + time_series[3] * m1[3]
     )
     return rzv
 
@@ -146,22 +146,22 @@ def get_sorted_grid_params(target, grid_list):
 
 
 def seek_qseis2025(
-    path_green: str,
-    event_depth_km: float,
-    receiver_depth_km: float,
-    az_deg: float,
-    dist_km: float,
-    focal_mechanism: Union[np.ndarray, list],
-    srate: float,
-    output_type: str = "disp",
-    rotate: bool = True,
-    before_p: Union[float, None] = None,
-    pad_zeros: bool = False,
-    shift: bool = False,
-    only_seismograms: bool = True,
-    model_name: str = "ak135fc",
-    green_info: Union[dict, None] = None,
-    interpolate_type: int = 0,
+        path_green: str,
+        event_depth_km: float,
+        receiver_depth_km: float,
+        az_deg: float,
+        dist_km: float,
+        focal_mechanism: Union[np.ndarray, list],
+        srate: float,
+        output_type: str = "disp",
+        rotate: bool = True,
+        before_p: Union[float, None] = None,
+        pad_zeros: bool = False,
+        shift: bool = False,
+        only_seismograms: bool = True,
+        model_name: str = "ak135fc",
+        green_info: Union[dict, None] = None,
+        interpolate_type: int = 0,
 ):
     """
     Read synthetic seismograms.
@@ -173,7 +173,7 @@ def seek_qseis2025(
     :param dist_km: Epicentral distance in km.
     :param focal_mechanism: [strike, dip, rake] or [M11, M12, M13, M22, M23, M33].
     :param srate: Sampling rate in Hz.
-    :param output_type: disp | velo | strain | strain_rate |
+    :param output_type: disp | velo | acce | strain | strain_rate |
             stress | stress_rate | rota | rota_rate.
     :param before_p: Time before P-wave.
     :param pad_zeros: Pad with zeros.
@@ -436,13 +436,33 @@ def seek_qseis2025(
         seismograms_resample = np.cumsum(seismograms_resample, axis=1) / srate
     elif (wavelet_type == 2) and (("rate" in output_type) or (output_type == "velo")):
         seismograms_resample = (
-            signal.convolve(
-                seismograms_resample.T,
-                np.array([1, -1])[:, None],
-                mode="same",
-                method="auto",
-            ).T
-            / srate
+                signal.convolve(
+                    seismograms_resample.T,
+                    np.array([1, -1])[:, None],
+                    mode="same",
+                    method="auto",
+                ).T
+                / srate
+        )
+    elif (wavelet_type == 1) and (output_type == 'acce'):
+        seismograms_resample = (
+                signal.convolve(
+                    seismograms_resample.T,
+                    np.array([1, -1])[:, None],
+                    mode="same",
+                    method="auto",
+                ).T
+                / srate
+        )
+    elif (wavelet_type == 2) and (output_type == 'acce'):
+        seismograms_resample = (
+                signal.convolve(
+                    seismograms_resample.T,
+                    np.array([1, -2, 1])[:, None],
+                    mode="same",
+                    method="auto",
+                ).T
+                / (srate * srate)
         )
 
     if only_seismograms:
