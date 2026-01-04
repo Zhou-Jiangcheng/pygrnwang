@@ -254,7 +254,7 @@ def convert_sub_faults_geo2ned(sub_faults, source_point, approximate=True):
     else:
         for n in range(sub_faults_c.shape[0]):
             x = (sub_faults_c[n, 0] - source_point_c[0]) * d2m
-            y = (sub_faults_c[n, 1] - source_point_c[1]) * d2m
+            y = (sub_faults_c[n, 1] - source_point_c[1]) * d2m * np.cos(np.deg2rad(sub_faults_c[n, 0]))
             z = sub_faults_c[n, 2] - source_point_c[2]
             sub_faults_ned[n, :] = np.array([x, y, z])
     return sub_faults_ned
