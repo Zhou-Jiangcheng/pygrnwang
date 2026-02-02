@@ -1,10 +1,9 @@
 import os
-import sys
-import subprocess
-import platform
+import json
 
 from .spgrn2020inp import s as str_inp
 from .utils import call_exe, convert_earth_model_nd2inp
+from .read_green_info_spgrn2020 import read_green_info_spgrn2020
 
 
 def create_dir_spgrn2020(event_depth, receiver_depth, path_green):
@@ -98,6 +97,24 @@ def create_inp_spgrn2020(
         fw.writelines(lines + lines_earth + last_line)
     return path_inp
 
+def update_green_info_lib_json(path_green, event_depth, receiver_depth):
+    with open(os.path.join(path_green, "green_lib_info.json"), "r") as fr:
+        green_info = json.load(fr)
+    green_info_dep = read_green_info_spgrn2020(
+        str(
+            os.path.join(
+                path_green, "GreenFunc", "%.2f" % event_depth, "%.2f" % receiver_depth
+            )
+        ),
+        event_depth,
+    )
+    green_info["dist_list"] = green_info_dep["dist_list"]
+    green_info['samples_num'] = green_info_dep['samples_num']
+    json_str = json.dumps(green_info, indent=4, ensure_ascii=False)
+    with open(
+        os.path.join(path_green, "green_lib_info.json"), "w", encoding="utf-8"
+    ) as file:
+        file.write(json_str)
 
 def call_spgrn2020(event_depth, receiver_depth, path_green, check_finished=False):
     # print(event_depth, receiver_depth, path_green, check_finished)
@@ -127,6 +144,7 @@ def call_spgrn2020(event_depth, receiver_depth, path_green, check_finished=False
         path_finished=path_finished,
         name="spgrn2020",
     )
+    update_green_info_lib_json(path_green, event_depth, receiver_depth)
 
 
 if __name__ == "__main__":
