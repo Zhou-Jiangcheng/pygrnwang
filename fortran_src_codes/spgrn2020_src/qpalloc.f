@@ -35,7 +35,7 @@ c
 c
       complex*16 comi,comi2,cua(8,6)
 c
-      character*80 spcgrndir,stdgrndir,infofile,tptable,tstable
+      character*128 spcgrndir,stdgrndir,infofile,tptable,tstable
 c
       logical*2, allocatable:: ksmallpsv(:),ksmallsh(:)
 c
@@ -74,7 +74,7 @@ c
      &       zhlw(:,:,:),wj(:,:,:),wh(:,:,:),zjupg(:),
      &       zjlwg(:),zhupg(:),zhlwg(:),wjg(:),whg(:)
 c
-      character*80, allocatable:: grnfile(:),rgrnfile(:),
+      character*128, allocatable:: grnfile(:),rgrnfile(:),
      &             tgrnfile(:),pgrnfile(:),stdgrnfile(:)
 
 c

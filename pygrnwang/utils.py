@@ -304,7 +304,7 @@ def call_exe(path_inp, path_finished, name):
         name_exe = "%s.exe" % name
         path_exe = os.path.join(sys.exec_prefix, 'Scripts', name_exe)
     else:
-        name_exe = "%s.exe" % name
+        name_exe = "%s.bin" % name
         path_exe = os.path.join(sys.exec_prefix, 'bin', name_exe)
     proc = subprocess.Popen(
         [path_exe],

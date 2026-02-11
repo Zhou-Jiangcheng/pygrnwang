@@ -69,7 +69,7 @@ s = """# This is the input file of FORTRAN77 program "spgrn2020" for calculating
 #    exist already, 1 = need to be calculated or updated.
 #    Note: update is required if any of the above parameters is changed)
 #-------------------------------------------------------------------------------------------
-'\e\spgrn2020_lib\GreenSpec\10.0\'
+''
 1
 10.0  0.00  'grn_d10.0'  1
 #-------------------------------------------------------------------------------------------
@@ -88,7 +88,7 @@ s = """# This is the input file of FORTRAN77 program "spgrn2020" for calculating
 #    where delta_1 and delta_2 are the smallest and largest intervals near d1 and d2,
 #    respectively (sampling interval linearly increasing with distance)
 #-------------------------------------------------------------------------------------------
-'\e\spgrn2020_lib\GreenFunc\10.0\'
+''
 'GreenInfo10.0.dat'
 'tptable.dat'
 'tstable.dat'

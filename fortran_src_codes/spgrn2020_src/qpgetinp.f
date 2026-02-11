@@ -7,7 +7,7 @@ c     work space
 c
       integer*4 i,j,l,ir,ig,isg,is,is1,flen,iswap,nhypo,ierr
       real*8 suppress,r1,r2,dr,dr1,dr2,swap
-      character*80 fswap
+      character*128 fswap
 c
 c     uniform receiver depth
 c     ======================
@@ -127,7 +127,7 @@ c
         enddo
       enddo
 c
-      do flen=80,1,-1
+      do flen=128,1,-1
         if(spcgrndir(flen:flen).ne.' ')goto 200
       enddo
 200   continue
@@ -143,7 +143,7 @@ c
       call skipdoc(inpunit)
       read(inpunit,*)stdgrndir
 c
-      do flen=80,1,-1
+      do flen=128,1,-1
         if(stdgrndir(flen:flen).ne.' ')goto 300
       enddo
 300   continue

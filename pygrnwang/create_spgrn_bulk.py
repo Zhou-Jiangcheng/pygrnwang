@@ -15,8 +15,8 @@ from .create_spgrn import (
     create_dir_spgrn2020,
     create_inp_spgrn2020,
     call_spgrn2020,
+    update_green_info_lib_json
 )
-from .read_green_info_spgrn2020 import read_green_info_spgrn2020
 from .utils import group, convert_earth_model_nd2nd_without_Q
 
 
@@ -123,31 +123,10 @@ def pre_process_spgrn2020(
 
     return group_list
 
-
-def update_green_info_lib_json(path_green, event_depth, receiver_depth):
-    with open(os.path.join(path_green, "green_lib_info.json"), "r") as fr:
-        green_info = json.load(fr)
-    green_info_dep = read_green_info_spgrn2020(
-        str(
-            os.path.join(
-                path_green, "GreenFunc", "%.2f" % event_depth, "%.2f" % receiver_depth
-            )
-        ),
-        event_depth,
-    )
-    green_info["dist_list"] = green_info_dep["dist_list"]
-    json_str = json.dumps(green_info, indent=4, ensure_ascii=False)
-    with open(
-        os.path.join(path_green, "green_lib_info.json"), "w", encoding="utf-8"
-    ) as file:
-        file.write(json_str)
-
-
 def create_grnlib_spgrn2020_sequential(path_green, check_finished=False):
     s = datetime.datetime.now()
     with open(os.path.join(path_green, "group_list.pkl"), "rb") as fr:
         group_list = pickle.load(fr)
-    update_green_info_lib_json(path_green, group_list[0][0][0], group_list[0][0][1])
     for item in group_list:
         for i in range(len(item)):
             print("computing " + str(item[i]))
@@ -155,25 +134,19 @@ def create_grnlib_spgrn2020_sequential(path_green, check_finished=False):
     e = datetime.datetime.now()
     print("run time:%s" % str(e - s))
 
-
 def create_grnlib_spgrn2020_parallel(path_green, check_finished=False):
     s = datetime.datetime.now()
     with open(os.path.join(path_green, "group_list.pkl"), "rb") as fr:
         group_list = pickle.load(fr)
-    update_green_info_lib_json(path_green, group_list[0][0][0], group_list[0][0][1])
     # 展平任务
     tasks = []
     for grp in group_list:
         for item in grp:
             tasks.append(tuple(item + [path_green, check_finished]))
 
-    # 读取进程数（可选）
-    processes = None
-    try:
-        with open(os.path.join(path_green, "green_lib_info.json"), "r") as fr:
-            processes = json.load(fr).get("processes_num", None)
-    except Exception:
-        pass
+    with open(os.path.join(path_green, "green_lib_info.json"), "r") as fr:
+        green_info = json.load(fr)
+    processes = green_info.get("processes_num", None)
 
     with Pool(processes=processes) as pool:
         for _ in tqdm(
@@ -182,6 +155,10 @@ def create_grnlib_spgrn2020_parallel(path_green, check_finished=False):
             desc="Computing SPGRN2020 library",
         ):
             pass
+
+    update_green_info_lib_json(path_green,
+                               float(green_info['event_depth_list'][0]),
+                               float(green_info['receiver_depth_list'][0]))
     e = datetime.datetime.now()
     print("run time:" + str(e - s))
 
@@ -190,7 +167,6 @@ def create_grnlib_spgrn2020_parallel_multi_nodes(path_green, check_finished=Fals
     s = datetime.datetime.now()
     with open(os.path.join(path_green, "group_list.pkl"), "rb") as fr:
         group_list = pickle.load(fr)
-    update_green_info_lib_json(path_green, group_list[0][0][0], group_list[0][0][1])
     for ind_group in range(len(group_list)):
         comm = MPI.COMM_WORLD
         processes_num = comm.Get_size()

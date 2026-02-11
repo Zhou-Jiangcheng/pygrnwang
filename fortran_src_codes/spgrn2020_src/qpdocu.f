@@ -50,7 +50,7 @@ c
       write(20,'(a)')'#  list of source_depths / filenames'
       write(20,'(i10)')ngrn
       do ig=1,ngrn
-        do flen=80,1,-1
+        do flen=128,1,-1
           if(grnfile(ig)(flen:flen).ne.' ')goto 100
         enddo
 100     continue
@@ -83,16 +83,16 @@ c
       write(20,'(a)')'#        bytes are for the reserved places before'
       write(20,'(a)')'#         and after each record'
       write(20,'(a)')'#================================================'
-      do slen=80,1,-1
+      do slen=128,1,-1
         if(stdgrndir(slen:slen).ne.' ')goto 200
       enddo
 200   continue
-      do flen=80,1,-1
+      do flen=128,1,-1
         if(tptable(flen:flen).ne.' ')goto 300
       enddo
 300   continue
       write(20,'(a)')'  '//''''//tptable(slen+1:flen)//''''
-      do flen=80,1,-1
+      do flen=128,1,-1
         if(tstable(flen:flen).ne.' ')goto 400
       enddo
 400   continue
