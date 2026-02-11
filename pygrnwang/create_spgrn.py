@@ -144,6 +144,7 @@ def call_spgrn2020(event_depth, receiver_depth, path_green, check_finished=False
         path_finished=path_finished,
         name="spgrn2020",
     )
+    update_green_info_lib_json(path_green, event_depth, receiver_depth)
 
 
 if __name__ == "__main__":
