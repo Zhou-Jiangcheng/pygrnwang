@@ -1,61 +1,59 @@
 import os
 import pickle
-import shutil
-import platform
 import json
 import datetime
-from tqdm import tqdm  # 新增
 
 try:
     from mpi4py import MPI
 except:
     pass
 from multiprocessing import Pool
-from .create_spgrn import (
-    create_dir_spgrn2020,
-    create_inp_spgrn2020,
-    call_spgrn2020,
-    update_green_info_lib_json
-)
+from tqdm import tqdm
+import jpype
+
+from .create_spgrn2020 import create_dir_spgrn
+from .create_spgrn2020_bulk import update_green_info_lib_json
+from .create_spgrn2012 import create_inp_spgrn2012, call_spgrn2012
 from .utils import group, convert_earth_model_nd2nd_without_Q
+from .pytaup import create_tpts_table
 
 
-# 新增：imap_unordered 的打包调用助手
-def _call_spgrn2020_star(args):
-    return call_spgrn2020(*args)
+def _call_spgrn2012_star(args):
+    return call_spgrn2012(*args)
 
 
-def pre_process_spgrn2020(
-    processes_num,
-    path_green,
-    path_bin,
-    event_depth_list,
-    receiver_depth_list,
-    spec_time_window,
-    sampling_interval,
-    max_frequency,
-    max_slowness,
-    anti_alias,
-    gravity_fc,
-    gravity_harmonic,
-    cal_sph,
-    cal_tor,
-    source_radius,
-    cal_gf,
-    time_window,
-    green_before_p,
-    source_duration,
-    dist_range,
-    delta_dist_range,
-    path_nd=None,
-    earth_model_layer_num=None,
-    physical_dispersion=0,
+def pre_process_spgrn2012(
+        processes_num,
+        path_green,
+        path_bin,
+        event_depth_list,
+        receiver_depth_list,
+        spec_time_window,
+        sampling_interval,
+        max_frequency,
+        max_slowness,
+        anti_alias,
+        gravity_fc,
+        gravity_harmonic,
+        cal_sph,
+        cal_tor,
+        source_radius,
+        cal_gf,
+        time_window,
+        t0,
+        v0,
+        source_duration,
+        dist_range,
+        delta_dist_range,
+        path_nd=None,
+        earth_model_layer_num=None,
+        physical_dispersion=0
 ):
     item_list = []
     for event_depth in event_depth_list:
         for receiver_depth in receiver_depth_list:
-            create_dir_spgrn2020(event_depth, receiver_depth, path_green)
-            create_inp_spgrn2020(
+            create_dir_spgrn(event_depth, receiver_depth, path_green)
+            create_inp_spgrn2012(
                 path_green,
                 event_depth,
                 receiver_depth,
@@ -71,7 +69,8 @@ def pre_process_spgrn2020(
                 source_radius,
                 cal_gf,
                 time_window,
-                green_before_p,
+                t0,
+                v0,
                 source_duration,
                 dist_range,
                 delta_dist_range,
@@ -106,7 +105,8 @@ def pre_process_spgrn2020(
         "cal_gf": cal_gf,
         "time_window": time_window,
         # "sampling_num": round(time_window / sampling_interval + 1),
-        "green_before_p": green_before_p,
+        "t0": t0,
+        "v0": v0,
         "source_duration": source_duration,
         "dist_range": dist_range,
         "delta_dist_range": delta_dist_range,
@@ -117,28 +117,31 @@ def pre_process_spgrn2020(
     }
     json_str = json.dumps(params, indent=4, ensure_ascii=False)
     with open(
-        os.path.join(path_green, "green_lib_info.json"), "w", encoding="utf-8"
+            os.path.join(path_green, "green_lib_info.json"), "w", encoding="utf-8"
     ) as file:
         file.write(json_str)
 
     return group_list
 
-def create_grnlib_spgrn2020_sequential(path_green, check_finished=False):
+
+def create_grnlib_spgrn2012_sequential(path_green, check_finished=False):
     s = datetime.datetime.now()
     with open(os.path.join(path_green, "group_list.pkl"), "rb") as fr:
         group_list = pickle.load(fr)
     for item in group_list:
         for i in range(len(item)):
             print("computing " + str(item[i]))
-            call_spgrn2020(item[i][0], item[i][1], path_green, check_finished)
+            call_spgrn2012(item[i][0], item[i][1], path_green, check_finished)
+    update_green_info_lib_json(path_green, group_list[0][0][0], group_list[0][0][1])
     e = datetime.datetime.now()
     print("run time:%s" % str(e - s))
 
-def create_grnlib_spgrn2020_parallel(path_green, check_finished=False):
+
+def create_grnlib_spgrn2012_parallel(path_green, check_finished=False):
     s = datetime.datetime.now()
     with open(os.path.join(path_green, "group_list.pkl"), "rb") as fr:
         group_list = pickle.load(fr)
-    # 展平任务
+
     tasks = []
     for grp in group_list:
         for item in grp:
@@ -150,20 +153,34 @@ def create_grnlib_spgrn2020_parallel(path_green, check_finished=False):
 
     with Pool(processes=processes) as pool:
         for _ in tqdm(
-            pool.imap_unordered(_call_spgrn2020_star, tasks, chunksize=1),
-            total=len(tasks),
-            desc="Computing SPGRN2020 library",
+                pool.imap_unordered(_call_spgrn2012_star, tasks, chunksize=1),
+                total=len(tasks),
+                desc="Computing SPGRN2012 library",
         ):
             pass
 
-    update_green_info_lib_json(path_green,
+    green_info = update_green_info_lib_json(path_green,
                                float(green_info['event_depth_list'][0]),
                                float(green_info['receiver_depth_list'][0]))
+
+    # creating tp and ts tables
+    for event_depth in tqdm(green_info['event_depth_list'], desc="Creating travel time tables"):
+        for receiver_depth in green_info['receiver_depth_list']:
+            create_tpts_table(
+                os.path.join(path_green, "GreenFunc"),
+                event_depth,
+                receiver_depth,
+                green_info['dist_list'],
+                green_info['path_nd_without_Q'],
+                False,
+            )
+    if jpype.isJVMStarted():
+        jpype.shutdownJVM()
     e = datetime.datetime.now()
     print("run time:" + str(e - s))
 
 
-def create_grnlib_spgrn2020_parallel_multi_nodes(path_green, check_finished=False):
+def create_grnlib_spgrn2012_parallel_multi_nodes(path_green, check_finished=False):
     s = datetime.datetime.now()
     with open(os.path.join(path_green, "group_list.pkl"), "rb") as fr:
         group_list = pickle.load(fr)
@@ -177,12 +194,13 @@ def create_grnlib_spgrn2020_parallel_multi_nodes(path_green, check_finished=Fals
                 "Pleasse check the process num!" % (processes_num, len(group_list[0]))
             )
         print("ind_group:%d rank:%d" % (ind_group, rank))
-        call_spgrn2020(
+        call_spgrn2012(
             event_depth=group_list[ind_group][rank][0],
             receiver_depth=group_list[ind_group][rank][1],
             path_green=path_green,
             check_finished=check_finished,
         )
+    update_green_info_lib_json(path_green, group_list[0][0][0], group_list[0][0][1])
     e = datetime.datetime.now()
     print("run time:" + str(e - s))
 

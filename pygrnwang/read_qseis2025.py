@@ -8,8 +8,7 @@ import scipy.signal as signal
 
 from .focal_mechanism import check_convert_fm
 from .geo import rotate_rtz_to_enz, rotate_symmetric_tensor_series
-from .pytaup import read_tpts_table
-from .utils import shift_green2real_tpts
+from .utils import shift_green2real_tpts, read_tpts_table
 from .signal_process import resample
 
 # Define output type lists

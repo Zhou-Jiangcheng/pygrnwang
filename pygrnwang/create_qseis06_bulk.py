@@ -114,14 +114,18 @@ def pre_process_qseis06(
     convert_earth_model_nd2nd_without_Q(path_nd, path_nd_without_Q)
 
     # creating tp and ts tables
+    dist_kms = np.linspace(
+        dist_range[0],
+        dist_range[1],
+        round(np.ceil((dist_range[1] - dist_range[0]) / delta_dist)) + 1,
+    )
     for event_depth in tqdm(event_depth_list, desc="Creating travel time tables"):
         for receiver_depth in receiver_depth_list:
             create_tpts_table(
                 path_green,
                 event_depth,
                 receiver_depth,
-                dist_range,
-                delta_dist,
+                dist_kms,
                 path_nd_without_Q,
                 check_finished_tpts_table,
             )
@@ -296,14 +300,18 @@ def pre_process_qseis06_strain_rate(
         convert_earth_model_nd2nd_without_Q(path_nd, path_nd_without_Q)
 
     # creating tp and ts tables
+    dist_kms = np.linspace(
+        dist_range[0],
+        dist_range[1],
+        round(np.ceil((dist_range[1] - dist_range[0]) / delta_dist)) + 1,
+    )
     for event_depth in tqdm(event_depth_list, desc="Creating travel time tables"):
         for receiver_depth in receiver_depth_list:
             create_tpts_table(
                 path_green,
                 event_depth,
                 receiver_depth,
-                dist_range,
-                delta_dist,
+                dist_kms,
                 path_nd_without_Q,
                 check_finished_tpts_table,
             )

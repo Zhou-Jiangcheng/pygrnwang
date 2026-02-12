@@ -11,8 +11,7 @@ from .read_qseis06 import (
 from .create_qseis06_bulk import create_order_ind
 from .focal_mechanism import check_convert_fm
 from .geo import rotate_symmetric_tensor_series
-from .pytaup import read_tpts_table
-from .utils import read_nd, shift_green2real_tpts
+from .utils import read_nd, shift_green2real_tpts, read_tpts_table
 from .signal_process import resample
 
 

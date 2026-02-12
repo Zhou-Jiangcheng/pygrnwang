@@ -12,7 +12,7 @@ from .geo import rotate_rtz_to_enz
 from .signal_process import resample
 
 
-def synthesize_spgrn2020(az_in_deg, time_series, focal_mechanism):
+def synthesize_spgrn(az_in_deg, time_series, focal_mechanism):
     [M11, M12, M13, M22, M23, M33] = check_convert_fm(focal_mechanism=focal_mechanism)
     # expl.,strike-slip,dip-slip,clvd
     exp = (M11 + M22 + M33) / 3
@@ -271,7 +271,7 @@ def seek_spgrn2020(
 
     # --- 3. Synthesize Seismograms ---
     # r,t,z
-    seismograms = synthesize_spgrn2020(
+    seismograms = synthesize_spgrn(
         az_in_deg=az_deg, time_series=time_series, focal_mechanism=focal_mechanism
     )
     if rotate:

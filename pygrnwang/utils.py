@@ -321,5 +321,28 @@ def call_exe(path_inp, path_finished, name):
         return None
 
 
-if __name__ == "__main__":
-    pass
+def read_tpts_table(path_green, event_depth_km, receiver_depth_km, ind):
+    fr_tp = open(
+        os.path.join(
+            path_green,
+            "%.2f" % event_depth_km,
+            "%.2f" % receiver_depth_km,
+            "tp_table.bin",
+        ),
+        "rb",
+    )
+    tp = np.fromfile(file=fr_tp, dtype=np.float32, count=1, offset=ind * 4)[0]
+    fr_tp.close()
+
+    fr_ts = open(
+        os.path.join(
+            path_green,
+            "%.2f" % event_depth_km,
+            "%.2f" % receiver_depth_km,
+            "ts_table.bin",
+        ),
+        "rb",
+    )
+    ts = np.fromfile(file=fr_ts, dtype=np.float32, count=1, offset=ind * 4)[0]
+    fr_ts.close()
+    return float(tp), float(ts)

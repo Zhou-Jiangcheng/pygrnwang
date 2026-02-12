@@ -66,6 +66,7 @@ def install_binaries(target_exec_dir):
         "edgrn2.0_src": f"edgrn2.{platform_exec}",
         "edcmp2.0_src": f"edcmp2.{platform_exec}",
         "qssp2020_src": f"qssp2020.{platform_exec}",
+        "spgrn2012_src": f"spgrn2012.{platform_exec}",
         "spgrn2020_src": f"spgrn2020.{platform_exec}",
         "qseis06_src": f"qseis06.{platform_exec}",
         "qseis2025_src": f"qseis2025.{platform_exec}",

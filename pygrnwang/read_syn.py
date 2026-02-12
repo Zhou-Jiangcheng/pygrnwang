@@ -1,7 +1,7 @@
 import numpy as np
 from typing import Union
 
-from .read_spgrn import seek_spgrn2020
+from .read_spgrn2020 import seek_spgrn2020
 from .read_qssp2020 import seek_qssp2020
 from .read_qseis2025 import seek_qseis2025
 

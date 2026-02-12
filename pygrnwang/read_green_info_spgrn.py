@@ -3,7 +3,7 @@ import os
 import numpy as np
 
 
-def read_green_info_spgrn2020(path_greenfunc: str, green_depth: float) -> dict:
+def read_green_info_spgrn(path_greenfunc: str, green_depth: float) -> dict:
     """
     read GreenInfo.dat
     :param path_greenfunc:

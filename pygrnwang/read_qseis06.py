@@ -7,8 +7,7 @@ import pandas as pd
 
 from .focal_mechanism import check_convert_fm
 from .geo import rotate_rtz_to_enz
-from .pytaup import read_tpts_table
-from .utils import shift_green2real_tpts
+from .utils import shift_green2real_tpts, read_tpts_table
 from .signal_process import resample
 
 

@@ -9,7 +9,7 @@ from .create_qssp2020 import mt_com_list
 from .utils import (
     shift_green2real_tpts,
     create_rotate_z_mat,
-    rotate_symmetric_tensor_series,
+    rotate_symmetric_tensor_series, read_tpts_table,
 )
 from .focal_mechanism import (
     convert_mt_axis,
@@ -17,7 +17,6 @@ from .focal_mechanism import (
     check_convert_fm,
 )
 from .geo import rotate_rtz_to_enz
-from .pytaup import read_tpts_table
 from .signal_process import resample
 
 # Define output type lists
