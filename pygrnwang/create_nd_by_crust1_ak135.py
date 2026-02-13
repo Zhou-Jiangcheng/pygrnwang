@@ -99,7 +99,7 @@ def create_nd_by_crust1_ak135(
     inds = np.argwhere(nd_new[:, 2] == 0)
     ind_cmb = inds[0][0]
     ind_icocb = inds[-1][0]
-    ind_660 = np.argwhere(nd_new[:, 0] == 660)[0][0]
+    #ind_660 = np.argwhere(nd_new[:, 0] == 660)[0][0]
 
     lines = []
     for i in range(len(nd_new)):
@@ -108,8 +108,7 @@ def create_nd_by_crust1_ak135(
             line = line + "%12.5f " % float(nd_new[i, j])
         line = line[:-1] + "\n"
         lines.append(line)
-    # fake crust-mantle boundary, only for convenient to taup
-    lines.insert(ind_660 + 1, "mantle\n")
+    lines.insert(len(nd_crust1) - 1, "mantle\n")
     lines.insert(ind_cmb + 1, "outer-core\n")
     lines.insert(ind_icocb + 3, "inner-core\n")
     with open(path_output, "w") as fw:

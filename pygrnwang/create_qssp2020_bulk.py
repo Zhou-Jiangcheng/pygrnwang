@@ -22,7 +22,7 @@ from .create_qssp2020 import (
     convert_pd2bin_qssp2020,
 )
 from .utils import group, convert_earth_model_nd2nd_without_Q
-from .pytaup import create_tpts_table
+from .pytaup import taup_create_npz_file, create_tpts_table
 
 
 def _call_qssp2020_star(args):
@@ -282,6 +282,7 @@ def pre_process_qssp2020(
     convert_earth_model_nd2nd_without_Q(path_nd, path_nd_without_Q)
 
     # creating tp and ts tables
+    npz_file = taup_create_npz_file(nd_file=path_nd_without_Q)
     dist_kms = np.linspace(
         dist_range[0],
         dist_range[1],
@@ -290,15 +291,13 @@ def pre_process_qssp2020(
     for event_depth in tqdm(event_depth_list, desc="Creating travel time tables"):
         for receiver_depth in receiver_depth_list:
             create_tpts_table(
-                os.path.join(path_green, "GreenFunc"),
+                path_green,
                 event_depth,
                 receiver_depth,
                 dist_kms,
-                path_nd_without_Q,
+                npz_file,
                 check_finished_tpts_table,
             )
-    if jpype.isJVMStarted():
-        jpype.shutdownJVM()
 
     green_info = {
         "processes_num": processes_num,

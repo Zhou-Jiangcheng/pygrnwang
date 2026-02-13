@@ -6,13 +6,12 @@ import json
 import datetime
 from multiprocessing import Pool
 
+import numpy as np
 from tqdm import tqdm
-
 try:
     from mpi4py import MPI
 except:
     pass
-import jpype
 
 from .create_qseis2025 import (
     create_dir_qseis2025,
@@ -117,8 +116,6 @@ def pre_process_qseis2025(
                 path_nd_without_Q,
                 check_finished_tpts_table,
             )
-    if jpype.isJVMStarted():
-        jpype.shutdownJVM()
 
     green_info = {
         "processes_num": processes_num,

@@ -22,7 +22,7 @@ from .create_qseis06 import (
     call_qseis06,
     convert_pd2bin_qseis06,
 )
-from .pytaup import create_tpts_table
+from .pytaup import taup_create_npz_file, create_tpts_table
 from .utils import group, convert_earth_model_nd2nd_without_Q
 
 
@@ -114,6 +114,7 @@ def pre_process_qseis06(
     convert_earth_model_nd2nd_without_Q(path_nd, path_nd_without_Q)
 
     # creating tp and ts tables
+    npz_file = taup_create_npz_file(nd_file=path_nd_without_Q)
     dist_kms = np.linspace(
         dist_range[0],
         dist_range[1],
@@ -126,11 +127,9 @@ def pre_process_qseis06(
                 event_depth,
                 receiver_depth,
                 dist_kms,
-                path_nd_without_Q,
+                npz_file,
                 check_finished_tpts_table,
             )
-    if jpype.isJVMStarted():
-        jpype.shutdownJVM()
 
     green_info = {
         "processes_num": processes_num,

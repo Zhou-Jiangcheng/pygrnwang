@@ -9,13 +9,12 @@ except:
     pass
 from multiprocessing import Pool
 from tqdm import tqdm
-import jpype
 
 from .create_spgrn2020 import create_dir_spgrn
 from .create_spgrn2020_bulk import update_green_info_lib_json
 from .create_spgrn2012 import create_inp_spgrn2012, call_spgrn2012
 from .utils import group, convert_earth_model_nd2nd_without_Q
-from .pytaup import create_tpts_table
+from .pytaup import taup_create_npz_file, create_tpts_table
 
 
 def _call_spgrn2012_star(args):
@@ -164,6 +163,7 @@ def create_grnlib_spgrn2012_parallel(path_green, check_finished=False):
                                float(green_info['receiver_depth_list'][0]))
 
     # creating tp and ts tables
+    npz_file = taup_create_npz_file(nd_file=green_info['path_nd_without_Q'])
     for event_depth in tqdm(green_info['event_depth_list'], desc="Creating travel time tables"):
         for receiver_depth in green_info['receiver_depth_list']:
             create_tpts_table(
@@ -171,11 +171,10 @@ def create_grnlib_spgrn2012_parallel(path_green, check_finished=False):
                 event_depth,
                 receiver_depth,
                 green_info['dist_list'],
-                green_info['path_nd_without_Q'],
+                npz_file,
                 False,
             )
-    if jpype.isJVMStarted():
-        jpype.shutdownJVM()
+
     e = datetime.datetime.now()
     print("run time:" + str(e - s))
 
