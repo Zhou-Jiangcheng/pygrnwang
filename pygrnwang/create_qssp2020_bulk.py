@@ -32,7 +32,6 @@ def _call_qssp2020_star(args):
 def pre_process_spec(
         processes_num,
         path_green,
-        path_bin,
         event_depth_list,
         receiver_depth_list,
         spec_time_window,

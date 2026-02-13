@@ -1,8 +1,6 @@
 import os
 import json
 import pickle
-import shutil
-import platform
 import json
 import datetime
 from tqdm import tqdm
@@ -28,7 +26,6 @@ def _call_spgrn2020_star(args):
 def pre_process_spgrn2020(
         processes_num,
         path_green,
-        path_bin,
         event_depth_list,
         receiver_depth_list,
         spec_time_window,
@@ -90,7 +87,6 @@ def pre_process_spgrn2020(
     params = {
         "processes_num": processes_num,
         "path_green": path_green,
-        "path_bin": path_bin,
         "event_depth_list": event_depth_list,
         "receiver_depth_list": receiver_depth_list,
         "spec_time_window": spec_time_window,

@@ -1,6 +1,4 @@
 import os
-import shutil
-import platform
 import pickle
 import json
 import datetime
@@ -30,7 +28,6 @@ def _call_qseis2025_star(args):
 def pre_process_qseis2025(
     processes_num,
     path_green,
-    path_bin,
     event_depth_list,
     receiver_depth_list,
     dist_range,

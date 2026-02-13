@@ -1,6 +1,4 @@
 import os
-import shutil
-import platform
 import pickle
 import json
 import datetime
@@ -44,7 +42,6 @@ def create_order_ind(order, diff_accu_order):
 def pre_process_qseis06(
     processes_num,
     path_green,
-    path_bin,
     event_depth_list,
     receiver_depth_list,
     dist_range,
