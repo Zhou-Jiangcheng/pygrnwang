@@ -14,10 +14,10 @@ pip install pygrnwang
 
 ```
 conda create -n pygrnwang python=3.12
-conda install gfortran obspy numpy scipy pandas matplotlib tqdm mpi4py -c conda-forge
+conda install "setuptools<81" obspy tqdm mpi4py gfortran -c conda-forge
 git clone https://github.com/Zhou-Jiangcheng/pygrnwang.git
 cd pygrnwang
-pip install -e . --no-build-isolation
+pip install -e .
 ```
 
 # Usage
