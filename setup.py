@@ -77,6 +77,8 @@ def install_binaries(target_exec_dir, copy_to_system=True):
         output_binary = os.path.join(target_exec_dir, bin_name)
 
         extra = ["-static"]
+        if platform.machine().lower() in ("x86_64", "amd64"):
+            extra.append("-march=x86-64")
         env_fflags = os.environ.get("PYGRNWANG_FFLAGS", "")
         if env_fflags:
             extra += env_fflags.split()
