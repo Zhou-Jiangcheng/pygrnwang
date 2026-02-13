@@ -24,10 +24,7 @@ class BinaryDistribution(Distribution):
 
 
 def _compile_dir(src_dir: str, out_bin: str, extra_flags: list[str]) -> None:
-    cmd = "gfortran ./*.f -O3 %s -o %s" % (
-        " ".join("%s" % extra_flags[_] for _ in range(len(extra_flags))),
-        out_bin,
-    )
+    cmd = "gfortran ./*.f -O3 %s -o %s" % (" ".join(extra_flags), out_bin)
     print(cmd)
     proc = subprocess.run(cmd, cwd=src_dir, shell=True, text=True, capture_output=True)
     if proc.returncode != 0:
@@ -78,7 +75,7 @@ def install_binaries(target_exec_dir, copy_to_system=True):
 
         extra = ["-static"]
         if platform.machine().lower() in ("x86_64", "amd64"):
-            extra.append("-march=x86-64")
+            extra.extend(["-march=x86-64", "-mtune=generic"])
         env_fflags = os.environ.get("PYGRNWANG_FFLAGS", "")
         if env_fflags:
             extra += env_fflags.split()
