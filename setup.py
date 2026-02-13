@@ -37,10 +37,11 @@ def _compile_dir(src_dir: str, out_bin: str, extra_flags: list[str]) -> None:
         )
 
 
-def install_binaries(target_exec_dir):
+def install_binaries(target_exec_dir, copy_to_system=True):
     """
     Core logic: compile Fortran and copy all binaries files into conda's bin directory
     target_exec_dir: directory to store compilation outputs (build directory or source directory)
+    copy_to_system: whether to copy the compiled binaries to the environment's bin directory
     """
     print(f"[pygrnwang] Starting custom installation logic...")
     
@@ -48,6 +49,7 @@ def install_binaries(target_exec_dir):
         raise ValueError(r"Please install gfortran.")
     
     # Ensure the output directory exists
+    target_exec_dir = os.path.abspath(target_exec_dir)
     os.makedirs(target_exec_dir, exist_ok=True)
 
     # Get the bin directory of the current conda environment
@@ -74,7 +76,7 @@ def install_binaries(target_exec_dir):
         fortran_src_dir = os.path.join(fortran_src_root, src_folder)
         output_binary = os.path.join(target_exec_dir, bin_name)
 
-        extra = []
+        extra = ["-static"]
         env_fflags = os.environ.get("PYGRNWANG_FFLAGS", "")
         if env_fflags:
             extra += env_fflags.split()
@@ -85,7 +87,7 @@ def install_binaries(target_exec_dir):
         _compile_dir(fortran_src_dir, output_binary, extra)
 
         # Copy the executable to conda/bin
-        if os.path.exists(output_binary):
+        if copy_to_system and os.path.exists(output_binary):
             dest_link = os.path.join(env_bin_dir, bin_name)
             print(f"[pygrnwang] Installing binary to {dest_link}")
             try:
@@ -103,7 +105,7 @@ class CustomBuildPy(_build_py):
         _build_py.run(self)
         # Standard install: compile into build/lib/pygrnwang/exec
         exec_dir = os.path.join(self.build_lib, "pygrnwang", "exec")
-        install_binaries(exec_dir)
+        install_binaries(exec_dir, copy_to_system=False)
 
 
 class CustomDevelop(_develop):

@@ -7,3 +7,4 @@ recursive-include pygrnwang/exec *.jar
 #exclude pygrnwang/exec/*.exe
 exclude pygrnwang/exec/*.out
 exclude pygrnwang/exec/*.o
+prune test
