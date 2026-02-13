@@ -39,15 +39,13 @@ def _compile_dir(src_dir: str, out_bin: str, extra_flags: list[str]) -> None:
 
 def install_binaries(target_exec_dir):
     """
-    Core logic: compile Fortran and copy all binaries/Jar files into conda's bin directory
+    Core logic: compile Fortran and copy all binaries files into conda's bin directory
     target_exec_dir: directory to store compilation outputs (build directory or source directory)
     """
     print(f"[pygrnwang] Starting custom installation logic...")
     
     if not shutil.which("gfortran"):
         raise ValueError(r"Please install gfortran.")
-    if not shutil.which("jar"):
-        raise ValueError(r"Please install openjdk.")
     
     # Ensure the output directory exists
     os.makedirs(target_exec_dir, exist_ok=True)
@@ -96,23 +94,6 @@ def install_binaries(target_exec_dir):
                 os.chmod(dest_link, st.st_mode | 0o111)
             except Exception as e:
                 print(f"[Warning] Could not copy binary to {env_bin_dir}: {e}")
-
-    # 2. Copy TauP.jar
-    # Note: the Jar package is usually already in the source tree; no compilation is needed, just copy it
-    Taup_src = os.path.join(project_root, 'pygrnwang', 'exec', 'TauP-2.6.1.jar')
-    TauP_dst = os.path.join(env_bin_dir, "TauP.jar")
-    
-    if os.path.exists(Taup_src):
-        print(f"[pygrnwang] Installing Jar to {TauP_dst}")
-        try:
-            shutil.copy(Taup_src, TauP_dst)
-            st = os.stat(TauP_dst)
-            os.chmod(TauP_dst, st.st_mode | 0o111)
-        except Exception as e:
-            print(f"[Warning] Could not copy Jar to {env_bin_dir}: {e}")
-    else:
-        print(f"[Error] TauP.jar not found at {Taup_src}")
-
 
 # --- Custom command classes ---
 
