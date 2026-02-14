@@ -59,6 +59,33 @@ def taup_create_npz_file(nd_file):
         sys.exit(1)
     return npz_file
 
+def cal_first_p(event_depth_km, dist_km, receiver_depth_km=0.0, model_name="ak135"):
+    """
+    Calculates P and S times for a single distance.
+    This function remains unchanged and is called by workers.
+    """
+    # Force deeper point as source (reciprocity)
+    if event_depth_km < receiver_depth_km:
+        event_depth_km, receiver_depth_km = receiver_depth_km, event_depth_km
+
+    # This will use the per-process cache
+    model = _get_model(model_name)
+    dist_deg = dist_km / 111.19492664455874
+
+    # 1. First P
+    phases_list_p = ["p", "P", "pP", "Pg", "Pn", "Pdiff", "PKP"]
+    try:
+        arrivals_p = model.get_travel_times(
+            source_depth_in_km=event_depth_km,
+            receiver_depth_in_km=receiver_depth_km,
+            distance_in_degree=dist_deg,
+            phase_list=phases_list_p
+        )
+        first_p = arrivals_p[0].time if arrivals_p else np.nan
+    except Exception:
+        first_p = np.nan
+
+    return first_p
 
 def cal_first_p_s(event_depth_km, dist_km, receiver_depth_km=0.0, model_name="ak135"):
     """
