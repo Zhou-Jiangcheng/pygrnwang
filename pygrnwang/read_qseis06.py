@@ -8,7 +8,7 @@ import pandas as pd
 from .focal_mechanism import check_convert_fm
 from .geo import rotate_rtz_to_enz
 from .utils import shift_green2real_tpts, read_tpts_table
-from .signal_process import resample
+from .signal_process import resample, filter_butter
 
 
 def read_time_series_qseis06_bin(path_greenfunc, start_count):
@@ -100,7 +100,35 @@ def seek_qseis06(
     only_seismograms=True,
     model_name="ak135fc",
     green_info=None,
+    freq_band=None,
+    butter_order: int = 4,
+    zero_phase: bool = False,
 ):
+    """
+    Read synthetic seismograms.
+
+    :param path_green: Root directory of the data.
+    :param event_depth_km: Event depth in km.
+    :param receiver_depth_km: Receiver depth in km.
+    :param az_deg: Azimuth in degrees.
+    :param dist_km: Epicentral distance in km.
+    :param focal_mechanism: [strike, dip, rake] or [M11, M12, M13, M22, M23, M33].
+    :param output_type: 'disp', 'velo', 'acce'.
+    :param srate: Sampling rate in Hz.
+    :param before_p: Time before P-wave.
+    :param pad_zeros: Pad with zeros.
+    :param shift: Shift seismograms based on tpts.
+    :param rotate: Rotate rtz2ned.
+    :param only_seismograms: Return only seismograms.
+    :param model_name: Model name.
+    :param green_info: Green's function library info.
+    :param freq_band: Frequency band for bandpass filter [low_freq, high_freq] in Hz.
+            Use None or [None, None] for no filtering (default).
+            Use [low_freq, None] for highpass, [None, high_freq] for lowpass.
+    :param butter_order: Order of Butterworth filter (default: 4).
+    :param zero_phase: Whether to use zero-phase filtering (default: False).
+    :return: (seismograms_resample, tpts_table, first_p, first_s)
+    """
     if green_info is None:
         with open(os.path.join(path_green, "green_lib_info.json"), "r") as fr:
             green_info = json.load(fr)
@@ -183,6 +211,13 @@ def seek_qseis06(
     else:
         time_reduction = 0
 
+    # Apply bandpass filter
+    if freq_band is not None and (freq_band[0] is not None or freq_band[1] is not None):
+        for i in range(len(seismograms)):
+            seismograms[i] = filter_butter(
+                seismograms[i], srate_grn, freq_band, butter_order, zero_phase
+            )
+    
     ts_count = 0
     if before_p is not None:
         ts_count = round(

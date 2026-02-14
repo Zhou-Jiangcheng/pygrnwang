@@ -2,6 +2,7 @@ import numpy as np
 from typing import Union
 
 from .read_spgrn2020 import seek_spgrn2020
+from .read_spgrn2012 import seek_spgrn2012
 from .read_qssp2020 import seek_qssp2020
 from .read_qseis2025 import seek_qseis2025
 
@@ -24,6 +25,9 @@ def read_syn(
     model_name: str = "ak135fc",
     green_info: Union[dict, None] = None,
     interpolate_type: int = 0,
+    freq_band=None,
+    butter_order: int = 4,
+    zero_phase: bool = False,
 ):
     """
     Unified interface to read synthetic seismograms using different methods.
@@ -47,6 +51,11 @@ def read_syn(
     :param interpolate_type:
             0 for nearest neighbor,
             1 for trilinear interpolation (Source Depth, Receiver Depth, Distance).
+    :param freq_band: Frequency band for bandpass filter [low_freq, high_freq] in Hz.
+            Use None or [None, None] for no filtering (default).
+            Use [low_freq, None] for highpass, [None, high_freq] for lowpass.
+    :param butter_order: Order of Butterworth filter (default: 4).
+    :param zero_phase: Whether to use zero-phase filtering (default: False).
     :return: (
             seismograms_resample,
             tpts_table,
@@ -74,6 +83,9 @@ def read_syn(
         "model_name": model_name,
         "green_info": green_info,
         "interpolate_type": interpolate_type,
+        "freq_band": freq_band,
+        "butter_order": butter_order,
+        "zero_phase": zero_phase,
     }
 
     if method == "qseis2025":
@@ -82,6 +94,8 @@ def read_syn(
         return seek_qssp2020(**kwargs)
     elif method == "spgrn2020":
         return seek_spgrn2020(**kwargs)
+    elif method == "spgrn2012":
+        return seek_spgrn2012(**kwargs)
     else:
         raise ValueError(f"Unknown method: {method}")
 

@@ -17,7 +17,7 @@ from .focal_mechanism import (
     check_convert_fm,
 )
 from .geo import rotate_rtz_to_enz
-from .signal_process import resample
+from .signal_process import resample, filter_butter
 
 # Define output type lists
 one_com_list = ["gravimeter"]
@@ -143,6 +143,9 @@ def seek_qssp2020(
     model_name: str = "ak135fc",
     green_info: Union[dict, None] = None,
     interpolate_type: int = 0,
+    freq_band=None,
+    butter_order: int = 4,
+    zero_phase: bool = False,
 ):
     """
     Read synthetic seismograms.
@@ -168,6 +171,11 @@ def seek_qssp2020(
     :param interpolate_type:
             0 for nearest neighbor,
             1 for trilinear interpolation (Source Depth, Receiver Depth, Distance).
+    :param freq_band: Frequency band for bandpass filter [low_freq, high_freq] in Hz.
+            Use None or [None, None] for no filtering (default).
+            Use [low_freq, None] for highpass, [None, high_freq] for lowpass.
+    :param butter_order: Order of Butterworth filter (default: 4).
+    :param zero_phase: Whether to use zero-phase filtering (default: False).
     :return: (
             seismograms_resample,
             tpts_table,
@@ -361,6 +369,13 @@ def seek_qssp2020(
         )
         tpts_table = {"p_onset": grn_first_p, "s_onset": grn_first_s}
 
+    # Apply bandpass filter
+    if freq_band is not None and (freq_band[0] is not None or freq_band[1] is not None):
+        for i in range(len(seismograms)):
+            seismograms[i] = filter_butter(
+                seismograms[i], srate_grn, freq_band, butter_order, zero_phase
+            )
+    
     ts_count = 0
     if before_p is not None:
         ts_count = round(
