@@ -8,7 +8,7 @@ from scipy import signal
 from .utils import shift_green2real_tpts, read_tpts_table
 from .geo import rotate_rtz_to_enz
 from .signal_process import resample, filter_butter
-from .read_spgrn2020 import synthesize_spgrn, read_spgrn_data_by_index, get_sorted_grid_params
+from .read_spgrn2020 import synthesize_spgrn, read_spgrn_data_by_index, read_spgrn_data_two_indices, get_sorted_grid_params
 
 
 def seek_spgrn2012(
@@ -158,19 +158,16 @@ def seek_spgrn2012(
             )
             path_data_layer = os.path.join(path_gf_layer, "grn_d%.2f" % src_depth)
 
-            # Read low distance
-            data_d0 = read_spgrn_data_by_index(
-                path_data_layer, dist_idx_low, green_info
-            )
-
             if w_dist > 1e-4:
-                # Read high distance
-                data_d1 = read_spgrn_data_by_index(
-                    path_data_layer, dist_idx_high, green_info
+                # Read both indices in one file open
+                data_d0, data_d1 = read_spgrn_data_two_indices(
+                    path_data_layer, dist_idx_low, dist_idx_high, green_info
                 )
                 return (1 - w_dist) * data_d0 + w_dist * data_d1
             else:
-                return data_d0
+                return read_spgrn_data_by_index(
+                    path_data_layer, dist_idx_low, green_info
+                )
 
         # E. Helper to fetch and interpolate Receiver Depth for a specific Source Depth
         def fetch_receiver_layer(src_depth):
@@ -227,13 +224,10 @@ def seek_spgrn2012(
 
     green_before_p = tp - (dist_km / v0 + t0)
     
-    # Apply bandpass filter
+    # Apply bandpass filter (vectorized over all components at once)
     if freq_band is not None and (freq_band[0] is not None or freq_band[1] is not None):
-        for i in range(len(seismograms)):
-            seismograms[i] = filter_butter(
-                seismograms[i], srate_grn, freq_band, butter_order, zero_phase
-            )
-    
+        seismograms = filter_butter(seismograms, srate_grn, freq_band, butter_order, zero_phase)
+
     ts_count = 0
     if before_p is not None:
         ts_count = round((green_before_p - before_p) * srate_grn)
@@ -262,11 +256,18 @@ def seek_spgrn2012(
         )
 
     len_after_resample = round(sampling_num * srate / srate_grn)
-    seismograms_resample = np.zeros((3, len_after_resample))
-    for i in range(3):
-        seismograms_resample[i] = resample(
-            seismograms[i], srate_old=srate_grn, srate_new=srate, zero_phase=True
-        )[:len_after_resample]
+    # Vectorized resample: resample_poly supports 2D arrays via axis parameter
+    if float(srate_grn).is_integer() and float(srate).is_integer():
+        gcd = np.gcd(int(srate), int(srate_grn))
+        p = int(srate) // gcd
+        q = int(srate_grn) // gcd
+        seismograms_resample = signal.resample_poly(seismograms, p, q, axis=1)[:, :len_after_resample]
+    else:
+        seismograms_resample = np.zeros((3, len_after_resample))
+        for i in range(3):
+            seismograms_resample[i] = resample(
+                seismograms[i], srate_old=srate_grn, srate_new=srate, zero_phase=True
+            )[:len_after_resample]
 
     if output_type == "disp":
         seismograms_resample = np.cumsum(seismograms_resample, axis=1) / srate

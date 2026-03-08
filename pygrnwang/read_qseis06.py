@@ -211,13 +211,10 @@ def seek_qseis06(
     else:
         time_reduction = 0
 
-    # Apply bandpass filter
+    # Apply bandpass filter (vectorized over all components at once)
     if freq_band is not None and (freq_band[0] is not None or freq_band[1] is not None):
-        for i in range(len(seismograms)):
-            seismograms[i] = filter_butter(
-                seismograms[i], srate_grn, freq_band, butter_order, zero_phase
-            )
-    
+        seismograms = filter_butter(seismograms, srate_grn, freq_band, butter_order, zero_phase)
+
     ts_count = 0
     if before_p is not None:
         ts_count = round(
@@ -247,11 +244,19 @@ def seek_qseis06(
             model_name=model_name,
         )
 
-    seismograms_resample = np.zeros((3, round(sampling_num * srate / srate_grn)))
-    for i in range(3):
-        seismograms_resample[i] = resample(
-            seismograms[i], srate_old=srate_grn, srate_new=srate, zero_phase=True
-        )
+    len_after_resample = round(sampling_num * srate / srate_grn)
+    # Vectorized resample: resample_poly supports 2D arrays via axis parameter
+    if float(srate_grn).is_integer() and float(srate).is_integer():
+        gcd = np.gcd(int(srate), int(srate_grn))
+        p = int(srate) // gcd
+        q = int(srate_grn) // gcd
+        seismograms_resample = signal.resample_poly(seismograms, p, q, axis=1)[:, :len_after_resample]
+    else:
+        seismograms_resample = np.zeros((3, len_after_resample))
+        for i in range(3):
+            seismograms_resample[i] = resample(
+                seismograms[i], srate_old=srate_grn, srate_new=srate, zero_phase=True
+            )[:len_after_resample]
 
     if wavelet_type == 1 and output_type == "disp":
         seismograms_resample = np.cumsum(seismograms_resample, axis=1) / srate

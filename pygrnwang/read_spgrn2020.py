@@ -64,6 +64,24 @@ def read_spgrn_data_by_index(path_grn_data, dist_index, green_info):
     return time_series
 
 
+def read_spgrn_data_two_indices(path_grn_data, dist_idx_low, dist_idx_high, green_info):
+    """Read two distance indices in a single file open for efficiency."""
+    N_T = round(green_info["time_window"] / green_info["sampling_interval"]) + 1
+    length_each = 3 + (2 + N_T) * 10
+    bytes_each = length_each * 4
+
+    with open(path_grn_data, "rb") as fr:
+        fr.seek(dist_idx_low * bytes_each)
+        raw_low = np.frombuffer(fr.read(bytes_each), dtype=np.float32).copy()
+        fr.seek(dist_idx_high * bytes_each)
+        raw_high = np.frombuffer(fr.read(bytes_each), dtype=np.float32).copy()
+
+    shape = (10, 2 + N_T)
+    data_low = raw_low[3:].reshape(shape)[:, 1:-1]
+    data_high = raw_high[3:].reshape(shape)[:, 1:-1]
+    return data_low, data_high
+
+
 def get_sorted_grid_params(target, grid_list):
     """
     Helper to find neighbors and weight for 1D interpolation on a sorted list.
@@ -240,19 +258,16 @@ def seek_spgrn2020(
             )
             path_data_layer = os.path.join(path_gf_layer, "grn_d%.2f" % src_depth)
 
-            # Read low distance
-            data_d0 = read_spgrn_data_by_index(
-                path_data_layer, dist_idx_low, green_info
-            )
-
             if w_dist > 1e-4:
-                # Read high distance
-                data_d1 = read_spgrn_data_by_index(
-                    path_data_layer, dist_idx_high, green_info
+                # Read both indices in one file open
+                data_d0, data_d1 = read_spgrn_data_two_indices(
+                    path_data_layer, dist_idx_low, dist_idx_high, green_info
                 )
                 return (1 - w_dist) * data_d0 + w_dist * data_d1
             else:
-                return data_d0
+                return read_spgrn_data_by_index(
+                    path_data_layer, dist_idx_low, green_info
+                )
 
         # E. Helper to fetch and interpolate Receiver Depth for a specific Source Depth
         def fetch_receiver_layer(src_depth):
@@ -301,12 +316,9 @@ def seek_spgrn2020(
         path_greenfunc=path_greenfunc_meta, dist_in_km=dist_km, green_info=green_info
     )
 
-    # Apply bandpass filter
+    # Apply bandpass filter (vectorized over all 3 components at once)
     if freq_band is not None and (freq_band[0] is not None or freq_band[1] is not None):
-        for i in range(len(seismograms)):
-            seismograms[i] = filter_butter(
-                seismograms[i], srate_grn, freq_band, butter_order, zero_phase
-            )
+        seismograms = filter_butter(seismograms, srate_grn, freq_band, butter_order, zero_phase)
     
     ts_count = 0
     if before_p is not None:
@@ -336,11 +348,18 @@ def seek_spgrn2020(
         )
 
     len_after_resample = round(sampling_num * srate / srate_grn)
-    seismograms_resample = np.zeros((3, len_after_resample))
-    for i in range(3):
-        seismograms_resample[i] = resample(
-            seismograms[i], srate_old=srate_grn, srate_new=srate, zero_phase=True
-        )[:len_after_resample]
+    # Vectorized resample: resample_poly supports 2D arrays via axis parameter
+    if float(srate_grn).is_integer() and float(srate).is_integer():
+        gcd = np.gcd(int(srate), int(srate_grn))
+        p = int(srate) // gcd
+        q = int(srate_grn) // gcd
+        seismograms_resample = signal.resample_poly(seismograms, p, q, axis=1)[:, :len_after_resample]
+    else:
+        seismograms_resample = np.zeros((3, len_after_resample))
+        for i in range(3):
+            seismograms_resample[i] = resample(
+                seismograms[i], srate_old=srate_grn, srate_new=srate, zero_phase=True
+            )[:len_after_resample]
 
     if output_type == "disp":
         seismograms_resample = np.cumsum(seismograms_resample, axis=1) / srate

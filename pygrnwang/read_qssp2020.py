@@ -4,6 +4,7 @@ from typing import Union
 
 import numpy as np
 import pandas as pd
+from scipy import signal as signal
 
 from .create_qssp2020 import mt_com_list
 from .utils import (
@@ -369,13 +370,10 @@ def seek_qssp2020(
         )
         tpts_table = {"p_onset": grn_first_p, "s_onset": grn_first_s}
 
-    # Apply bandpass filter
+    # Apply bandpass filter (vectorized over all components at once)
     if freq_band is not None and (freq_band[0] is not None or freq_band[1] is not None):
-        for i in range(len(seismograms)):
-            seismograms[i] = filter_butter(
-                seismograms[i], srate_grn, freq_band, butter_order, zero_phase
-            )
-    
+        seismograms = filter_butter(seismograms, srate_grn, freq_band, butter_order, zero_phase)
+
     ts_count = 0
     if before_p is not None:
         ts_count = round(
@@ -407,13 +405,19 @@ def seek_qssp2020(
         first_p = None
         first_s = None
 
-    seismograms_resample = np.zeros(
-        (seismograms.shape[0], round(sampling_num * srate / srate_grn))
-    )
-    for i in range(seismograms.shape[0]):
-        seismograms_resample[i] = resample(
-            seismograms[i], srate_old=srate_grn, srate_new=srate, zero_phase=True
-        )
+    len_after_resample = round(sampling_num * srate / srate_grn)
+    # Vectorized resample: resample_poly supports 2D arrays via axis parameter
+    if float(srate_grn).is_integer() and float(srate).is_integer():
+        gcd = np.gcd(int(srate), int(srate_grn))
+        p = int(srate) // gcd
+        q = int(srate_grn) // gcd
+        seismograms_resample = signal.resample_poly(seismograms, p, q, axis=1)[:, :len_after_resample]
+    else:
+        seismograms_resample = np.zeros((seismograms.shape[0], len_after_resample))
+        for i in range(seismograms.shape[0]):
+            seismograms_resample[i] = resample(
+                seismograms[i], srate_old=srate_grn, srate_new=srate, zero_phase=True
+            )[:len_after_resample]
 
     if only_seismograms:
         return seismograms_resample
