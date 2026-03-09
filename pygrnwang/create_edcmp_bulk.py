@@ -27,7 +27,6 @@ def _call_edcmp2_star(args):
 def pre_process_edcmp2(
     processes_num: int,
     path_green: str,
-    path_bin: str,
     grn_source_depth_range,
     grn_source_delta_depth,
     grn_dist_range,
@@ -44,17 +43,12 @@ def pre_process_edcmp2(
 
     :param processes_num: Number of parallel processes to be used.
     :param path_green: Directory path for the Green's function library.
-    :param path_bin: Path to the edcmp2 binary file to be used if not present in path_green.
-
     :param layered: Boolean flag indicating whether the Green's function library is for a layered model.
     :param lam: Lamé parameter λ (default: 30516224000).
     :param mu: Shear modulus μ (default: 33701888000).
     :return: group_list_edcmp, a grouping of observation depths according to processes_num,
              which is also saved to a pickle file in path_green.
     """
-    # Print status (commented out)
-    # print("preprocessing edcmp2")
-
     # Load the current Green's function library information.
     with open(os.path.join(path_green, "green_lib_info.json"), "r") as fr:
         green_info = json.load(fr)
@@ -118,7 +112,8 @@ def create_grnlib_edcmp2_sequential(path_green, check_finished=False):
     # print("run time:%s" % str(e - s))
 
 
-def create_grnlib_edcmp2_parallel(path_green, check_finished=False):
+def create_grnlib_edcmp2_parallel(path_green, check_finished=False, 
+                                  convert_bulk=True, remove=False):
     s = datetime.datetime.now()
     with open(os.path.join(path_green, "group_list_edcmp.pkl"), "rb") as fr:
         group_list_edcmp = pickle.load(fr)
@@ -138,9 +133,11 @@ def create_grnlib_edcmp2_parallel(path_green, check_finished=False):
         for _ in tqdm(
             pool.imap_unordered(_call_edcmp2_star, tasks, chunksize=1),
             total=len(tasks),
-            desc="Computing static stress",
+            desc="Computing static lib",
         ):
             pass
+    if convert_bulk:
+        convert_pd2np_edcmp2_all(path_green, remove=remove)
     e = datetime.datetime.now()
     return e - s
 
@@ -171,6 +168,10 @@ def create_grnlib_edcmp2_parallel_multi_nodes(path_green, check_finished=False):
     print("run time:" + str(e - s))
 
 
+_EDCMP_OUTPUT_TYPE_NAMES = ["disp", "strain", "stress", "tilt"]
+_EDCMP_CHA_NUM = {"disp": 3, "strain": 6, "stress": 6, "tilt": 2}
+
+
 def convert_pd2np_edcmp2_all(path_green, remove=False):
     print("converting ascii files to npy files")
     with open(os.path.join(path_green, "green_lib_info.json"), "r") as fr:
@@ -183,24 +184,47 @@ def convert_pd2np_edcmp2_all(path_green, remove=False):
         grn_source_delta_depth,
     )
     obs_depth_list = green_info["obs_depth_list"]
+    if not isinstance(obs_depth_list, list):
+        obs_depth_list = [obs_depth_list]
+
+    grn_dist_range = green_info["grn_dist_range"]
+    grn_dist_delta = green_info["grn_delta_dist"]
+    n_dist = len(
+        np.arange(grn_dist_range[0], grn_dist_range[1] + grn_dist_delta, grn_dist_delta)
+    )
+
     output_observables = np.nonzero(np.array(green_info["output_observables"]))[0]
-    v_list = []
-    for i in range(len(event_depth_list)):
-        for j in range(len(obs_depth_list)):
+    n_dep = len(event_depth_list)
+    n_obs = len(obs_depth_list)
+
+    # Pre-allocate one bulk array per active output_type:
+    # shape (n_dep, n_obs, 5, n_dist, cha_num)
+    bulk_data = {}
+    for o in output_observables:
+        ot = _EDCMP_OUTPUT_TYPE_NAMES[int(o)]
+        bulk_data[ot] = np.zeros(
+            (n_dep, n_obs, 5, n_dist, _EDCMP_CHA_NUM[ot]), dtype=np.float32
+        )
+
+    for i, event_depth in enumerate(event_depth_list):
+        for j, obs_depth in enumerate(obs_depth_list):
             for k in range(5):
                 path_sub_dir = os.path.join(
                     path_green,
                     "edcmp2",
-                    "%.2f" % event_depth_list[i],
-                    "%.2f" % obs_depth_list[j],
+                    "%.2f" % event_depth,
+                    "%.2f" % obs_depth,
                     "%d" % k,
                 )
                 for o in output_observables:
                     v_ijko = convert_edcmp2(
                         path_sub_dir=path_sub_dir,
-                        output_type_ind=output_observables[o],
+                        output_type_ind=int(o),
                         remove=remove,
                     )
-                    v_list.append(v_ijko)
-    with open(os.path.join(path_green, "edcmp2_all.pkl"), "wb") as fr:
-        pickle.dump(v_list, fr)  # type:ignore
+                    bulk_data[_EDCMP_OUTPUT_TYPE_NAMES[int(o)]][i, j, k] = v_ijko
+
+    for ot, arr in bulk_data.items():
+        out_path = os.path.join(path_green, "edcmp2_%s.npy" % ot)
+        np.save(out_path, arr)
+        print("Saved %s, shape: %s" % (os.path.basename(out_path), str(arr.shape)))

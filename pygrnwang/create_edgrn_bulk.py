@@ -24,7 +24,6 @@ def _call_edgrn2_star(args):
 def pre_process_edgrn2(
     processes_num,
     path_green,
-    path_bin,
     grn_source_depth_range,
     grn_source_delta_depth,
     grn_dist_range,
