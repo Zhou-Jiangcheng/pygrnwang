@@ -7,7 +7,7 @@ on:
 
 jobs:
   # ============================================================
-  # Job 1: 使用 cibuildwheel 在三大平台上构建 wheel
+  # Job 1: 使用 cibuildwheel 在两大平台上构建 wheel (Linux, Windows)
   # ============================================================
   build_wheels:
     name: Build wheels on ${{ matrix.os }} (${{ matrix.cibw_arch }})
@@ -20,8 +20,6 @@ jobs:
             cibw_arch: "x86_64"
           - os: windows-latest
             cibw_arch: "AMD64"
-          - os: macos-latest  # Apple Silicon Mac (ARM64)
-            cibw_arch: "arm64"
 
     steps:
       - uses: actions/checkout@v4
@@ -38,17 +36,6 @@ jobs:
           pip install virtualenv cibuildwheel
 
       # ---- 安装 gfortran ----
-      - name: Install gfortran (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          brew install gcc || true
-          # 找到已安装的带有版本号的 gfortran (例如 gfortran-14, gfortran-15)
-          GFORTRAN_BIN=$(ls $(brew --prefix)/bin/gfortran-[0-9]* | sort -V | tail -n 1)
-          # 创建一个无版本号的软链接，以便 setup.py 能够识别
-          ln -sf "$GFORTRAN_BIN" $(brew --prefix)/bin/gfortran
-          # 验证 gfortran 是否可用
-          gfortran --version
-
       - name: Install gfortran (Windows)
         if: runner.os == 'Windows'
         uses: msys2/setup-msys2@v2
@@ -72,9 +59,6 @@ jobs:
           
           CIBW_BEFORE_BUILD_LINUX: >
             yum install -y gcc-gfortran glibc-static || (apt-get update && apt-get install -y gfortran libc6-dev)
-          
-          CIBW_BEFORE_BUILD_MACOS: >
-            brew install gcc || true
           
           CIBW_ENVIRONMENT_WINDOWS: >
             PATH="D:\\a\\_temp\\msys64\\mingw64\\bin;$PATH"
