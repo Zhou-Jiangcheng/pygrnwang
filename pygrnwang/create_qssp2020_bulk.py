@@ -106,7 +106,6 @@ def pre_process_spec(
 def pre_process_func(
         processes_num,
         path_green,
-        path_bin,
         event_depth_list,
         receiver_depth_list,
         spec_time_window,
@@ -182,7 +181,6 @@ def pre_process_func(
 def pre_process_qssp2020(
         processes_num,
         path_green,
-        path_bin,
         event_depth_list,
         receiver_depth_list,
         spec_time_window,
@@ -216,7 +214,6 @@ def pre_process_qssp2020(
     pre_process_spec(
         processes_num,
         path_green,
-        path_bin,
         event_depth_list,
         receiver_depth_list,
         spec_time_window,
@@ -247,7 +244,6 @@ def pre_process_qssp2020(
     pre_process_func(
         processes_num,
         path_green,
-        path_bin,
         event_depth_list,
         receiver_depth_list,
         spec_time_window,
