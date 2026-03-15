@@ -4,7 +4,7 @@ This Python package serves as the frontend for calculating and building a Green'
 
 # Installation
 
-1. For user mode (with Python 3.12)
+1. For user mode
 
 ```
 pip install pygrnwang
