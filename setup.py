@@ -73,9 +73,11 @@ def install_binaries(target_exec_dir, copy_to_system=True):
         fortran_src_dir = os.path.join(fortran_src_root, src_folder)
         output_binary = os.path.join(target_exec_dir, bin_name)
 
-        extra = ["-static"]
-        if platform.machine().lower() in ("x86_64", "amd64"):
-            extra.extend(["-march=x86-64", "-mtune=generic"])
+        if platform.system() == "Darwin":
+            extra = ["-static-libgfortran", "-static-libgcc"]
+        else:
+            extra = ["-static"]
+
         env_fflags = os.environ.get("PYGRNWANG_FFLAGS", "")
         if env_fflags:
             extra += env_fflags.split()
