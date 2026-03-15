@@ -19,7 +19,7 @@ jobs:
           - os: macos-latest
             cibw_arch: "arm64"
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -57,12 +57,12 @@ jobs:
           CIBW_BEFORE_BUILD_MACOS: >
             brew install gcc && ln -sf "$(ls /opt/homebrew/bin/gfortran-* | head -1)" /opt/homebrew/bin/gfortran
           CIBW_ENVIRONMENT_WINDOWS: >
-            PATH="D:\\a\\_temp\\msys64\\mingw64\\bin;$PATH"
+            PATH="D:/a/_temp/msys64/mingw64/bin;$PATH"
           CIBW_ENVIRONMENT_MACOS: >
             PATH="/opt/homebrew/bin:$PATH" MACOSX_DEPLOYMENT_TARGET=15.0
           CIBW_ARCHS: ${{ matrix.cibw_arch }}
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         with:
           name: wheels-${{ matrix.os }}-${{ matrix.cibw_arch }}
           path: ./wheelhouse/*.whl
@@ -71,12 +71,12 @@ jobs:
     name: Build source distribution
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Build sdist
         run: pipx run build --sdist
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         with:
           name: sdist
           path: dist/*.tar.gz
@@ -91,7 +91,7 @@ jobs:
     permissions:
       id-token: write
     steps:
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v8
         with:
           path: dist
           merge-multiple: true
