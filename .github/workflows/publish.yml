@@ -46,7 +46,7 @@ jobs:
         shell: bash
         run: echo "D:/a/_temp/msys64/mingw64/bin" >> $GITHUB_PATH
 
-      # ---- 构建 wheel ----
+      # ---- build wheel ----
       - name: Build wheels
         run: cibuildwheel --output-dir wheelhouse
         env:
@@ -55,7 +55,7 @@ jobs:
           CIBW_BEFORE_BUILD_LINUX: >
             yum install -y gcc-gfortran glibc-static || (apt-get update && apt-get install -y gfortran libc6-dev)
           CIBW_BEFORE_BUILD_MACOS: >
-            brew install gcc
+            brew install gcc && ln -sf /opt/homebrew/bin/gfortran-* /opt/homebrew/bin/gfortran
           CIBW_ENVIRONMENT_WINDOWS: >
             PATH="D:\\a\\_temp\\msys64\\mingw64\\bin;$PATH"
           CIBW_ENVIRONMENT_MACOS: >
