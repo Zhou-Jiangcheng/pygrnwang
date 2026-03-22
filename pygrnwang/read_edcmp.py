@@ -12,8 +12,8 @@ from .focal_mechanism import (
     plane2mt,
     mt2plane,
 )
-from .utils import create_rotate_z_mat, read_material_nd
-from .geo import rotate_rtz_to_enz
+from .utils import create_rotate_z_mat, read_material_nd, read_nd
+from .geo import rotate_rtz_to_enz, rotate_symmetric_tensor_series
 
 
 def read_edcmp_raw(path_green, output_type, grn_event_depth, grn_obs_depth, mt_ind):
@@ -72,6 +72,7 @@ def seek_edcmp2(
     check_convert_pure_dp=True,
     output_type: str = "disp",
     times_mu: bool = False,
+    area_km_sq: float = None,
     model_name="ak135",
     green_info=None,
 ):
@@ -101,6 +102,9 @@ def seek_edcmp2(
     :param output_type: One of 'disp', 'strain', 'stress', 'tilt'.
     :param times_mu: If True, return raw Green's function values (already multiplied by mu).
                      If False (default), divide by mu so units are per N·m.
+    :param area_km_sq: Optional subfault area in km². When provided, the result is
+                       multiplied by area in m² (area_km² * 1e6), scaling the output
+                       by the subfault area contribution to M0 = mu * A [m²] * slip [m].
     :param model_name: Earth model name used to look up mu (e.g. 'ak135').
     :param green_info: Pre-loaded green_lib_info dict. If None, reads green_lib_info.json
                        from path_green automatically.
@@ -200,6 +204,8 @@ def seek_edcmp2(
         rho = material_row[3]
         mu_pa = rho * beta**2 * 1e9
         v = v / mu_pa
+    if area_km_sq is not None:
+        v = v * area_km_sq * 1e6
     return v
 
 
@@ -214,6 +220,7 @@ def seek_edcmp2_bulk(
     check_convert_pure_dp: bool = True,
     output_type: str = "disp",
     times_mu: bool = False,
+    area_km_sq_arr: np.ndarray = None,
     model_name: str = "ak135",
     green_info=None,
 ):
@@ -235,8 +242,14 @@ def seek_edcmp2_bulk(
     :param check_convert_pure_dp: Convert to pure double-couple if True.
     :param output_type: 'disp', 'strain', 'stress', or 'tilt'.
     :param times_mu: If False, divide by mu (rho*beta^2).
+    :param area_km_sq_arr: Optional array of subfault areas in km², shape (N,).
+                        When provided, each result row is multiplied by the
+                        corresponding area in m² (area_km² * 1e6), scaling the
+                        Green's function output by the subfault area contribution
+                        to the seismic moment M0 = mu * A [m²] * slip [m].
     :param model_name: Earth model name for mu lookup.
     :param green_info: Pre-loaded green_lib_info dict (avoids re-reading JSON).
+    
     :return: numpy array of shape (N, cha_num), one row per query point.
     """
     event_depth_km_arr = np.asarray(event_depth_km_arr)
@@ -301,8 +314,24 @@ def seek_edcmp2_bulk(
     else:
         raise ValueError("output_type must be one of disp, strain, stress, tilt")
 
-    # Cache mu_pa by grn_event_depth to avoid redundant file reads
-    mu_cache = {}
+    # Pre-compute mu_pa for every depth in event_depth_arr (nd file read once)
+    if not times_mu:
+        if model_name == "ak135fc":
+            from .ak135fc import s as str_nd
+            lines = str_nd.split("\n")
+            lines_new = []
+            for line in lines:
+                temp = line.split()
+                if len(temp) > 1:
+                    lines_new.extend(float(x) for x in temp)
+            nd_model = np.array(lines_new).reshape(-1, 4)
+        else:
+            nd_model = read_nd(model_name)
+        nd_depths = nd_model[:, 0]
+        nd_mu = nd_model[:, 3] * nd_model[:, 2] ** 2 * 1e9  # rho * vs^2 (Pa)
+        ind_per_dep = np.searchsorted(nd_depths, event_depth_arr, side="left")
+        ind_per_dep = np.clip(ind_per_dep, 0, len(nd_depths) - 1)
+        mu_per_dep = nd_mu[ind_per_dep]   # shape: (n_event_depths,)
 
     results = np.zeros((N, cha_num), dtype=float)
     for n in range(N):
@@ -328,23 +357,44 @@ def seek_edcmp2_bulk(
         v_ned_green_north = np.asarray(v_raws[n], dtype=float).T @ weights
 
         v_rtz = np.zeros(cha_num)
-        v_rtz[0] = v_ned_green_north[0]
-        if cha_num > 1:
-            v_rtz[1] = -v_ned_green_north[1]
-        if cha_num > 2:
-            v_rtz[2] = -v_ned_green_north[2]
-
-        if rotate:
-            v = rotate_rtz_to_enz(az_in_deg=az_deg, r=v_rtz[0], t=v_rtz[1], z=v_rtz[2])
+        if cha_num <= 3:
+            # displacement / tilt: [Ux(R), Uy(T_edcmp), Uz(Up)] → t_code=-y, z_code=-z
+            v_rtz[0] = v_ned_green_north[0]
+            if cha_num > 1:
+                v_rtz[1] = -v_ned_green_north[1]
+            if cha_num > 2:
+                v_rtz[2] = -v_ned_green_north[2]
+            if rotate:
+                v = rotate_rtz_to_enz(az_in_deg=az_deg, r=v_rtz[0], t=v_rtz[1], z=v_rtz[2])
+            else:
+                v = v_rtz
         else:
-            v = v_rtz
+            # stress / strain (cha_num=6)
+            # edcmp columns: [Sxx, Syy, Szz, Sxy, Syz, Szx]  (x=R, y=T_edcmp, z=Up)
+            # sign convention t_code=-y, z_code=-z → Q=diag(1,-1,-1):
+            #   σ_ij_code = Q_ia Q_jb σ_ab_edcmp
+            # reorder to [rr, rt, rz, tt, tz, zz] = [xx, xy, xz, yy, yz, zz] for rotate fn
+            v_rtz[0] =  v_ned_green_north[0]   # σ_rr = +Sxx
+            v_rtz[1] = -v_ned_green_north[3]   # σ_rt = -Sxy  (one sign flip)
+            v_rtz[2] = -v_ned_green_north[5]   # σ_rz = -Szx  (one sign flip)
+            v_rtz[3] =  v_ned_green_north[1]   # σ_tt = +Syy  (two flips cancel)
+            v_rtz[4] =  v_ned_green_north[4]   # σ_tz = +Syz  (two flips cancel)
+            v_rtz[5] =  v_ned_green_north[2]   # σ_zz = +Szz  (two flips cancel)
+            if rotate:
+                # rotate_symmetric_tensor_series with γ = az - π/2 gives:
+                #   R.T @ σ_rtz @ R = A_enz @ σ_rtz @ A_enz.T
+                # where A_enz = [[sin(az),-cos(az),0],[cos(az),sin(az),0],[0,0,1]]
+                # output order: [ee, en, ez, nn, nz, zz]
+                gamma = np.deg2rad(az_deg) - np.pi / 2
+                v = rotate_symmetric_tensor_series(v_rtz.reshape(1, 6), gamma)[0]
+            else:
+                v = v_rtz
 
         if not times_mu:
-            grn_dep = float(event_depth_arr[dep_idx[n]])
-            if grn_dep not in mu_cache:
-                mat = read_material_nd(model_name=model_name, depth=grn_dep)
-                mu_cache[grn_dep] = mat[3] * mat[2] ** 2 * 1e9
-            v = v / mu_cache[grn_dep]
+            v = v / mu_per_dep[dep_idx[n]]
+
+        if area_km_sq_arr is not None:
+            v = v * area_km_sq_arr[n] * 1e6  # km² -> m²
 
         results[n] = v
 
