@@ -205,11 +205,11 @@ def seek_edcmp2(
 
 def seek_edcmp2_bulk(
     path_green: str,
-    event_depth_km_list,
-    receiver_depth_km_list,
-    az_deg_list,
-    dist_km_list,
-    focal_mechanism_list,
+    event_depth_km_arr: np.ndarray,
+    receiver_depth_km_arr: np.ndarray,
+    az_deg_arr: np.ndarray,
+    dist_km_arr: np.ndarray,
+    focal_mechanism_arr: np.ndarray,
     rotate: bool = True,
     check_convert_pure_dp: bool = True,
     output_type: str = "disp",
@@ -225,19 +225,26 @@ def seek_edcmp2_bulk(
     edcmp2_{output_type}.npy files in path_green.
 
     :param path_green: Root directory of the Green's function library.
-    :param event_depth_km_list: List of event depths in km.
-    :param receiver_depth_km_list: List of receiver depths in km.
-    :param az_deg_list: List of azimuths in degrees.
-    :param dist_km_list: List of epicentral distances in km.
-    :param focal_mechanism_list: List of focal mechanisms (each as [strike,dip,rake](deg) or MT in NED).
+    :param event_depth_km_arr: Array of event depths in km, shape (N,).
+    :param receiver_depth_km_arr: Array of receiver depths in km, shape (N,).
+    :param az_deg_arr: Array of azimuths in degrees, shape (N,).
+    :param dist_km_arr: Array of epicentral distances in km, shape (N,).
+    :param focal_mechanism_arr: Array of focal mechanisms, shape (N, 3) for [strike,dip,rake]
+                                 or (N, 6) for MT in NED.
     :param rotate: Rotate from rtz to enz.
     :param check_convert_pure_dp: Convert to pure double-couple if True.
     :param output_type: 'disp', 'strain', 'stress', or 'tilt'.
     :param times_mu: If False, divide by mu (rho*beta^2).
     :param model_name: Earth model name for mu lookup.
     :param green_info: Pre-loaded green_lib_info dict (avoids re-reading JSON).
-    :return: List of result arrays, one per query point.
+    :return: numpy array of shape (N, cha_num), one row per query point.
     """
+    event_depth_km_arr = np.asarray(event_depth_km_arr)
+    receiver_depth_km_arr = np.asarray(receiver_depth_km_arr)
+    az_deg_arr = np.asarray(az_deg_arr)
+    dist_km_arr = np.asarray(dist_km_arr)
+    focal_mechanism_arr = np.asarray(focal_mechanism_arr)
+
     if green_info is None:
         with open(os.path.join(path_green, "green_lib_info.json"), "r") as fr:
             green_info = json.load(fr)
@@ -263,20 +270,17 @@ def seek_edcmp2_bulk(
     # Load bulk array once: shape (n_dep, n_obs, 5, n_dist, cha_num)
     bulk = np.load(os.path.join(path_green, "edcmp2_%s.npy" % output_type))
 
-    N = len(event_depth_km_list)
-    event_depth_km_q = np.asarray(event_depth_km_list)
-    receiver_depth_km_q = np.asarray(receiver_depth_km_list)
-    dist_km_q = np.asarray(dist_km_list)
+    N = len(event_depth_km_arr)
 
     # Batch nearest-neighbor index lookup for all queries at once
     dep_idx = np.argmin(
-        np.abs(event_depth_arr[:, None] - event_depth_km_q[None, :]), axis=0
+        np.abs(event_depth_arr[:, None] - event_depth_km_arr[None, :]), axis=0
     )
     obs_idx = np.argmin(
-        np.abs(obs_depth_arr[:, None] - receiver_depth_km_q[None, :]), axis=0
+        np.abs(obs_depth_arr[:, None] - receiver_depth_km_arr[None, :]), axis=0
     )
     dist_idx = np.argmin(
-        np.abs(dist_arr[:, None] - dist_km_q[None, :]), axis=0
+        np.abs(dist_arr[:, None] - dist_km_arr[None, :]), axis=0
     )
 
     # Batch extract Green's function data for all queries: shape (N, 5, cha_num)
@@ -288,14 +292,23 @@ def seek_edcmp2_bulk(
         :,
     ]  # -> (N, 5, cha_num)
 
+    if output_type == "disp":
+        cha_num = 3
+    elif output_type in ("strain", "stress"):
+        cha_num = 6
+    elif output_type == "tilt":
+        cha_num = 2
+    else:
+        raise ValueError("output_type must be one of disp, strain, stress, tilt")
+
     # Cache mu_pa by grn_event_depth to avoid redundant file reads
     mu_cache = {}
 
-    results = []
+    results = np.zeros((N, cha_num), dtype=float)
     for n in range(N):
-        az_deg = float(az_deg_list[n])
+        az_deg = float(az_deg_arr[n])
         A_rotate = create_rotate_z_mat(gamma=np.deg2rad(az_deg))
-        focal_mechanism_conv = check_convert_fm(focal_mechanism_list[n])
+        focal_mechanism_conv = check_convert_fm(focal_mechanism_arr[n])
         mt_ned_full = tensor2full_tensor_matrix(mt=focal_mechanism_conv, flag="ned")
         mt_rotate = A_rotate.T @ mt_ned_full @ A_rotate
         mt = np.array([
@@ -314,7 +327,6 @@ def seek_edcmp2_bulk(
         # Synthesize: (cha_num, 5) @ (5,) = (cha_num,)
         v_ned_green_north = np.asarray(v_raws[n], dtype=float).T @ weights
 
-        cha_num = v_ned_green_north.shape[0]
         v_rtz = np.zeros(cha_num)
         v_rtz[0] = v_ned_green_north[0]
         if cha_num > 1:
@@ -334,6 +346,6 @@ def seek_edcmp2_bulk(
                 mu_cache[grn_dep] = mat[3] * mat[2] ** 2 * 1e9
             v = v / mu_cache[grn_dep]
 
-        results.append(v)
+        results[n] = v
 
     return results
