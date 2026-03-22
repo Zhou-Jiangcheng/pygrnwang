@@ -7,7 +7,6 @@ from multiprocessing import Pool
 
 import numpy as np
 from tqdm import tqdm
-import jpype
 
 try:
     from mpi4py import MPI
