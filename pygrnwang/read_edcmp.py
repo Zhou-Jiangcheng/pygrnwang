@@ -221,6 +221,7 @@ def seek_edcmp2_bulk(
     output_type: str = "disp",
     times_mu: bool = False,
     area_km_sq_arr: np.ndarray = None,
+    slip_m_arr: np.ndarray = None,
     model_name: str = "ak135",
     green_info=None,
 ):
@@ -247,9 +248,13 @@ def seek_edcmp2_bulk(
                         corresponding area in m² (area_km² * 1e6), scaling the
                         Green's function output by the subfault area contribution
                         to the seismic moment M0 = mu * A [m²] * slip [m].
+    :param slip_m_arr: Optional array of subfault slips in m, shape (N,).
+                       When provided, each result row is multiplied by the
+                       corresponding slip, scaling the Green's function output
+                       by the slip contribution to M0 = mu * A [m²] * slip [m].
     :param model_name: Earth model name for mu lookup.
     :param green_info: Pre-loaded green_lib_info dict (avoids re-reading JSON).
-    
+
     :return: numpy array of shape (N, cha_num), one row per query point.
     """
     event_depth_km_arr = np.asarray(event_depth_km_arr)
@@ -395,6 +400,9 @@ def seek_edcmp2_bulk(
 
         if area_km_sq_arr is not None:
             v = v * area_km_sq_arr[n] * 1e6  # km² -> m²
+
+        if slip_m_arr is not None:
+            v = v * slip_m_arr[n]
 
         results[n] = v
 
