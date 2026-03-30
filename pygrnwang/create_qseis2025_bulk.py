@@ -6,6 +6,7 @@ from multiprocessing import Pool
 
 import numpy as np
 from tqdm import tqdm
+
 try:
     from mpi4py import MPI
 except:
@@ -183,7 +184,9 @@ def create_grnlib_qseis2025_parallel(
 
     processes = None
     try:
-        with open(os.path.join(path_green, "green_lib_info.json"), "r") as fr:
+        with open(
+            os.path.join(path_green, "green_lib_info.json"), "r", encoding="utf-8"
+        ) as fr:
             processes = json.load(fr).get("processes_num", None)
     except Exception:
         pass

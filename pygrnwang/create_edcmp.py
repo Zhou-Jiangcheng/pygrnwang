@@ -119,7 +119,7 @@ def call_edcmp2(event_depth, obs_depth, mt_ind, path_green, check_finished=False
         and os.path.exists(path_finished)
         and len(os.listdir(sub_sub_dir)) > 2
     ):
-        with open(path_finished, "r") as fr:
+        with open(path_finished, "r", encoding="utf-8") as fr:
             output = fr.readlines()
         return output
 

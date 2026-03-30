@@ -316,7 +316,7 @@ def call_exe(path_inp, path_finished, name):
     stdout_text = stdout_bytes.decode(errors="ignore")
     stderr_text = stderr_bytes.decode(errors="ignore")
     output = stdout_text + stderr_text
-    with open(path_finished, "w") as fw:
+    with open(path_finished, "w", encoding="utf-8") as fw:
         fw.writelines(output)
         return None
 
