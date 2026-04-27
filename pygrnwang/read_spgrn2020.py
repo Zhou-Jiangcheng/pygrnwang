@@ -318,8 +318,10 @@ def seek_spgrn2020(
 
     # Apply bandpass filter (vectorized over all 3 components at once)
     if freq_band is not None and (freq_band[0] is not None or freq_band[1] is not None):
-        seismograms = filter_butter(seismograms, srate_grn, freq_band, butter_order, zero_phase)
-    
+        seismograms = filter_butter(
+            seismograms, srate_grn, freq_band, butter_order, zero_phase
+        )
+
     ts_count = 0
     if before_p is not None:
         ts_count = round((green_before_p - before_p) * srate_grn)
@@ -353,7 +355,9 @@ def seek_spgrn2020(
         gcd = np.gcd(int(srate), int(srate_grn))
         p = int(srate) // gcd
         q = int(srate_grn) // gcd
-        seismograms_resample = signal.resample_poly(seismograms, p, q, axis=1)[:, :len_after_resample]
+        seismograms_resample = signal.resample_poly(seismograms, p, q, axis=1)[
+            :, :len_after_resample
+        ]
     else:
         seismograms_resample = np.zeros((3, len_after_resample))
         for i in range(3):

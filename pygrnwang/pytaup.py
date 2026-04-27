@@ -48,8 +48,8 @@ def taup_create_npz_file(nd_file):
             output_filename=npz_file,
             verbose=False,
             # Using conservative parameters to avoid crashes in low-velocity zones
-            # min_delta_p=0.05,       
-            # max_depth_interval=1.0, 
+            # min_delta_p=0.05,
+            # max_depth_interval=1.0,
             # max_interp_error=0.03
         )
         taup_creator.load_velocity_model()
@@ -58,6 +58,7 @@ def taup_create_npz_file(nd_file):
         print(f"Model build failed: {e}")
         sys.exit(1)
     return npz_file
+
 
 def cal_first_p(event_depth_km, dist_km, receiver_depth_km=0.0, model_name="ak135"):
     """
@@ -79,13 +80,14 @@ def cal_first_p(event_depth_km, dist_km, receiver_depth_km=0.0, model_name="ak13
             source_depth_in_km=event_depth_km,
             receiver_depth_in_km=receiver_depth_km,
             distance_in_degree=dist_deg,
-            phase_list=phases_list_p
+            phase_list=phases_list_p,
         )
         first_p = arrivals_p[0].time if arrivals_p else np.nan
     except Exception:
         first_p = np.nan
 
     return first_p
+
 
 def cal_first_p_s(event_depth_km, dist_km, receiver_depth_km=0.0, model_name="ak135"):
     """
@@ -107,7 +109,7 @@ def cal_first_p_s(event_depth_km, dist_km, receiver_depth_km=0.0, model_name="ak
             source_depth_in_km=event_depth_km,
             receiver_depth_in_km=receiver_depth_km,
             distance_in_degree=dist_deg,
-            phase_list=phases_list_p
+            phase_list=phases_list_p,
         )
         first_p = arrivals_p[0].time if arrivals_p else np.nan
     except Exception:
@@ -120,7 +122,7 @@ def cal_first_p_s(event_depth_km, dist_km, receiver_depth_km=0.0, model_name="ak
             source_depth_in_km=event_depth_km,
             receiver_depth_in_km=receiver_depth_km,
             distance_in_degree=dist_deg,
-            phase_list=phases_list_s
+            phase_list=phases_list_s,
         )
         first_s = arrivals_s[0].time if arrivals_s else np.nan
     except Exception:
@@ -137,27 +139,29 @@ def _calculate_chunk(dist_chunk, event_depth_km, receiver_depth_km, model_name):
     """
     chunk_tp = []
     chunk_ts = []
-    
+
     # Iterate through the subset of distances
     for dist in dist_chunk:
         fp, fs = cal_first_p_s(event_depth_km, dist, receiver_depth_km, model_name)
         chunk_tp.append(fp)
         chunk_ts.append(fs)
-        
+
     return np.array(chunk_tp, dtype=np.float32), np.array(chunk_ts, dtype=np.float32)
 
 
 def create_tpts_table(
-        path_green,
-        event_depth_km,
-        receiver_depth_km,
-        dist_km_list,
-        model_name="ak135",
-        check_finished=False,
-        max_workers=None  # Added parameter to control parallelism
+    path_green,
+    event_depth_km,
+    receiver_depth_km,
+    dist_km_list,
+    model_name="ak135",
+    check_finished=False,
+    max_workers=None,  # Added parameter to control parallelism
 ):
     # Ensure directory exists
-    dir_path = os.path.join(path_green, "%.2f" % event_depth_km, "%.2f" % receiver_depth_km)
+    dir_path = os.path.join(
+        path_green, "%.2f" % event_depth_km, "%.2f" % receiver_depth_km
+    )
     if not os.path.exists(dir_path):
         os.makedirs(dir_path, exist_ok=True)
 
@@ -165,21 +169,21 @@ def create_tpts_table(
     path_ts_table = os.path.join(str(dir_path), "ts_table.bin")
 
     if (
-            check_finished
-            and os.path.exists(path_tp_table)
-            and os.path.exists(path_ts_table)
+        check_finished
+        and os.path.exists(path_tp_table)
+        and os.path.exists(path_ts_table)
     ):
         return
 
     # [CRITICAL] Pre-load/Build model in the MAIN process first.
-    # This prevents a race condition where multiple workers try to build 
+    # This prevents a race condition where multiple workers try to build
     # the .npz file simultaneously if it doesn't exist.
     _get_model(model_name)
 
     # Determine number of workers (default to CPU count)
     if max_workers is None:
         max_workers = os.cpu_count() or 1
-    
+
     # If data is small, don't use multiprocessing overhead
     if len(dist_km_list) < 50:
         max_workers = 1
@@ -193,15 +197,21 @@ def create_tpts_table(
     if max_workers > 1:
         # Split the distance list into chunks for each worker
         chunks = np.array_split(dist_km_list, max_workers)
-        
+
         with ProcessPoolExecutor(max_workers=max_workers) as executor:
             # Submit tasks
             futures = [
-                executor.submit(_calculate_chunk, chunk, event_depth_km, receiver_depth_km, model_name)
+                executor.submit(
+                    _calculate_chunk,
+                    chunk,
+                    event_depth_km,
+                    receiver_depth_km,
+                    model_name,
+                )
                 for chunk in chunks
             ]
-            
-            # Collect results as they complete (order doesn't matter for collection, 
+
+            # Collect results as they complete (order doesn't matter for collection,
             # but we need to reassemble in order. Map or simple loop works best here.)
             # Here we just loop through futures in order of submission to keep order.
             for future in futures:
@@ -210,7 +220,9 @@ def create_tpts_table(
                 ts_table_parts.append(res_ts)
     else:
         # Serial execution fallback
-        res_tp, res_ts = _calculate_chunk(dist_km_list, event_depth_km, receiver_depth_km, model_name)
+        res_tp, res_ts = _calculate_chunk(
+            dist_km_list, event_depth_km, receiver_depth_km, model_name
+        )
         tp_table_parts.append(res_tp)
         ts_table_parts.append(res_ts)
 
@@ -225,26 +237,28 @@ def create_tpts_table(
 if __name__ == "__main__":
     # Example usage
     my_nd_file = r"C:\Users\zjc\my_data\wenchuan.nd"
-    
+
     # Generate a dummy distance list
-    dists = np.linspace(10, 2000, 500) # 500 points
-    
+    dists = np.linspace(10, 2000, 500)  # 500 points
+
     try:
         import time
+
         s = time.time()
-        
+
         create_tpts_table(
             path_green="./output_tables",
             event_depth_km=10.0,
             receiver_depth_km=0.0,
             dist_km_list=dists,
             model_name=my_nd_file,
-            max_workers=4  # Use 4 cores
+            max_workers=4,  # Use 4 cores
         )
-        
+
         print(f"Calculation finished in {time.time() - s:.2f}s")
-        
+
     except Exception as e:
         import traceback
+
         traceback.print_exc()
         print(f"Error in main execution: {e}")

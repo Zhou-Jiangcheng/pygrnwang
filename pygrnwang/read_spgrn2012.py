@@ -8,29 +8,34 @@ from scipy import signal
 from .utils import shift_green2real_tpts, read_tpts_table
 from .geo import rotate_rtz_to_enz
 from .signal_process import resample, filter_butter
-from .read_spgrn2020 import synthesize_spgrn, read_spgrn_data_by_index, read_spgrn_data_two_indices, get_sorted_grid_params
+from .read_spgrn2020 import (
+    synthesize_spgrn,
+    read_spgrn_data_by_index,
+    read_spgrn_data_two_indices,
+    get_sorted_grid_params,
+)
 
 
 def seek_spgrn2012(
-        path_green: str,
-        event_depth_km: float,
-        receiver_depth_km: float,
-        az_deg: float,
-        dist_km: float,
-        focal_mechanism: Union[np.ndarray, list],
-        srate: float,
-        output_type: str = "disp",
-        rotate: bool = True,
-        before_p: Union[float, None] = None,
-        pad_zeros: bool = False,
-        shift: bool = False,
-        only_seismograms: bool = True,
-        model_name: str = "ak135fc",
-        green_info: Union[dict, None] = None,
-        interpolate_type: int = 0,
-        freq_band=None,
-        butter_order: int = 4,
-        zero_phase: bool = False,
+    path_green: str,
+    event_depth_km: float,
+    receiver_depth_km: float,
+    az_deg: float,
+    dist_km: float,
+    focal_mechanism: Union[np.ndarray, list],
+    srate: float,
+    output_type: str = "disp",
+    rotate: bool = True,
+    before_p: Union[float, None] = None,
+    pad_zeros: bool = False,
+    shift: bool = False,
+    only_seismograms: bool = True,
+    model_name: str = "ak135fc",
+    green_info: Union[dict, None] = None,
+    interpolate_type: int = 0,
+    freq_band=None,
+    butter_order: int = 4,
+    zero_phase: bool = False,
 ):
     """
     Read synthetic seismograms.
@@ -216,17 +221,19 @@ def seek_spgrn2012(
         path_green=os.path.join(path_green, "GreenFunc"),
         event_depth_km=grn_dep_source,
         receiver_depth_km=grn_dep_receiver,
-        ind=nearest_dist_idx
+        ind=nearest_dist_idx,
     )
     tpts_table = {}
-    tpts_table['p_onset'] = tp
-    tpts_table['s_onset'] = ts
+    tpts_table["p_onset"] = tp
+    tpts_table["s_onset"] = ts
 
     green_before_p = tp - (dist_km / v0 + t0)
-    
+
     # Apply bandpass filter (vectorized over all components at once)
     if freq_band is not None and (freq_band[0] is not None or freq_band[1] is not None):
-        seismograms = filter_butter(seismograms, srate_grn, freq_band, butter_order, zero_phase)
+        seismograms = filter_butter(
+            seismograms, srate_grn, freq_band, butter_order, zero_phase
+        )
 
     ts_count = 0
     if before_p is not None:
@@ -261,7 +268,9 @@ def seek_spgrn2012(
         gcd = np.gcd(int(srate), int(srate_grn))
         p = int(srate) // gcd
         q = int(srate_grn) // gcd
-        seismograms_resample = signal.resample_poly(seismograms, p, q, axis=1)[:, :len_after_resample]
+        seismograms_resample = signal.resample_poly(seismograms, p, q, axis=1)[
+            :, :len_after_resample
+        ]
     else:
         seismograms_resample = np.zeros((3, len_after_resample))
         for i in range(3):
@@ -273,13 +282,13 @@ def seek_spgrn2012(
         seismograms_resample = np.cumsum(seismograms_resample, axis=1) / srate
     elif output_type == "acce":
         seismograms_resample = (
-                signal.convolve(
-                    seismograms_resample.T,
-                    np.array([1, -1])[:, None],
-                    mode="same",
-                    method="auto",
-                ).T
-                / srate
+            signal.convolve(
+                seismograms_resample.T,
+                np.array([1, -1])[:, None],
+                mode="same",
+                method="auto",
+            ).T
+            / srate
         )
 
     if only_seismograms:

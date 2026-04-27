@@ -10,11 +10,7 @@ try:
 except:
     pass
 from multiprocessing import Pool
-from .create_spgrn2020 import (
-    create_dir_spgrn,
-    create_inp_spgrn2020,
-    call_spgrn2020
-)
+from .create_spgrn2020 import create_dir_spgrn, create_inp_spgrn2020, call_spgrn2020
 from .read_green_info_spgrn import read_green_info_spgrn
 from .utils import group, convert_earth_model_nd2nd_without_Q
 
@@ -24,29 +20,29 @@ def _call_spgrn2020_star(args):
 
 
 def pre_process_spgrn2020(
-        processes_num,
-        path_green,
-        event_depth_list,
-        receiver_depth_list,
-        spec_time_window,
-        sampling_interval,
-        max_frequency,
-        max_slowness,
-        anti_alias,
-        gravity_fc,
-        gravity_harmonic,
-        cal_sph,
-        cal_tor,
-        source_radius,
-        cal_gf,
-        time_window,
-        green_before_p,
-        source_duration,
-        dist_range,
-        delta_dist_range,
-        path_nd=None,
-        earth_model_layer_num=None,
-        physical_dispersion=0,
+    processes_num,
+    path_green,
+    event_depth_list,
+    receiver_depth_list,
+    spec_time_window,
+    sampling_interval,
+    max_frequency,
+    max_slowness,
+    anti_alias,
+    gravity_fc,
+    gravity_harmonic,
+    cal_sph,
+    cal_tor,
+    source_radius,
+    cal_gf,
+    time_window,
+    green_before_p,
+    source_duration,
+    dist_range,
+    delta_dist_range,
+    path_nd=None,
+    earth_model_layer_num=None,
+    physical_dispersion=0,
 ):
     item_list = []
     for event_depth in event_depth_list:
@@ -113,7 +109,7 @@ def pre_process_spgrn2020(
     }
     json_str = json.dumps(params, indent=4, ensure_ascii=False)
     with open(
-            os.path.join(path_green, "green_lib_info.json"), "w", encoding="utf-8"
+        os.path.join(path_green, "green_lib_info.json"), "w", encoding="utf-8"
     ) as file:
         file.write(json_str)
 
@@ -132,10 +128,10 @@ def update_green_info_lib_json(path_green, event_depth, receiver_depth):
         event_depth,
     )
     green_info["dist_list"] = green_info_dep["dist_list"]
-    green_info['samples_num'] = green_info_dep['samples_num']
+    green_info["samples_num"] = green_info_dep["samples_num"]
     json_str = json.dumps(green_info, indent=4, ensure_ascii=False)
     with open(
-            os.path.join(path_green, "green_lib_info.json"), "w", encoding="utf-8"
+        os.path.join(path_green, "green_lib_info.json"), "w", encoding="utf-8"
     ) as file:
         file.write(json_str)
     return green_info
@@ -170,15 +166,17 @@ def create_grnlib_spgrn2020_parallel(path_green, check_finished=False):
 
     with Pool(processes=processes) as pool:
         for _ in tqdm(
-                pool.imap_unordered(_call_spgrn2020_star, tasks, chunksize=1),
-                total=len(tasks),
-                desc="Computing SPGRN2020 library",
+            pool.imap_unordered(_call_spgrn2020_star, tasks, chunksize=1),
+            total=len(tasks),
+            desc="Computing SPGRN2020 library",
         ):
             pass
 
-    update_green_info_lib_json(path_green,
-                               float(green_info['event_depth_list'][0]),
-                               float(green_info['receiver_depth_list'][0]))
+    update_green_info_lib_json(
+        path_green,
+        float(green_info["event_depth_list"][0]),
+        float(green_info["receiver_depth_list"][0]),
+    )
     e = datetime.datetime.now()
     print("run time:" + str(e - s))
 

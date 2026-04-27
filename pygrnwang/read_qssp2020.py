@@ -10,7 +10,8 @@ from .create_qssp2020 import mt_com_list
 from .utils import (
     shift_green2real_tpts,
     create_rotate_z_mat,
-    rotate_symmetric_tensor_series, read_tpts_table,
+    rotate_symmetric_tensor_series,
+    read_tpts_table,
 )
 from .focal_mechanism import (
     convert_mt_axis,
@@ -372,7 +373,9 @@ def seek_qssp2020(
 
     # Apply bandpass filter (vectorized over all components at once)
     if freq_band is not None and (freq_band[0] is not None or freq_band[1] is not None):
-        seismograms = filter_butter(seismograms, srate_grn, freq_band, butter_order, zero_phase)
+        seismograms = filter_butter(
+            seismograms, srate_grn, freq_band, butter_order, zero_phase
+        )
 
     ts_count = 0
     if before_p is not None:
@@ -411,7 +414,9 @@ def seek_qssp2020(
         gcd = np.gcd(int(srate), int(srate_grn))
         p = int(srate) // gcd
         q = int(srate_grn) // gcd
-        seismograms_resample = signal.resample_poly(seismograms, p, q, axis=1)[:, :len_after_resample]
+        seismograms_resample = signal.resample_poly(seismograms, p, q, axis=1)[
+            :, :len_after_resample
+        ]
     else:
         seismograms_resample = np.zeros((seismograms.shape[0], len_after_resample))
         for i in range(seismograms.shape[0]):

@@ -99,7 +99,7 @@ def create_nd_by_crust1_ak135(
     inds = np.argwhere(nd_new[:, 2] == 0)
     ind_cmb = inds[0][0]
     ind_icocb = inds[-1][0]
-    #ind_660 = np.argwhere(nd_new[:, 0] == 660)[0][0]
+    # ind_660 = np.argwhere(nd_new[:, 0] == 660)[0][0]
 
     lines = []
     for i in range(len(nd_new)):

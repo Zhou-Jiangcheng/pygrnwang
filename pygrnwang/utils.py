@@ -185,7 +185,7 @@ def convert_earth_model_nd2inp(path_nd, path_output):
             lines_new.append(temp)
     for i in range(len(lines_new)):
         # print(lines_new[i])
-        lines_new[i] = "  ".join([str(int(i + 1))] + lines_new[i]) + "\n"  # type:ignore
+        lines_new[i] = "  ".join([str(int(i + 1))] + lines_new[i]) + "\n"  # type: ignore
     # with open(path_output, "w") as fw:
     #     fw.writelines(lines_new)
     return lines_new
@@ -302,10 +302,10 @@ def reshape_sub_faults(sub_faults, num_strike, num_dip):
 def call_exe(path_inp, path_finished, name):
     if platform.system() == "Windows":
         name_exe = "%s.exe" % name
-        path_exe = os.path.join(sys.exec_prefix, 'Scripts', name_exe)
+        path_exe = os.path.join(sys.exec_prefix, "Scripts", name_exe)
     else:
         name_exe = "%s.bin" % name
-        path_exe = os.path.join(sys.exec_prefix, 'bin', name_exe)
+        path_exe = os.path.join(sys.exec_prefix, "bin", name_exe)
     proc = subprocess.Popen(
         [path_exe],
         stdin=subprocess.PIPE,

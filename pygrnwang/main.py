@@ -1,2 +1,2 @@
 def main():
-    print('pygrnwang has been installed successfully!')
+    print("pygrnwang has been installed successfully!")

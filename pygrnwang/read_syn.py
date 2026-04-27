@@ -100,5 +100,5 @@ def read_syn(
         raise ValueError(f"Unknown method: {method}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pass

@@ -28,16 +28,16 @@ def read_time_series_qseis06_ascii(path_greenfunc, start_count):
     for com in ["tr", "tz"]:
         ex_com = pd.read_csv(
             os.path.join(path_greenfunc, "ex.%s" % com), sep="\\s+"
-        ).to_numpy()  # type:ignore
+        ).to_numpy()  # type: ignore
         ss_com = pd.read_csv(
             os.path.join(path_greenfunc, "ss.%s" % com), sep="\\s+"
-        ).to_numpy()  # type:ignore
+        ).to_numpy()  # type: ignore
         ds_com = pd.read_csv(
             os.path.join(path_greenfunc, "ds.%s" % com), sep="\\s+"
-        ).to_numpy()  # type:ignore
+        ).to_numpy()  # type: ignore
         cl_com = pd.read_csv(
             os.path.join(path_greenfunc, "cl.%s" % com), sep="\\s+"
-        ).to_numpy()  # type:ignore
+        ).to_numpy()  # type: ignore
         time_series_com = np.concatenate(
             [
                 ex_com[:, start_count],
@@ -52,10 +52,10 @@ def read_time_series_qseis06_ascii(path_greenfunc, start_count):
     for com in ["tt"]:
         ss_r = pd.read_csv(
             os.path.join(path_greenfunc, "ss.%s" % com), sep="\\s+"
-        ).to_numpy()  # type:ignore
+        ).to_numpy()  # type: ignore
         ds_r = pd.read_csv(
             os.path.join(path_greenfunc, "ds.%s" % com), sep="\\s+"
-        ).to_numpy()  # type:ignore
+        ).to_numpy()  # type: ignore
         time_series_com = np.concatenate(
             [
                 ss_r[:, start_count],
@@ -213,7 +213,9 @@ def seek_qseis06(
 
     # Apply bandpass filter (vectorized over all components at once)
     if freq_band is not None and (freq_band[0] is not None or freq_band[1] is not None):
-        seismograms = filter_butter(seismograms, srate_grn, freq_band, butter_order, zero_phase)
+        seismograms = filter_butter(
+            seismograms, srate_grn, freq_band, butter_order, zero_phase
+        )
 
     ts_count = 0
     if before_p is not None:
@@ -250,7 +252,9 @@ def seek_qseis06(
         gcd = np.gcd(int(srate), int(srate_grn))
         p = int(srate) // gcd
         q = int(srate_grn) // gcd
-        seismograms_resample = signal.resample_poly(seismograms, p, q, axis=1)[:, :len_after_resample]
+        seismograms_resample = signal.resample_poly(seismograms, p, q, axis=1)[
+            :, :len_after_resample
+        ]
     else:
         seismograms_resample = np.zeros((3, len_after_resample))
         for i in range(3):

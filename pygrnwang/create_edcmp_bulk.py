@@ -112,8 +112,9 @@ def create_grnlib_edcmp2_sequential(path_green, check_finished=False):
     # print("run time:%s" % str(e - s))
 
 
-def create_grnlib_edcmp2_parallel(path_green, check_finished=False, 
-                                  convert_bulk=True, remove=False):
+def create_grnlib_edcmp2_parallel(
+    path_green, check_finished=False, convert_bulk=True, remove=False
+):
     s = datetime.datetime.now()
     with open(os.path.join(path_green, "group_list_edcmp.pkl"), "rb") as fr:
         group_list_edcmp = pickle.load(fr)

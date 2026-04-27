@@ -41,20 +41,20 @@ def install_binaries(target_exec_dir, copy_to_system=True):
     copy_to_system: whether to copy the compiled binaries to the environment's bin directory
     """
     print(f"[pygrnwang] Starting custom installation logic...")
-    
+
     if not shutil.which("gfortran"):
         raise ValueError(r"Please install gfortran.")
-    
+
     # Ensure the output directory exists
     target_exec_dir = os.path.abspath(target_exec_dir)
     os.makedirs(target_exec_dir, exist_ok=True)
 
     # Get the bin directory of the current conda environment
     if platform.system() == "Windows":
-        env_bin_dir = os.path.join(sys.exec_prefix, 'Scripts')
+        env_bin_dir = os.path.join(sys.exec_prefix, "Scripts")
     else:
-        env_bin_dir = os.path.join(sys.exec_prefix, 'bin')
-        
+        env_bin_dir = os.path.join(sys.exec_prefix, "bin")
+
     print(f"[pygrnwang] Target environment bin: {env_bin_dir}")
 
     # 1. Compile Fortran
@@ -98,10 +98,13 @@ def install_binaries(target_exec_dir, copy_to_system=True):
             except Exception as e:
                 print(f"[Warning] Could not copy binary to {env_bin_dir}: {e}")
 
+
 # --- Custom command classes ---
+
 
 class CustomBuildPy(_build_py):
     """Controls `pip install .`"""
+
     def run(self):
         _build_py.run(self)
         # Standard install: compile into build/lib/pygrnwang/exec
@@ -111,6 +114,7 @@ class CustomBuildPy(_build_py):
 
 class CustomDevelop(_develop):
     """Controls `python setup.py develop`"""
+
     def run(self):
         _develop.run(self)
         # Development install: compile directly into the source directory pygrnwang/exec
@@ -126,18 +130,17 @@ cmd_classes = {
 
 # Extra handling for `pip install -e .` (PEP 660)
 if _editable_wheel:
+
     class CustomEditableWheel(_editable_wheel):
         """Controls `pip install -e .`"""
+
         def run(self):
             _editable_wheel.run(self)
             # Editable install is also treated as development mode; compile into the source directory
             exec_dir = os.path.join(project_root, "pygrnwang", "exec")
             install_binaries(exec_dir)
-    
+
     cmd_classes["editable_wheel"] = CustomEditableWheel
 
 
-setup(
-    cmdclass=cmd_classes,
-    distclass=BinaryDistribution
-)
+setup(cmdclass=cmd_classes, distclass=BinaryDistribution)

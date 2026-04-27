@@ -297,16 +297,14 @@ def seek_edcmp2_bulk(
     obs_idx = np.argmin(
         np.abs(obs_depth_arr[:, None] - receiver_depth_km_arr[None, :]), axis=0
     )
-    dist_idx = np.argmin(
-        np.abs(dist_arr[:, None] - dist_km_arr[None, :]), axis=0
-    )
+    dist_idx = np.argmin(np.abs(dist_arr[:, None] - dist_km_arr[None, :]), axis=0)
 
     # Batch extract Green's function data for all queries: shape (N, 5, cha_num)
     v_raws = bulk[
-        dep_idx[:, None],        # (N, 1)
-        obs_idx[:, None],        # (N, 1)
-        np.arange(5)[None, :],   # (1, 5)
-        dist_idx[:, None],       # (N, 1)
+        dep_idx[:, None],  # (N, 1)
+        obs_idx[:, None],  # (N, 1)
+        np.arange(5)[None, :],  # (1, 5)
+        dist_idx[:, None],  # (N, 1)
         :,
     ]  # -> (N, 5, cha_num)
 
@@ -323,6 +321,7 @@ def seek_edcmp2_bulk(
     if not times_mu:
         if model_name == "ak135fc":
             from .ak135fc import s as str_nd
+
             lines = str_nd.split("\n")
             lines_new = []
             for line in lines:
@@ -336,7 +335,7 @@ def seek_edcmp2_bulk(
         nd_mu = nd_model[:, 3] * nd_model[:, 2] ** 2 * 1e9  # rho * vs^2 (Pa)
         ind_per_dep = np.searchsorted(nd_depths, event_depth_arr, side="left")
         ind_per_dep = np.clip(ind_per_dep, 0, len(nd_depths) - 1)
-        mu_per_dep = nd_mu[ind_per_dep]   # shape: (n_event_depths,)
+        mu_per_dep = nd_mu[ind_per_dep]  # shape: (n_event_depths,)
 
     results = np.zeros((N, cha_num), dtype=float)
     for n in range(N):
@@ -345,10 +344,16 @@ def seek_edcmp2_bulk(
         focal_mechanism_conv = check_convert_fm(focal_mechanism_arr[n])
         mt_ned_full = tensor2full_tensor_matrix(mt=focal_mechanism_conv, flag="ned")
         mt_rotate = A_rotate.T @ mt_ned_full @ A_rotate
-        mt = np.array([
-            mt_rotate[0, 0], mt_rotate[0, 1], mt_rotate[0, 2],
-            mt_rotate[1, 1], mt_rotate[1, 2], mt_rotate[2, 2],
-        ])
+        mt = np.array(
+            [
+                mt_rotate[0, 0],
+                mt_rotate[0, 1],
+                mt_rotate[0, 2],
+                mt_rotate[1, 1],
+                mt_rotate[1, 2],
+                mt_rotate[2, 2],
+            ]
+        )
         if check_convert_pure_dp:
             mt_dp = plane2mt(1, *mt2plane(mt)[0])
         else:
@@ -370,7 +375,9 @@ def seek_edcmp2_bulk(
             if cha_num > 2:
                 v_rtz[2] = -v_ned_green_north[2]
             if rotate:
-                v = rotate_rtz_to_enz(az_in_deg=az_deg, r=v_rtz[0], t=v_rtz[1], z=v_rtz[2])
+                v = rotate_rtz_to_enz(
+                    az_in_deg=az_deg, r=v_rtz[0], t=v_rtz[1], z=v_rtz[2]
+                )
             else:
                 v = v_rtz
         else:
@@ -379,12 +386,12 @@ def seek_edcmp2_bulk(
             # sign convention t_code=-y, z_code=-z → Q=diag(1,-1,-1):
             #   σ_ij_code = Q_ia Q_jb σ_ab_edcmp
             # reorder to [rr, rt, rz, tt, tz, zz] = [xx, xy, xz, yy, yz, zz] for rotate fn
-            v_rtz[0] =  v_ned_green_north[0]   # σ_rr = +Sxx
-            v_rtz[1] = -v_ned_green_north[3]   # σ_rt = -Sxy  (one sign flip)
-            v_rtz[2] = -v_ned_green_north[5]   # σ_rz = -Szx  (one sign flip)
-            v_rtz[3] =  v_ned_green_north[1]   # σ_tt = +Syy  (two flips cancel)
-            v_rtz[4] =  v_ned_green_north[4]   # σ_tz = +Syz  (two flips cancel)
-            v_rtz[5] =  v_ned_green_north[2]   # σ_zz = +Szz  (two flips cancel)
+            v_rtz[0] = v_ned_green_north[0]  # σ_rr = +Sxx
+            v_rtz[1] = -v_ned_green_north[3]  # σ_rt = -Sxy  (one sign flip)
+            v_rtz[2] = -v_ned_green_north[5]  # σ_rz = -Szx  (one sign flip)
+            v_rtz[3] = v_ned_green_north[1]  # σ_tt = +Syy  (two flips cancel)
+            v_rtz[4] = v_ned_green_north[4]  # σ_tz = +Syz  (two flips cancel)
+            v_rtz[5] = v_ned_green_north[2]  # σ_zz = +Szz  (two flips cancel)
             if rotate:
                 # rotate_symmetric_tensor_series with γ = az - π/2 gives:
                 #   R.T @ σ_rtz @ R = A_enz @ σ_rtz @ A_enz.T

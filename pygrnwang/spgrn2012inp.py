@@ -1,4 +1,4 @@
-s="""# This is the input file of FORTRAN77 program "spgrn2012" for calculating
+s = """# This is the input file of FORTRAN77 program "spgrn2012" for calculating
 # synthetic Green's functions of a self-gravitating, spherically symmetric,
 # isotropic and viscoelastic earth.
 #

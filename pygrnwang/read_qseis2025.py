@@ -49,16 +49,16 @@ def read_time_series_qseis2025_ascii(path_greenfunc, start_count, output_type="d
     for com in name_list_psv:
         ex_com = pd.read_csv(
             str(os.path.join(path_greenfunc, "ex.%s" % com)), sep="\\s+"
-        ).to_numpy()  # type:ignore
+        ).to_numpy()  # type: ignore
         ss_com = pd.read_csv(
             str(os.path.join(path_greenfunc, "ss.%s" % com)), sep="\\s+"
-        ).to_numpy()  # type:ignore
+        ).to_numpy()  # type: ignore
         ds_com = pd.read_csv(
             str(os.path.join(path_greenfunc, "ds.%s" % com)), sep="\\s+"
-        ).to_numpy()  # type:ignore
+        ).to_numpy()  # type: ignore
         cl_com = pd.read_csv(
             str(os.path.join(path_greenfunc, "cl.%s" % com)), sep="\\s+"
-        ).to_numpy()  # type:ignore
+        ).to_numpy()  # type: ignore
         time_series_com = np.concatenate(
             [
                 ex_com[:, start_count],
@@ -72,10 +72,10 @@ def read_time_series_qseis2025_ascii(path_greenfunc, start_count, output_type="d
     for com in name_list_sh:
         ss_r = pd.read_csv(
             os.path.join(path_greenfunc, "ss.%s" % com), sep="\\s+"
-        ).to_numpy()  # type:ignore
+        ).to_numpy()  # type: ignore
         ds_r = pd.read_csv(
             os.path.join(path_greenfunc, "ds.%s" % com), sep="\\s+"
-        ).to_numpy()  # type:ignore
+        ).to_numpy()  # type: ignore
         time_series_com = np.concatenate(
             [
                 ss_r[:, start_count],
@@ -88,9 +88,9 @@ def read_time_series_qseis2025_ascii(path_greenfunc, start_count, output_type="d
 
 
 def read_time_series_qseis2025_bin(
-        path_greenfunc,
-        start_count,
-        output_type,
+    path_greenfunc,
+    start_count,
+    output_type,
 ):
     time_series_list = []
     name_list_psv, name_list_sh = get_outfile_name_list(output_type)
@@ -106,10 +106,10 @@ def read_time_series_qseis2025_bin(
 def synthesize_rzv(time_series, m1):
     # ex,ss,ds,cl
     rzv = (
-            time_series[0] * m1[0]
-            + time_series[1] * m1[1]
-            + time_series[2] * m1[2]
-            + time_series[3] * m1[3]
+        time_series[0] * m1[0]
+        + time_series[1] * m1[1]
+        + time_series[2] * m1[2]
+        + time_series[3] * m1[3]
     )
     return rzv
 
@@ -145,25 +145,25 @@ def get_sorted_grid_params(target, grid_list):
 
 
 def seek_qseis2025(
-        path_green: str,
-        event_depth_km: float,
-        receiver_depth_km: float,
-        az_deg: float,
-        dist_km: float,
-        focal_mechanism: Union[np.ndarray, list],
-        srate: float,
-        output_type: str = "disp",
-        rotate: bool = True,
-        before_p: Union[float, None] = None,
-        pad_zeros: bool = False,
-        shift: bool = False,
-        only_seismograms: bool = True,
-        model_name: str = "ak135fc",
-        green_info: Union[dict, None] = None,
-        interpolate_type: int = 0,
-        freq_band=None,
-        butter_order: int = 4,
-        zero_phase: bool = False,
+    path_green: str,
+    event_depth_km: float,
+    receiver_depth_km: float,
+    az_deg: float,
+    dist_km: float,
+    focal_mechanism: Union[np.ndarray, list],
+    srate: float,
+    output_type: str = "disp",
+    rotate: bool = True,
+    before_p: Union[float, None] = None,
+    pad_zeros: bool = False,
+    shift: bool = False,
+    only_seismograms: bool = True,
+    model_name: str = "ak135fc",
+    green_info: Union[dict, None] = None,
+    interpolate_type: int = 0,
+    freq_band=None,
+    butter_order: int = 4,
+    zero_phase: bool = False,
 ):
     """
     Read synthetic seismograms.
@@ -405,7 +405,9 @@ def seek_qseis2025(
 
     # Apply bandpass filter (vectorized over all components at once)
     if freq_band is not None and (freq_band[0] is not None or freq_band[1] is not None):
-        seismograms = filter_butter(seismograms, srate_grn, freq_band, butter_order, zero_phase)
+        seismograms = filter_butter(
+            seismograms, srate_grn, freq_band, butter_order, zero_phase
+        )
 
     ts_count = 0
     if before_p is not None:
@@ -442,7 +444,9 @@ def seek_qseis2025(
         gcd = np.gcd(int(srate), int(srate_grn))
         p = int(srate) // gcd
         q = int(srate_grn) // gcd
-        seismograms_resample = signal.resample_poly(seismograms, p, q, axis=1)[:, :len_after_resample]
+        seismograms_resample = signal.resample_poly(seismograms, p, q, axis=1)[
+            :, :len_after_resample
+        ]
     else:
         seismograms_resample = np.zeros((len(seismograms), len_after_resample))
         for i in range(len(seismograms)):
@@ -453,34 +457,31 @@ def seek_qseis2025(
         seismograms_resample = np.cumsum(seismograms_resample, axis=1) / srate
     elif (wavelet_type == 2) and (("rate" in output_type) or (output_type == "velo")):
         seismograms_resample = (
-                signal.convolve(
-                    seismograms_resample.T,
-                    np.array([1, -1])[:, None],
-                    mode="same",
-                    method="auto",
-                ).T
-                / srate
+            signal.convolve(
+                seismograms_resample.T,
+                np.array([1, -1])[:, None],
+                mode="same",
+                method="auto",
+            ).T
+            / srate
         )
-    elif (wavelet_type == 1) and (output_type == 'acce'):
+    elif (wavelet_type == 1) and (output_type == "acce"):
         seismograms_resample = (
-                signal.convolve(
-                    seismograms_resample.T,
-                    np.array([1, -1])[:, None],
-                    mode="same",
-                    method="auto",
-                ).T
-                / srate
+            signal.convolve(
+                seismograms_resample.T,
+                np.array([1, -1])[:, None],
+                mode="same",
+                method="auto",
+            ).T
+            / srate
         )
-    elif (wavelet_type == 2) and (output_type == 'acce'):
-        seismograms_resample = (
-                signal.convolve(
-                    seismograms_resample.T,
-                    np.array([1, -2, 1])[:, None],
-                    mode="same",
-                    method="auto",
-                ).T
-                / (srate * srate)
-        )
+    elif (wavelet_type == 2) and (output_type == "acce"):
+        seismograms_resample = signal.convolve(
+            seismograms_resample.T,
+            np.array([1, -2, 1])[:, None],
+            mode="same",
+            method="auto",
+        ).T / (srate * srate)
 
     if only_seismograms:
         return seismograms_resample

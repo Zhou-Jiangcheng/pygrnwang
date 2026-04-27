@@ -22,30 +22,30 @@ def _call_spgrn2012_star(args):
 
 
 def pre_process_spgrn2012(
-        processes_num,
-        path_green,
-        event_depth_list,
-        receiver_depth_list,
-        spec_time_window,
-        sampling_interval,
-        max_frequency,
-        max_slowness,
-        anti_alias,
-        gravity_fc,
-        gravity_harmonic,
-        cal_sph,
-        cal_tor,
-        source_radius,
-        cal_gf,
-        time_window,
-        t0,
-        v0,
-        source_duration,
-        dist_range,
-        delta_dist_range,
-        path_nd=None,
-        earth_model_layer_num=None,
-        physical_dispersion=0
+    processes_num,
+    path_green,
+    event_depth_list,
+    receiver_depth_list,
+    spec_time_window,
+    sampling_interval,
+    max_frequency,
+    max_slowness,
+    anti_alias,
+    gravity_fc,
+    gravity_harmonic,
+    cal_sph,
+    cal_tor,
+    source_radius,
+    cal_gf,
+    time_window,
+    t0,
+    v0,
+    source_duration,
+    dist_range,
+    delta_dist_range,
+    path_nd=None,
+    earth_model_layer_num=None,
+    physical_dispersion=0,
 ):
     item_list = []
     for event_depth in event_depth_list:
@@ -114,7 +114,7 @@ def pre_process_spgrn2012(
     }
     json_str = json.dumps(params, indent=4, ensure_ascii=False)
     with open(
-            os.path.join(path_green, "green_lib_info.json"), "w", encoding="utf-8"
+        os.path.join(path_green, "green_lib_info.json"), "w", encoding="utf-8"
     ) as file:
         file.write(json_str)
 
@@ -150,25 +150,29 @@ def create_grnlib_spgrn2012_parallel(path_green, check_finished=False):
 
     with Pool(processes=processes) as pool:
         for _ in tqdm(
-                pool.imap_unordered(_call_spgrn2012_star, tasks, chunksize=1),
-                total=len(tasks),
-                desc="Computing SPGRN2012 library",
+            pool.imap_unordered(_call_spgrn2012_star, tasks, chunksize=1),
+            total=len(tasks),
+            desc="Computing SPGRN2012 library",
         ):
             pass
 
-    green_info = update_green_info_lib_json(path_green,
-                               float(green_info['event_depth_list'][0]),
-                               float(green_info['receiver_depth_list'][0]))
+    green_info = update_green_info_lib_json(
+        path_green,
+        float(green_info["event_depth_list"][0]),
+        float(green_info["receiver_depth_list"][0]),
+    )
 
     # creating tp and ts tables
-    npz_file = taup_create_npz_file(nd_file=green_info['path_nd_without_Q'])
-    for event_depth in tqdm(green_info['event_depth_list'], desc="Creating travel time tables"):
-        for receiver_depth in green_info['receiver_depth_list']:
+    npz_file = taup_create_npz_file(nd_file=green_info["path_nd_without_Q"])
+    for event_depth in tqdm(
+        green_info["event_depth_list"], desc="Creating travel time tables"
+    ):
+        for receiver_depth in green_info["receiver_depth_list"]:
             create_tpts_table(
                 os.path.join(path_green, "GreenFunc"),
                 event_depth,
                 receiver_depth,
-                green_info['dist_list'],
+                green_info["dist_list"],
                 npz_file,
                 False,
             )

@@ -5,29 +5,29 @@ from .utils import call_exe, convert_earth_model_nd2inp
 
 
 def create_inp_spgrn2012(
-        path_green,
-        event_depth,
-        receiver_depth,
-        spec_time_window,
-        sampling_interval,
-        max_frequency,
-        max_slowness,
-        anti_alias,
-        gravity_fc,
-        gravity_harmonic,
-        cal_sph,
-        cal_tor,
-        source_radius,
-        cal_gf,
-        time_window,
-        t0,
-        v0,
-        source_duration,
-        dist_range,
-        delta_dist_range,
-        path_nd=None,
-        earth_model_layer_num=None,
-        physical_dispersion=0,
+    path_green,
+    event_depth,
+    receiver_depth,
+    spec_time_window,
+    sampling_interval,
+    max_frequency,
+    max_slowness,
+    anti_alias,
+    gravity_fc,
+    gravity_harmonic,
+    cal_sph,
+    cal_tor,
+    source_radius,
+    cal_gf,
+    time_window,
+    t0,
+    v0,
+    source_duration,
+    dist_range,
+    delta_dist_range,
+    path_nd=None,
+    earth_model_layer_num=None,
+    physical_dispersion=0,
 ):
     path_func = str(
         os.path.join(
@@ -98,9 +98,9 @@ def call_spgrn2012(event_depth, receiver_depth, path_green, check_finished=False
     path_finished = os.path.join(sub_sub_dir, ".finished")
 
     if (
-            check_finished
-            and os.path.exists(path_finished)
-            and len(os.listdir(sub_sub_dir)) > 2
+        check_finished
+        and os.path.exists(path_finished)
+        and len(os.listdir(sub_sub_dir)) > 2
     ):
         with open(path_finished, "r", encoding="utf-8") as fr:
             output = fr.readlines()
