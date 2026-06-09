@@ -196,7 +196,6 @@ def convert_pd2bin_qseis2025(path_greenfunc, remove=False):
         for stype in ["ex", "ss", "ds", "cl"]:
             path_ascii = os.path.join(path_greenfunc, "%s.%s" % (stype, com))
             if not os.path.exists(path_ascii):
-                # warnings.warn("ascii file %s do not exist, skip" % path_ascii)
                 continue
             stype_com = pd.read_csv(path_ascii, sep="\\s+").to_numpy()
             time_series_com.append(stype_com[:, 1:])
@@ -206,14 +205,13 @@ def convert_pd2bin_qseis2025(path_greenfunc, remove=False):
             output_data = np.concatenate(
                 [time_series_com[_] for _ in range(4)], dtype=np.float32
             )
-            np.save(str(os.path.join(path_greenfunc, "grn_%s.npy" % com)), output_data)
+            output_data.T.tofile(os.path.join(path_greenfunc, "grn_%s.bin" % com))
 
     for com in ["tt", "ezt", "ert", "szt", "srt", "oz", "or"]:
         time_series_com = []
         for stype in ["ss", "ds"]:
             path_ascii = os.path.join(path_greenfunc, "%s.%s" % (stype, com))
             if not os.path.exists(path_ascii):
-                # warnings.warn("ascii file %s do not exist, skip" % path_ascii)
                 continue
             stype_com = pd.read_csv(path_ascii, sep="\\s+").to_numpy()
             time_series_com.append(stype_com[:, 1:])
@@ -223,7 +221,7 @@ def convert_pd2bin_qseis2025(path_greenfunc, remove=False):
             output_data = np.concatenate(
                 [time_series_com[_] for _ in range(2)], dtype=np.float32
             )
-            np.save(os.path.join(path_greenfunc, "grn_%s.npy" % com), output_data)
+            output_data.T.tofile(os.path.join(path_greenfunc, "grn_%s.bin" % com))
 
 
 if __name__ == "__main__":

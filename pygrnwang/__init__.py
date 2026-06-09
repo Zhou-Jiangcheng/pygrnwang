@@ -8,4 +8,4 @@ Wang et al., 2017).
 
 """
 
-__version__ = "1.0.0"
+__version__ = "2.1.2"

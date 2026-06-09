@@ -1,17 +1,74 @@
 import os
 import sys
-import numpy as np
-from obspy.taup import TauPyModel
-from obspy.taup.taup_create import TauPCreate
-from concurrent.futures import ProcessPoolExecutor  # 引入并行处理模块
+import platform
+import shutil
 
+import numpy as np
+from concurrent.futures import ProcessPoolExecutor
+
+
+# ============================================================================
+# Backend selection
+# ----------------------------------------------------------------------------
+# If a Java runtime, TauP.jar and jpype are all available, use the (faster)
+# Java TauP backend. Otherwise fall back to obspy.taup, which is slower.
+# ============================================================================
+def _detect_java_backend():
+    """
+    Return (use_java, jar_path).
+    use_java is True only when `java` is on PATH, TauP.jar exists in the
+    environment's bin/Scripts directory and jpype can be imported.
+    """
+    if shutil.which("java") is None:
+        return False, None
+
+    if platform.system() == "Windows":
+        jar_path = os.path.join(sys.exec_prefix, "Scripts", "TauP.jar")
+    else:
+        jar_path = os.path.join(sys.exec_prefix, "bin", "TauP.jar")
+
+    if not os.path.exists(jar_path):
+        return False, None
+
+    try:
+        import jpype  # noqa: F401
+    except ImportError:
+        return False, None
+
+    return True, jar_path
+
+
+_USE_JAVA, _JAR_PATH = _detect_java_backend()
+
+if _USE_JAVA:
+    import jpype
+    import jpype.imports  # noqa: F401  use jpype to call java class
+
+    if not jpype.isJVMStarted():
+        jpype.startJVM("--enable-native-access=ALL-UNNAMED", classpath=[_JAR_PATH])
+    from edu.sc.seis.TauP import TauP_Time  # type: ignore
+else:
+    from obspy.taup import TauPyModel
+    from obspy.taup.taup_create import TauPCreate
+
+
+_DEG_PER_KM = 1.0 / 111.19492664455874
+
+# Phase lists shared by both backends.
+_PHASES_P = ["p", "P", "pP", "Pg", "Pn", "Pdiff", "PKP"]
+_PHASES_S = ["s", "S", "sS", "pS", "Sg", "Sn", "Sdiff", "SKS"]
+
+
+# ============================================================================
+# obspy backend
+# ============================================================================
 # --- Global Model Cache ---
 _MODEL_CACHE = {}
 
 
 def _get_model(model_name, rebuild_npz=False):
     """
-    Retrieve a cached TauPyModel instance.
+    Retrieve a cached TauPyModel instance (obspy backend only).
     """
     if model_name in _MODEL_CACHE:
         return _MODEL_CACHE[model_name]
@@ -27,7 +84,7 @@ def _get_model(model_name, rebuild_npz=False):
         if not os.path.exists(npz_file) or rebuild_npz:
             # Only allow building in the main process logic or ensure file lock (simplified here)
             # The calling function ensures this is done before forking in most cases.
-            taup_create_npz_file(nd_file)
+            _taup_create_npz_file_obspy(nd_file)
 
         real_model_path = npz_file
 
@@ -40,7 +97,7 @@ def _get_model(model_name, rebuild_npz=False):
         sys.exit(1)
 
 
-def taup_create_npz_file(nd_file):
+def _taup_create_npz_file_obspy(nd_file):
     npz_file = os.path.splitext(nd_file)[0] + ".npz"
     try:
         taup_creator = TauPCreate(
@@ -60,27 +117,23 @@ def taup_create_npz_file(nd_file):
     return npz_file
 
 
-def cal_first_p(event_depth_km, dist_km, receiver_depth_km=0.0, model_name="ak135"):
-    """
-    Calculates P and S times for a single distance.
-    This function remains unchanged and is called by workers.
-    """
+def _cal_first_p_obspy(
+    event_depth_km, dist_km, receiver_depth_km=0.0, model_name="ak135"
+):
     # Force deeper point as source (reciprocity)
     if event_depth_km < receiver_depth_km:
         event_depth_km, receiver_depth_km = receiver_depth_km, event_depth_km
 
     # This will use the per-process cache
     model = _get_model(model_name)
-    dist_deg = dist_km / 111.19492664455874
+    dist_deg = dist_km * _DEG_PER_KM
 
-    # 1. First P
-    phases_list_p = ["p", "P", "pP", "Pg", "Pn", "Pdiff", "PKP"]
     try:
         arrivals_p = model.get_travel_times(
             source_depth_in_km=event_depth_km,
             receiver_depth_in_km=receiver_depth_km,
             distance_in_degree=dist_deg,
-            phase_list=phases_list_p,
+            phase_list=_PHASES_P,
         )
         first_p = arrivals_p[0].time if arrivals_p else np.nan
     except Exception:
@@ -89,40 +142,36 @@ def cal_first_p(event_depth_km, dist_km, receiver_depth_km=0.0, model_name="ak13
     return first_p
 
 
-def cal_first_p_s(event_depth_km, dist_km, receiver_depth_km=0.0, model_name="ak135"):
-    """
-    Calculates P and S times for a single distance.
-    This function remains unchanged and is called by workers.
-    """
+def _cal_first_p_s_obspy(
+    event_depth_km, dist_km, receiver_depth_km=0.0, model_name="ak135"
+):
     # Force deeper point as source (reciprocity)
     if event_depth_km < receiver_depth_km:
         event_depth_km, receiver_depth_km = receiver_depth_km, event_depth_km
 
     # This will use the per-process cache
     model = _get_model(model_name)
-    dist_deg = dist_km / 111.19492664455874
+    dist_deg = dist_km * _DEG_PER_KM
 
     # 1. First P
-    phases_list_p = ["p", "P", "pP", "Pg", "Pn", "Pdiff", "PKP"]
     try:
         arrivals_p = model.get_travel_times(
             source_depth_in_km=event_depth_km,
             receiver_depth_in_km=receiver_depth_km,
             distance_in_degree=dist_deg,
-            phase_list=phases_list_p,
+            phase_list=_PHASES_P,
         )
         first_p = arrivals_p[0].time if arrivals_p else np.nan
     except Exception:
         first_p = np.nan
 
     # 2. First S
-    phases_list_s = ["s", "S", "sS", "pS", "Sg", "Sn", "Sdiff", "SKS"]
     try:
         arrivals_s = model.get_travel_times(
             source_depth_in_km=event_depth_km,
             receiver_depth_in_km=receiver_depth_km,
             distance_in_degree=dist_deg,
-            phase_list=phases_list_s,
+            phase_list=_PHASES_S,
         )
         first_s = arrivals_s[0].time if arrivals_s else np.nan
     except Exception:
@@ -131,7 +180,111 @@ def cal_first_p_s(event_depth_km, dist_km, receiver_depth_km=0.0, model_name="ak
     return first_p, first_s
 
 
-# --- Worker Function for Parallelization ---
+# ============================================================================
+# Java (TauP) backend
+# ============================================================================
+def taup_time_java(
+    event_depth_km, dist_km, phases_list, receiver_depth_km=0, model_name="ak135"
+):
+    """
+    Full travel-time query using the Java TauP backend.
+    Only available when the Java backend has been selected.
+    """
+    if not _USE_JAVA:
+        raise RuntimeError(
+            "taup_time_java requires a Java runtime with TauP.jar and jpype."
+        )
+    ttobj = TauP_Time(model_name)
+    ttobj.setSourceDepth(event_depth_km)
+    ttobj.setReceiverDepth(receiver_depth_km)
+    ttobj.setPhaseNames(phases_list)
+    ttobj.calculate(dist_km * _DEG_PER_KM)
+
+    N_arr = ttobj.getNumArrivals()
+    results = {"phase": [], "puristphase": [], "time": [], "rayparameter": []}
+    for i in range(N_arr):
+        arr = ttobj.getArrival(i)
+        results["phase"].append(str(arr.getName()))
+        results["puristphase"].append(str(arr.getPuristName()))
+        results["time"].append(float(arr.getTime()))
+        results["rayparameter"].append(float(arr.getRayParam()))
+    return results
+
+
+def _first_arrival_java(event_depth_km, dist_km, receiver_depth_km, model_name, phases):
+    ttobj = TauP_Time(model_name)
+    ttobj.setSourceDepth(event_depth_km)
+    ttobj.setReceiverDepth(receiver_depth_km)
+    ttobj.setPhaseNames(phases)
+    ttobj.calculate(dist_km * _DEG_PER_KM)
+    if ttobj.getNumArrivals() == 0:
+        return np.nan
+    return float(ttobj.getArrival(0).getTime())
+
+
+def _cal_first_p_java(
+    event_depth_km, dist_km, receiver_depth_km=0.0, model_name="ak135"
+):
+    if event_depth_km < receiver_depth_km:
+        event_depth_km, receiver_depth_km = receiver_depth_km, event_depth_km
+    return _first_arrival_java(
+        event_depth_km, dist_km, receiver_depth_km, model_name, _PHASES_P
+    )
+
+
+def _cal_first_p_s_java(
+    event_depth_km, dist_km, receiver_depth_km=0.0, model_name="ak135"
+):
+    if event_depth_km < receiver_depth_km:
+        event_depth_km, receiver_depth_km = receiver_depth_km, event_depth_km
+    first_p = _first_arrival_java(
+        event_depth_km, dist_km, receiver_depth_km, model_name, _PHASES_P
+    )
+    first_s = _first_arrival_java(
+        event_depth_km, dist_km, receiver_depth_km, model_name, _PHASES_S
+    )
+    return first_p, first_s
+
+
+# ============================================================================
+# Public API (dispatches to the selected backend)
+# ============================================================================
+def taup_create_npz_file(nd_file):
+    """
+    Prepare a velocity model from an .nd file.
+
+    obspy backend: builds and returns the corresponding .npz file.
+    Java backend : TauP reads .nd files directly, so the .nd path is returned
+                   unchanged (no build step needed).
+    """
+    if _USE_JAVA:
+        return nd_file
+    return _taup_create_npz_file_obspy(nd_file)
+
+
+def cal_first_p(event_depth_km, dist_km, receiver_depth_km=0.0, model_name="ak135"):
+    """Calculate the first P arrival time for a single distance."""
+    if _USE_JAVA:
+        return _cal_first_p_java(event_depth_km, dist_km, receiver_depth_km, model_name)
+    else:
+        return _cal_first_p_obspy(
+            event_depth_km, dist_km, receiver_depth_km, model_name
+        )
+
+
+def cal_first_p_s(event_depth_km, dist_km, receiver_depth_km=0.0, model_name="ak135"):
+    """Calculate the first P and S arrival times for a single distance."""
+    if _USE_JAVA:
+        return _cal_first_p_s_java(
+            event_depth_km, dist_km, receiver_depth_km, model_name
+        )
+    else:
+        return _cal_first_p_s_obspy(
+            event_depth_km, dist_km, receiver_depth_km, model_name
+        )
+
+
+# --- Worker Function for Parallelization (obspy backend only) ---
 def _calculate_chunk(dist_chunk, event_depth_km, receiver_depth_km, model_name):
     """
     Worker function to process a chunk of distances.
@@ -156,7 +309,7 @@ def create_tpts_table(
     dist_km_list,
     model_name="ak135",
     check_finished=False,
-    max_workers=None,  # Added parameter to control parallelism
+    max_workers=None,  # Added parameter to control parallelism (obspy backend)
 ):
     # Ensure directory exists
     dir_path = os.path.join(
@@ -175,6 +328,22 @@ def create_tpts_table(
     ):
         return
 
+    if _USE_JAVA:
+        # The JVM does not play well with forked worker processes, so run
+        # serially in the current (JVM-hosting) process.
+        tp_table = np.zeros(len(dist_km_list), dtype=np.float32)
+        ts_table = np.zeros(len(dist_km_list), dtype=np.float32)
+        for i in range(len(dist_km_list)):
+            first_p, first_s = _cal_first_p_s_java(
+                event_depth_km, dist_km_list[i], receiver_depth_km, model_name
+            )
+            tp_table[i] = first_p
+            ts_table[i] = first_s
+        tp_table.tofile(path_tp_table)
+        ts_table.tofile(path_ts_table)
+        return
+
+    # ---- obspy backend (parallel) ----
     # [CRITICAL] Pre-load/Build model in the MAIN process first.
     # This prevents a race condition where multiple workers try to build
     # the .npz file simultaneously if it doesn't exist.
@@ -187,8 +356,6 @@ def create_tpts_table(
     # If data is small, don't use multiprocessing overhead
     if len(dist_km_list) < 50:
         max_workers = 1
-
-    # print(f"Calculating table (Depth: {event_depth_km}km) with {max_workers} workers...")
 
     tp_table_parts = []
     ts_table_parts = []
@@ -211,9 +378,7 @@ def create_tpts_table(
                 for chunk in chunks
             ]
 
-            # Collect results as they complete (order doesn't matter for collection,
-            # but we need to reassemble in order. Map or simple loop works best here.)
-            # Here we just loop through futures in order of submission to keep order.
+            # Loop through futures in order of submission to keep order.
             for future in futures:
                 res_tp, res_ts = future.result()
                 tp_table_parts.append(res_tp)
@@ -235,30 +400,4 @@ def create_tpts_table(
 
 
 if __name__ == "__main__":
-    # Example usage
-    my_nd_file = r"C:\Users\zjc\my_data\wenchuan.nd"
-
-    # Generate a dummy distance list
-    dists = np.linspace(10, 2000, 500)  # 500 points
-
-    try:
-        import time
-
-        s = time.time()
-
-        create_tpts_table(
-            path_green="./output_tables",
-            event_depth_km=10.0,
-            receiver_depth_km=0.0,
-            dist_km_list=dists,
-            model_name=my_nd_file,
-            max_workers=4,  # Use 4 cores
-        )
-
-        print(f"Calculation finished in {time.time() - s:.2f}s")
-
-    except Exception as e:
-        import traceback
-
-        traceback.print_exc()
-        print(f"Error in main execution: {e}")
+    pass

@@ -45,6 +45,13 @@ def install_binaries(target_exec_dir, copy_to_system=True):
     if not shutil.which("gfortran"):
         raise ValueError(r"Please install gfortran.")
 
+    # Check whether Java is available on PATH
+    if shutil.which("java") is None:
+        print(
+            "[pygrnwang] Warning: Java not found on PATH. "
+            "obspy will be used to compute arrival times."
+        )
+
     # Ensure the output directory exists
     target_exec_dir = os.path.abspath(target_exec_dir)
     os.makedirs(target_exec_dir, exist_ok=True)
@@ -98,6 +105,17 @@ def install_binaries(target_exec_dir, copy_to_system=True):
             except Exception as e:
                 print(f"[Warning] Could not copy binary to {env_bin_dir}: {e}")
 
+    # 2. Copy java
+    output_binary = os.path.join(target_exec_dir, 'TauP.jar')
+    if copy_to_system and os.path.exists(output_binary):
+            dest_link = os.path.join(env_bin_dir, 'TauP.jar')
+            print(f"[pygrnwang] Installing binary to {dest_link}")
+            try:
+                shutil.copy2(output_binary, dest_link)
+                st = os.stat(dest_link)
+                os.chmod(dest_link, st.st_mode | 0o111)
+            except Exception as e:
+                print(f"[Warning] Could not copy binary to {env_bin_dir}: {e}")
 
 # --- Custom command classes ---
 

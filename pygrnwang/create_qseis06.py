@@ -291,7 +291,7 @@ def convert_pd2bin_qseis06(path_greenfunc, remove=False):
             ]
         )
         time_series_com = np.array(time_series_com, dtype=np.float32)
-        np.save(os.path.join(path_greenfunc, "grn_%s.npy" % com), time_series_com)
+        time_series_com.T.tofile(os.path.join(path_greenfunc, "grn_%s.bin" % com))
         if remove:
             os.remove(os.path.join(path_greenfunc, "ex.%s" % com))
             os.remove(os.path.join(path_greenfunc, "ss.%s" % com))
@@ -312,7 +312,7 @@ def convert_pd2bin_qseis06(path_greenfunc, remove=False):
             ]
         )
         time_series_com = np.array(time_series_com, dtype=np.float32)
-        np.save(os.path.join(path_greenfunc, "grn_%s.npy" % com), time_series_com)
+        time_series_com.T.tofile(os.path.join(path_greenfunc, "grn_%s.bin" % com))
         if remove:
             os.remove(os.path.join(path_greenfunc, "ss.%s" % com))
             os.remove(os.path.join(path_greenfunc, "ds.%s" % com))

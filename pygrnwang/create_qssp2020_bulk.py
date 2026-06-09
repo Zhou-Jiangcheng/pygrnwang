@@ -285,7 +285,7 @@ def pre_process_qssp2020(
     for event_depth in tqdm(event_depth_list, desc="Creating travel time tables"):
         for receiver_depth in receiver_depth_list:
             create_tpts_table(
-                path_green,
+                os.path.join(path_green, "GreenFunc"),
                 event_depth,
                 receiver_depth,
                 dist_kms,

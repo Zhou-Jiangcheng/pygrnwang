@@ -132,20 +132,16 @@ def call_edcmp2(event_depth, obs_depth, mt_ind, path_green, check_finished=False
 
 
 def convert_edcmp2(path_sub_dir, output_type_ind, remove=False):
-    fname_df = str(
-        os.path.join(path_sub_dir, "hs.%s" % output_name_list[output_type_ind])
-    )
+    output_name = output_name_list[output_type_ind]
+    fname_df = str(os.path.join(path_sub_dir, "hs.%s" % output_name))
     df = pd.read_csv(
         fname_df,
         skiprows=3,
         sep="\\s+",
         header=None,
     )
-    values_raw = df.to_numpy()[:, 2:]
-    np.save(
-        str(os.path.join(path_sub_dir, "%s.npy" % output_name_list[output_type_ind])),
-        values_raw,
-    )
+    values_raw = np.asarray(df.to_numpy()[:, 2:], dtype=np.float32)
+    values_raw.tofile(os.path.join(path_sub_dir, "%s.bin" % output_name))
     if remove:
         os.remove(fname_df)
     return values_raw

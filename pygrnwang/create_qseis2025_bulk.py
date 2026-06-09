@@ -195,7 +195,7 @@ def create_grnlib_qseis2025_parallel(
         for _ in tqdm(
             pool.imap_unordered(_call_qseis2025_star, tasks, chunksize=1),
             total=len(tasks),
-            desc="Compute QSEIS2025 Green's library in the transformed domain.",
+            desc="Compute QSEIS2025 Green's library",
         ):
             pass
 
@@ -204,7 +204,7 @@ def create_grnlib_qseis2025_parallel(
 
 
 def convert_pd2bin_qseis2025_all(path_green, remove=False):
-    print("converting ascii files to bytes files")
+    print("Converting ascii files to bytes files")
     with open(os.path.join(path_green, "green_lib_info.json"), "r") as fr:
         green_info = json.load(fr)
     event_depth_list = green_info["event_depth_list"]

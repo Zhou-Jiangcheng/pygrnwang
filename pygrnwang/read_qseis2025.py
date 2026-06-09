@@ -91,15 +91,28 @@ def read_time_series_qseis2025_bin(
     path_greenfunc,
     start_count,
     output_type,
+    sampling_num,
 ):
     time_series_list = []
     name_list_psv, name_list_sh = get_outfile_name_list(output_type)
     for com in name_list_psv:
-        time_series_com = np.load(os.path.join(path_greenfunc, "grn_%s.npy" % com))
-        time_series_list.append(time_series_com[:, start_count].reshape(4, -1))
+        path_bin = os.path.join(path_greenfunc, "grn_%s.bin" % com)
+        data = np.fromfile(
+            path_bin,
+            dtype=np.float32,
+            count=4 * sampling_num,
+            offset=start_count * 4 * sampling_num * 4,
+        )
+        time_series_list.append(data.reshape(4, -1))
     for com in name_list_sh:
-        time_series_com = np.load(os.path.join(path_greenfunc, "grn_%s.npy" % com))
-        time_series_list.append(time_series_com[:, start_count].reshape(2, -1))
+        path_bin = os.path.join(path_greenfunc, "grn_%s.bin" % com)
+        data = np.fromfile(
+            path_bin,
+            dtype=np.float32,
+            count=2 * sampling_num,
+            offset=start_count * 2 * sampling_num * 4,
+        )
+        time_series_list.append(data.reshape(2, -1))
     return name_list_psv, name_list_sh, time_series_list
 
 
@@ -247,11 +260,14 @@ def seek_qseis2025(
         start_count = dist_idx - ind_group * num_each_group
 
         path_greenfunc_sub = os.path.join(path_greenfunc, "%d_0" % ind_group)
-        if os.path.exists(os.path.join(path_greenfunc_sub, "grn_szt.npy")):
+        _name_list_psv, _name_list_sh = get_outfile_name_list(output_type)
+        _first_com = _name_list_psv[0] if _name_list_psv else _name_list_sh[0]
+        if os.path.exists(os.path.join(path_greenfunc_sub, "grn_%s.bin" % _first_com)):
             _, _, ts_list = read_time_series_qseis2025_bin(
                 path_greenfunc=path_greenfunc_sub,
                 start_count=start_count,
                 output_type=output_type,
+                sampling_num=sampling_num,
             )
         else:
             _, _, ts_list = read_time_series_qseis2025_ascii(

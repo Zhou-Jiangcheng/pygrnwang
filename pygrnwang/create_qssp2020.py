@@ -272,7 +272,7 @@ def convert_pd2bin_qssp2020(path_green, event_depth, receiver_depth, output_type
             )
             dat = pd.read_csv(path_dat, sep="\\s+").to_numpy()
             dat = np.array(dat, dtype=np.float32)[:, 1:].T
-            dat.tofile(os.path.join(path_dat[:-4], "%s.bin" % path_dat[:-4]))
+            dat.tofile(path_dat[:-4] + ".bin")
 
 
 if __name__ == "__main__":

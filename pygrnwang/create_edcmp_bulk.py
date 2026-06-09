@@ -138,7 +138,7 @@ def create_grnlib_edcmp2_parallel(
         ):
             pass
     if convert_bulk:
-        convert_pd2np_edcmp2_all(path_green, remove=remove)
+        convert_pd2bin_edcmp2_all(path_green, remove=remove)
     e = datetime.datetime.now()
     return e - s
 
@@ -173,8 +173,8 @@ _EDCMP_OUTPUT_TYPE_NAMES = ["disp", "strain", "stress", "tilt"]
 _EDCMP_CHA_NUM = {"disp": 3, "strain": 6, "stress": 6, "tilt": 2}
 
 
-def convert_pd2np_edcmp2_all(path_green, remove=False):
-    print("converting ascii files to npy files")
+def convert_pd2bin_edcmp2_all(path_green, remove=False):
+    print("converting ascii files to binary float32 files")
     with open(os.path.join(path_green, "green_lib_info.json"), "r") as fr:
         green_info = json.load(fr)
     grn_source_depth_range = green_info["grn_source_depth_range"]
@@ -226,6 +226,6 @@ def convert_pd2np_edcmp2_all(path_green, remove=False):
                     bulk_data[_EDCMP_OUTPUT_TYPE_NAMES[int(o)]][i, j, k] = v_ijko
 
     for ot, arr in bulk_data.items():
-        out_path = os.path.join(path_green, "edcmp2_%s.npy" % ot)
-        np.save(out_path, arr)
+        out_path = os.path.join(path_green, "edcmp2_%s.bin" % ot)
+        arr.tofile(out_path)
         print("Saved %s, shape: %s" % (os.path.basename(out_path), str(arr.shape)))

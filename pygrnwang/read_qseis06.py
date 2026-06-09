@@ -11,14 +11,26 @@ from .utils import shift_green2real_tpts, read_tpts_table
 from .signal_process import resample, filter_butter
 
 
-def read_time_series_qseis06_bin(path_greenfunc, start_count):
+def read_time_series_qseis06_bin(path_greenfunc, start_count, sampling_num):
     time_series_list = []
     for com in ["tr", "tz"]:
-        time_series_com = np.load(os.path.join(path_greenfunc, "grn_%s.npy" % com))
-        time_series_list.append(time_series_com[:, start_count].reshape(4, -1))
+        path_bin = os.path.join(path_greenfunc, "grn_%s.bin" % com)
+        data = np.fromfile(
+            path_bin,
+            dtype=np.float32,
+            count=4 * sampling_num,
+            offset=start_count * 4 * sampling_num * 4,
+        )
+        time_series_list.append(data.reshape(4, -1))
     for com in ["tt"]:
-        time_series_com = np.load(os.path.join(path_greenfunc, "grn_%s.npy" % com))
-        time_series_list.append(time_series_com[:, start_count].reshape(2, -1))
+        path_bin = os.path.join(path_greenfunc, "grn_%s.bin" % com)
+        data = np.fromfile(
+            path_bin,
+            dtype=np.float32,
+            count=2 * sampling_num,
+            offset=start_count * 2 * sampling_num * 4,
+        )
+        time_series_list.append(data.reshape(2, -1))
     return time_series_list
 
 
@@ -135,8 +147,8 @@ def seek_qseis06(
     srate_grn = 1 / green_info["sampling_interval"]
     sampling_num = green_info["sampling_num"]
     time_reduction_velo = green_info["time_reduction_velo"]
-    dist_range = green_info["dist_range"]
-    delta_dist = green_info["delta_dist"]
+    dist_range = green_info["grn_dist_range"]
+    delta_dist = green_info["grn_delta_dist"]
     num_each_group = green_info["N_each_group"]
     wavelet_type = green_info["wavelet_type"]
     grn_dep_list = green_info["event_depth_list"]
@@ -163,9 +175,11 @@ def seek_qseis06(
     start_count = ind - ind_group * num_each_group
 
     path_greenfunc_sub = os.path.join(path_greenfunc, "%d_0" % ind_group)
-    if os.path.exists(os.path.join(path_greenfunc_sub, "grn_tz.npy")):
+    if os.path.exists(os.path.join(path_greenfunc_sub, "grn_tz.bin")):
         time_series_list = read_time_series_qseis06_bin(
-            path_greenfunc=path_greenfunc_sub, start_count=start_count
+            path_greenfunc=path_greenfunc_sub,
+            start_count=start_count,
+            sampling_num=sampling_num,
         )
     else:
         time_series_list = read_time_series_qseis06_ascii(
