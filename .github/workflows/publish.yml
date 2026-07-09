@@ -1,8 +1,12 @@
 name: Build and Publish to PyPI
+
 on:
   push:
     tags:
       - "v*"
+
+permissions:
+  contents: read
 
 jobs:
   build_wheels:
@@ -18,18 +22,19 @@ jobs:
             cibw_arch: "AMD64"
           - os: macos-latest
             cibw_arch: "arm64"
+
     steps:
       - uses: actions/checkout@v6
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.14"
 
       - name: Pre-install build tools
         run: |
           python -m pip install --upgrade pip
-          pip install virtualenv cibuildwheel
+          python -m pip install "cibuildwheel==4.1.0"
 
       # ---- gfortran ----
       - name: Install gfortran (Windows)
@@ -44,28 +49,88 @@ jobs:
       - name: Add MSYS2 gfortran to PATH (Windows)
         if: runner.os == 'Windows'
         shell: bash
-        run: echo "D:/a/_temp/msys64/mingw64/bin" >> $GITHUB_PATH
+        run: echo "D:/a/_temp/msys64/mingw64/bin" >> "$GITHUB_PATH"
+
+      - name: Install gfortran and detect macOS deployment target
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          brew install gcc
+
+          # Prefer the gfortran that belongs to the Homebrew gcc formula just installed.
+          # Do not use `ls ... | head -1`, because it can accidentally select an older
+          # gfortran such as gfortran-13 when multiple versions are present on the runner.
+          GFORTRAN="$(brew --prefix gcc)/bin/gfortran"
+          if [ ! -x "$GFORTRAN" ]; then
+            GFORTRAN="$(ls -1 /opt/homebrew/bin/gfortran-* | sort -V | tail -1)"
+          fi
+
+          ln -sf "$GFORTRAN" /opt/homebrew/bin/gfortran
+          echo "Using gfortran: $(command -v gfortran)"
+          gfortran --version
+
+          LIBQUADMATH="$(gfortran -print-file-name=libquadmath.0.dylib)"
+          if [ ! -f "$LIBQUADMATH" ]; then
+            echo "Could not find libquadmath.0.dylib from gfortran"
+            echo "gfortran returned: $LIBQUADMATH"
+            exit 1
+          fi
+          echo "Using libquadmath: $LIBQUADMATH"
+
+          # Read the dylib's actual minimum supported macOS version and use it as the
+          # deployment target. This avoids hard-coding 15.0 or 16.0 while keeping the
+          # wheel tag consistent with the bundled Homebrew runtime library.
+          TARGET="$({
+            otool -l "$LIBQUADMATH" | awk '
+              /LC_BUILD_VERSION/ { in_lc=1; next }
+              in_lc && /minos/ { print $2; exit }
+            '
+          })"
+
+          if [ -z "$TARGET" ]; then
+            TARGET="$({
+              otool -l "$LIBQUADMATH" | awk '
+                /LC_VERSION_MIN_MACOSX/ { in_lc=1; next }
+                in_lc && /version/ { print $2; exit }
+              '
+            })"
+          fi
+
+          if [ -z "$TARGET" ]; then
+            echo "Could not detect the minimum macOS version required by libquadmath"
+            otool -l "$LIBQUADMATH"
+            exit 1
+          fi
+
+          echo "Detected MACOSX_DEPLOYMENT_TARGET=$TARGET"
+          echo "MACOSX_DEPLOYMENT_TARGET=$TARGET" >> "$GITHUB_ENV"
 
       # ---- build wheel ----
       - name: Build wheels
         run: cibuildwheel --output-dir wheelhouse
         env:
-          CIBW_BUILD: "cp310-* cp311-* cp312-* cp313-* cp314-*"
+          # Keep Python >=3.9 support consistent with pyproject.toml.
+          CIBW_BUILD: "cp39-* cp310-* cp311-* cp312-* cp313-* cp314-*"
           CIBW_SKIP: "*-win32 *-manylinux_i686 *-musllinux*"
           CIBW_BEFORE_BUILD_LINUX: >
             yum install -y gcc-gfortran glibc-static || (apt-get update && apt-get install -y gfortran libc6-dev)
           CIBW_BEFORE_BUILD_MACOS: >
-            brew install gcc && ln -sf "$(ls /opt/homebrew/bin/gfortran-* | head -1)" /opt/homebrew/bin/gfortran
+            gfortran --version
           CIBW_ENVIRONMENT_WINDOWS: >
             PATH="D:/a/_temp/msys64/mingw64/bin;$PATH"
           CIBW_ENVIRONMENT_MACOS: >
-            PATH="/opt/homebrew/bin:$PATH" MACOSX_DEPLOYMENT_TARGET=15.0
+            PATH="/opt/homebrew/bin:$PATH" MACOSX_DEPLOYMENT_TARGET="$MACOSX_DEPLOYMENT_TARGET"
+          CIBW_TEST_COMMAND: >
+            python -c "import pygrnwang; print('pygrnwang import OK:', pygrnwang.__version__)"
           CIBW_ARCHS: ${{ matrix.cibw_arch }}
 
       - uses: actions/upload-artifact@v7
         with:
           name: wheels-${{ matrix.os }}-${{ matrix.cibw_arch }}
           path: ./wheelhouse/*.whl
+          if-no-files-found: error
 
   build_sdist:
     name: Build source distribution
@@ -73,13 +138,22 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+
       - name: Build sdist
-        run: pipx run build --sdist
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "build==1.5.1"
+          python -m build --sdist
 
       - uses: actions/upload-artifact@v7
         with:
           name: sdist
           path: dist/*.tar.gz
+          if-no-files-found: error
 
   publish:
     name: Publish to PyPI
@@ -89,12 +163,24 @@ jobs:
       name: pypi
       url: https://pypi.org/p/pygrnwang
     permissions:
+      contents: read
       id-token: write
     steps:
       - uses: actions/download-artifact@v8
         with:
           path: dist
           merge-multiple: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+
+      - name: Check distributions
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install twine
+          python -m twine check dist/*
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
