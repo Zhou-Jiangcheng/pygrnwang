@@ -1,6 +1,4 @@
 import os
-import shutil
-import platform
 import pickle
 import json
 import datetime
@@ -10,11 +8,6 @@ from multiprocessing import Pool
 import numpy as np
 from tqdm import tqdm
 
-try:
-    from mpi4py import MPI
-except:
-    pass
-
 from .create_edcmp import create_inp_edcmp2, call_edcmp2, convert_edcmp2
 from .utils import group
 from .geo import d2km, convert_sub_faults_geo2ned, cal_max_dist_from_2d_points
@@ -22,6 +15,13 @@ from .geo import d2km, convert_sub_faults_geo2ned, cal_max_dist_from_2d_points
 
 def _call_edcmp2_star(args):
     return call_edcmp2(*args)
+
+def _get_mpi():
+    try:
+        from mpi4py import MPI
+    except ImportError as exc:
+        raise RuntimeError("mpi4py is required for multi-node MPI mode") from exc
+    return MPI
 
 
 def pre_process_edcmp2(
@@ -145,6 +145,7 @@ def create_grnlib_edcmp2_parallel(
 
 def create_grnlib_edcmp2_parallel_multi_nodes(path_green, check_finished=False):
     s = datetime.datetime.now()
+    MPI = _get_mpi()
     with open(os.path.join(path_green, "group_list_edcmp.pkl"), "rb") as fr:
         group_list_edcmp = pickle.load(fr)
     for ind_group in range(len(group_list_edcmp)):

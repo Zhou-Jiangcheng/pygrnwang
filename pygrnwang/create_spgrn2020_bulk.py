@@ -3,13 +3,10 @@ import json
 import pickle
 import json
 import datetime
+from multiprocessing import Pool
+
 from tqdm import tqdm
 
-try:
-    from mpi4py import MPI
-except:
-    pass
-from multiprocessing import Pool
 from .create_spgrn2020 import create_dir_spgrn, create_inp_spgrn2020, call_spgrn2020
 from .read_green_info_spgrn import read_green_info_spgrn
 from .utils import group, convert_earth_model_nd2nd_without_Q
@@ -17,6 +14,13 @@ from .utils import group, convert_earth_model_nd2nd_without_Q
 
 def _call_spgrn2020_star(args):
     return call_spgrn2020(*args)
+
+def _get_mpi():
+    try:
+        from mpi4py import MPI
+    except ImportError as exc:
+        raise RuntimeError("mpi4py is required for multi-node MPI mode") from exc
+    return MPI
 
 
 def pre_process_spgrn2020(
@@ -183,6 +187,7 @@ def create_grnlib_spgrn2020_parallel(path_green, check_finished=False):
 
 def create_grnlib_spgrn2020_parallel_multi_nodes(path_green, check_finished=False):
     s = datetime.datetime.now()
+    MPI = _get_mpi()
     with open(os.path.join(path_green, "group_list.pkl"), "rb") as fr:
         group_list = pickle.load(fr)
     for ind_group in range(len(group_list)):

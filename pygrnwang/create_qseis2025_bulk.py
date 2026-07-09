@@ -7,11 +7,6 @@ from multiprocessing import Pool
 import numpy as np
 from tqdm import tqdm
 
-try:
-    from mpi4py import MPI
-except:
-    pass
-
 from .create_qseis2025 import (
     create_dir_qseis2025,
     create_inp_qseis2025,
@@ -24,6 +19,13 @@ from .utils import group, convert_earth_model_nd2nd_without_Q
 
 def _call_qseis2025_star(args):
     return call_qseis2025(*args)
+
+def _get_mpi():
+    try:
+        from mpi4py import MPI
+    except ImportError as exc:
+        raise RuntimeError("mpi4py is required for multi-node MPI mode") from exc
+    return MPI
 
 
 def pre_process_qseis2025(
@@ -226,6 +228,7 @@ def create_grnlib_qseis2025_parallel_multi_nodes(
     path_green, check_finished=False, convert_pd2bin=True, remove_pd=True
 ):
     s = datetime.datetime.now()
+    MPI = _get_mpi()
     with open(os.path.join(path_green, "group_list.pkl"), "rb") as fr:
         group_list = pickle.load(fr)
     comm = MPI.COMM_WORLD

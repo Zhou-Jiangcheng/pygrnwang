@@ -2,12 +2,8 @@ import os
 import pickle
 import json
 import datetime
-
-try:
-    from mpi4py import MPI
-except:
-    pass
 from multiprocessing import Pool
+
 from tqdm import tqdm
 
 from .create_spgrn2020 import create_dir_spgrn
@@ -19,6 +15,13 @@ from .pytaup import taup_create_npz_file, create_tpts_table
 
 def _call_spgrn2012_star(args):
     return call_spgrn2012(*args)
+
+def _get_mpi():
+    try:
+        from mpi4py import MPI
+    except ImportError as exc:
+        raise RuntimeError("mpi4py is required for multi-node MPI mode") from exc
+    return MPI
 
 
 def pre_process_spgrn2012(
@@ -183,6 +186,7 @@ def create_grnlib_spgrn2012_parallel(path_green, check_finished=False):
 
 def create_grnlib_spgrn2012_parallel_multi_nodes(path_green, check_finished=False):
     s = datetime.datetime.now()
+    MPI = _get_mpi()
     with open(os.path.join(path_green, "group_list.pkl"), "rb") as fr:
         group_list = pickle.load(fr)
     for ind_group in range(len(group_list)):

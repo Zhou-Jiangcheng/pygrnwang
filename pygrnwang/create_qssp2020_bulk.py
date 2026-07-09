@@ -8,11 +8,6 @@ from multiprocessing import Pool
 import numpy as np
 from tqdm import tqdm
 
-try:
-    from mpi4py import MPI
-except:
-    pass
-
 from .create_qssp2020 import (
     mt_com_list,
     create_inp_qssp2020,
@@ -26,6 +21,14 @@ from .pytaup import taup_create_npz_file, create_tpts_table
 
 def _call_qssp2020_star(args):
     return call_qssp2020(*args)
+
+
+def _get_mpi():
+    try:
+        from mpi4py import MPI
+    except ImportError as exc:
+        raise RuntimeError("mpi4py is required for multi-node MPI mode") from exc
+    return MPI
 
 
 def pre_process_spec(
@@ -411,6 +414,7 @@ def create_grnlib_qssp2020_parallel(
 
 def create_grnlib_qssp2020_spec_parallel_multi_nodes(path_green, check_finished=False):
     s = datetime.datetime.now()
+    MPI = _get_mpi()
     with open(os.path.join(path_green, "group_list_spec.pkl"), "rb") as fr:
         group_list_spec = pickle.load(fr)
     N_all = 0
@@ -449,6 +453,7 @@ def create_grnlib_qssp2020_spec_parallel_multi_nodes(path_green, check_finished=
 
 def create_grnlib_qssp2020_func_parallel_multi_nodes(path_green, check_finished=False):
     s = datetime.datetime.now()
+    MPI = _get_mpi()
     with open(os.path.join(path_green, "group_list_func.pkl"), "rb") as fr:
         group_list_spec = pickle.load(fr)
     N_all = 0

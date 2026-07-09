@@ -7,11 +7,6 @@ from multiprocessing import Pool
 import numpy as np
 from tqdm import tqdm
 
-try:
-    from mpi4py import MPI
-except:
-    pass
-
 from .create_qseis06 import (
     create_dir_qseis06,
     create_inp_qseis06,
@@ -26,6 +21,13 @@ from .utils import group, convert_earth_model_nd2nd_without_Q
 # 新增：imap_unordered 的打包调用助手
 def _call_qseis06_star(args):
     return call_qseis06(*args)
+
+def _get_mpi():
+    try:
+        from mpi4py import MPI
+    except ImportError as exc:
+        raise RuntimeError("mpi4py is required for multi-node MPI mode") from exc
+    return MPI
 
 
 def create_order_ind(order, diff_accu_order):
@@ -409,6 +411,7 @@ def create_grnlib_qseis06_parallel(
 
 def create_grnlib_qseis06_parallel_multi_nodes(path_green, check_finished=False):
     s = datetime.datetime.now()
+    MPI = _get_mpi()
     with open(os.path.join(path_green, "group_list.pkl"), "rb") as fr:
         group_list = pickle.load(fr)
     comm = MPI.COMM_WORLD

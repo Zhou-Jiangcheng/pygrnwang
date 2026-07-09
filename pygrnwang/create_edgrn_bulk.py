@@ -1,6 +1,4 @@
 import os
-import shutil
-import platform
 import pickle
 import json
 import datetime
@@ -8,17 +6,19 @@ import datetime
 from tqdm import tqdm
 from multiprocessing import Pool
 
-try:
-    from mpi4py import MPI
-except:
-    pass
-
 from .create_edgrn import create_inp_edgrn2, call_edgrn2
 from .utils import group, convert_earth_model_nd2nd_without_Q
 
 
 def _call_edgrn2_star(args):
     return call_edgrn2(*args)
+
+def _get_mpi():
+    try:
+        from mpi4py import MPI
+    except ImportError as exc:
+        raise RuntimeError("mpi4py is required for multi-node MPI mode") from exc
+    return MPI
 
 
 def pre_process_edgrn2(
@@ -119,6 +119,7 @@ def create_grnlib_edgrn2_parallel(path_green, check_finished=False):
 
 def create_grnlib_edgrn2_parallel_multi_nodes(path_green, check_finished=False):
     s = datetime.datetime.now()
+    MPI = _get_mpi()
     with open(os.path.join(path_green, "group_list_edgrn.pkl"), "rb") as fr:
         group_list_edgrn = pickle.load(fr)
     for ind_group in range(len(group_list_edgrn)):
