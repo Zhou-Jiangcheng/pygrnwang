@@ -14,6 +14,7 @@ from .utils import group
 def _call_edcmp2_star(args):
     return call_edcmp2(*args)
 
+
 def _get_mpi():
     try:
         from mpi4py import MPI

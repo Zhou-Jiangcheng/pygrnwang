@@ -16,6 +16,7 @@ from .pytaup import taup_create_npz_file, create_tpts_table
 def _call_spgrn2012_star(args):
     return call_spgrn2012(*args)
 
+
 def _get_mpi():
     try:
         from mpi4py import MPI

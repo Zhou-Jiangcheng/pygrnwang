@@ -106,16 +106,17 @@ def install_binaries(target_exec_dir, copy_to_system=True):
                 print(f"[Warning] Could not copy binary to {env_bin_dir}: {e}")
 
     # 2. Copy java
-    output_binary = os.path.join(target_exec_dir, 'TauP.jar')
+    output_binary = os.path.join(target_exec_dir, "TauP.jar")
     if copy_to_system and os.path.exists(output_binary):
-            dest_link = os.path.join(env_bin_dir, 'TauP.jar')
-            print(f"[pygrnwang] Installing binary to {dest_link}")
-            try:
-                shutil.copy2(output_binary, dest_link)
-                st = os.stat(dest_link)
-                os.chmod(dest_link, st.st_mode | 0o111)
-            except Exception as e:
-                print(f"[Warning] Could not copy binary to {env_bin_dir}: {e}")
+        dest_link = os.path.join(env_bin_dir, "TauP.jar")
+        print(f"[pygrnwang] Installing binary to {dest_link}")
+        try:
+            shutil.copy2(output_binary, dest_link)
+            st = os.stat(dest_link)
+            os.chmod(dest_link, st.st_mode | 0o111)
+        except Exception as e:
+            print(f"[Warning] Could not copy binary to {env_bin_dir}: {e}")
+
 
 # --- Custom command classes ---
 

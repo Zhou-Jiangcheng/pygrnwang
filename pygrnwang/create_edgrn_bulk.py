@@ -13,6 +13,7 @@ from .utils import group, convert_earth_model_nd2nd_without_Q
 def _call_edgrn2_star(args):
     return call_edgrn2(*args)
 
+
 def _get_mpi():
     try:
         from mpi4py import MPI
