@@ -232,6 +232,16 @@ def _cal_first_p_java(
     )
 
 
+def _cal_first_s_java(
+    event_depth_km, dist_km, receiver_depth_km=0.0, model_name="ak135"
+):
+    if event_depth_km < receiver_depth_km:
+        event_depth_km, receiver_depth_km = receiver_depth_km, event_depth_km
+    return _first_arrival_java(
+        event_depth_km, dist_km, receiver_depth_km, model_name, _PHASES_S
+    )
+
+
 def _cal_first_p_s_java(
     event_depth_km, dist_km, receiver_depth_km=0.0, model_name="ak135"
 ):
@@ -270,6 +280,16 @@ def cal_first_p(event_depth_km, dist_km, receiver_depth_km=0.0, model_name="ak13
         return _cal_first_p_obspy(
             event_depth_km, dist_km, receiver_depth_km, model_name
         )
+
+
+def cal_first_s(event_depth_km, dist_km, receiver_depth_km=0.0, model_name="ak135"):
+    """Calculate the first S arrival time for a single distance."""
+    if _USE_JAVA:
+        return _cal_first_s_java(event_depth_km, dist_km, receiver_depth_km, model_name)
+    else:
+        return _cal_first_p_s_obspy(
+            event_depth_km, dist_km, receiver_depth_km, model_name
+        )[1]
 
 
 def cal_first_p_s(event_depth_km, dist_km, receiver_depth_km=0.0, model_name="ak135"):

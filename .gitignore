@@ -163,6 +163,8 @@ cython_debug/
 
 # vscode
 .vscode/
+.claude/
+.codex/
 
 # exe files
 *.exe
