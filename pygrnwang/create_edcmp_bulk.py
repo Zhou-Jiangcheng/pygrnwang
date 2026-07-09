@@ -2,7 +2,6 @@ import os
 import pickle
 import json
 import datetime
-import math
 from multiprocessing import Pool
 
 import numpy as np
@@ -10,7 +9,6 @@ from tqdm import tqdm
 
 from .create_edcmp import create_inp_edcmp2, call_edcmp2, convert_edcmp2
 from .utils import group
-from .geo import d2km, convert_sub_faults_geo2ned, cal_max_dist_from_2d_points
 
 
 def _call_edcmp2_star(args):
