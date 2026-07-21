@@ -13,6 +13,7 @@ def create_nd_by_crust1_ak135(
     path_ak135: str,
     path_output: str,
     no_low_velo_layer: bool = False,
+    layered_crust: bool = True,
 ):
     """
     Merge the CRUST1.0 model (without water and upper_sediments) of a given location
@@ -28,6 +29,11 @@ def create_nd_by_crust1_ak135(
         no_low_velo_layer: Ensure that the combination of CRUST1.0 and AK135fc models
             produces no spurious low-velocity zones at the interface, which may remove
             several layers in the upper-mantle of the AK135fc model.
+        layered_crust: If True (default), encode every CRUST1.0 layer above
+            the mantle as a constant-property layer using repeated interface
+            depths. If False, retain linear interpolation between CRUST1.0
+            layer-top samples. In both modes, the rows immediately above and
+            below the ``mantle`` marker have the same depth.
     Returns:
         nd_new: np.ndarray [[dep, vp, vs, rho, qp, qs], ... ]
     """
@@ -95,22 +101,59 @@ def create_nd_by_crust1_ak135(
         else:
             ind_cut = ind_cut_new
 
-    nd_new = np.concatenate([nd_crust1, nd_ak135[ind_cut:, :]])
-    inds = np.argwhere(nd_new[:, 2] == 0)
-    ind_cmb = inds[0][0]
-    ind_icocb = inds[-1][0]
-    # ind_660 = np.argwhere(nd_new[:, 0] == 660)[0][0]
+    if len(nd_crust1) < 2:
+        raise ValueError("CRUST1.0 model must contain crust and mantle rows")
+
+    # CRUST1.0 supplies one constant-property value per layer at the layer
+    # top. An nd file, however, linearly interpolates between adjacent rows.
+    # Repeat each interface depth to preserve CRUST1.0's stepwise layering.
+    crust_rows = nd_crust1[:-1]
+    crust_mantle_row = nd_crust1[-1].copy()
+    moho_depth = float(crust_mantle_row[0])
+    if np.any(np.diff(crust_rows[:, 0]) <= 0) or moho_depth <= crust_rows[-1, 0]:
+        raise ValueError("CRUST1.0 layer-top depths must increase toward the mantle")
+
+    if layered_crust:
+        rows_above_mantle = []
+        for i, top_row in enumerate(crust_rows):
+            bottom_depth = (
+                crust_rows[i + 1, 0] if i + 1 < len(crust_rows) else moho_depth
+            )
+            bottom_row = top_row.copy()
+            bottom_row[0] = bottom_depth
+            rows_above_mantle.extend((top_row.copy(), bottom_row))
+        rows_above_mantle = np.asarray(rows_above_mantle)
+    else:
+        bottom_row = crust_rows[-1].copy()
+        bottom_row[0] = moho_depth
+        rows_above_mantle = np.vstack((crust_rows, bottom_row))
+
+    mantle_rows = nd_ak135[ind_cut:, :].copy()
+    if not len(mantle_rows):
+        raise ValueError("AK135 model has no rows at or below the Moho")
+    if not np.isclose(mantle_rows[0, 0], moho_depth):
+        # When no_low_velo_layer skips deeper into AK135, retain the CRUST1.0
+        # mantle value at the Moho so the named boundary remains well formed.
+        crust_mantle_row[0] = moho_depth
+        mantle_rows = np.vstack((crust_mantle_row, mantle_rows))
+
+    mantle_index = len(rows_above_mantle)
+    nd_new = np.vstack((rows_above_mantle, mantle_rows))
+
+    fluid_indices = np.flatnonzero(nd_new[:, 2] == 0)
+    if not len(fluid_indices) or fluid_indices[-1] + 1 >= len(nd_new):
+        raise ValueError("AK135 model must contain outer- and inner-core rows")
+    boundary_labels = {
+        mantle_index: "mantle",
+        int(fluid_indices[0]): "outer-core",
+        int(fluid_indices[-1] + 1): "inner-core",
+    }
 
     lines = []
-    for i in range(len(nd_new)):
-        line = ""
-        for j in range(6):
-            line = line + "%12.5f " % float(nd_new[i, j])
-        line = line[:-1] + "\n"
-        lines.append(line)
-    lines.insert(len(nd_crust1) - 1, "mantle\n")
-    lines.insert(ind_cmb + 1, "outer-core\n")
-    lines.insert(ind_icocb + 3, "inner-core\n")
+    for i, row in enumerate(nd_new):
+        if i in boundary_labels:
+            lines.append(boundary_labels[i] + "\n")
+        lines.append(" ".join("%12.5f" % float(value) for value in row[:6]) + "\n")
     with open(path_output, "w") as fw:
         fw.writelines(lines)
     return nd_new
