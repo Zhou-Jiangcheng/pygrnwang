@@ -154,6 +154,7 @@ def create_nd_by_crust1_ak135(
         if i in boundary_labels:
             lines.append(boundary_labels[i] + "\n")
         lines.append(" ".join("%12.5f" % float(value) for value in row[:6]) + "\n")
+    lines.append('\n')
     with open(path_output, "w") as fw:
         fw.writelines(lines)
     return nd_new
