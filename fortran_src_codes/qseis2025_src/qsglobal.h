@@ -184,9 +184,9 @@ c
 c
 c     input and output data files
 c
-      character*110 inputfile
+      character*160 inputfile
       common /inputdata/ inputfile
       integer*4 ssel(7),fsel(19,7),flen(19,7),outsel(5)
-      character*113 outfile(19,7)
+      character*160 outfile(19,7)
       common /outsel/ ssel,fsel,flen,outsel
       common /outdata/ outfile

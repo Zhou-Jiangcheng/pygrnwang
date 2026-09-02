@@ -38,7 +38,7 @@ c
 c
       complex*16 comi,comi2
 c
-      character*100 dispout(3),veloout(3),acceout(3),
+      character*160 dispout(3),veloout(3),acceout(3),
      &             rotaout(3),rotarateout(3),
      &             strainout(6),strainrateout(6),
      &             stressout(6),stressrateout(6),
@@ -111,7 +111,7 @@ c
      &                         expl(:),clvd(:),ss12(:),
      &                         ss11(:),ds31(:),ds23(:)
 c
-      character*100,allocatable:: specfile(:),uspecfile(:),vspecfile(:),
+      character*160,allocatable:: specfile(:),uspecfile(:),vspecfile(:),
      &  wspecfile(:),especfile(:),fspecfile(:),gspecfile(:),
      &  pspecfile(:),qspecfile(:)
       character*10,allocatable:: rname(:)

@@ -46,7 +46,7 @@ c
       write(20,'(a)')'#   list of source_depths / filenames'
       write(20,'(i10)')ngrn
       do ig=1,ngrn
-        do flen=128,1,-1
+        do flen=160,1,-1
           if(stdgrnfile(ig)(flen:flen).ne.' ')goto 100
         enddo
 100     continue

@@ -18,7 +18,7 @@ c
       real*8 suppress,ros,vps,vss,fcut
       real*8 rot(3,3),sm(3,3),swap(3,3)
       real*8 resolut(3),t0(nrmax)
-      character*80 outfile0(7),comments*180
+      character*160 outfile0(7),comments*180
 c
 c     source parameters
 c     =================
@@ -184,7 +184,7 @@ c
       read(comments,*)(outfile0(istp),istp=1,6)
       do istp=1,6
         if(ssel(istp).ne.1)ssel(istp)=0
-        do flen0=80,1,-1
+        do flen0=160,1,-1
           if(outfile0(istp)(flen0:flen0).ne.' ')goto 100
         enddo
 100     continue
@@ -278,7 +278,7 @@ c
       else
         read(unit,*)(azimuth(i),i=1,nr)
       endif
-      do flen0=80,1,-1
+      do flen0=160,1,-1
         if(outfile0(7)(flen0:flen0).ne.' ')goto 200
       enddo
 200   continue

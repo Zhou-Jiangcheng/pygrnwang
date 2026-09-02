@@ -84,9 +84,9 @@ c	2 = 6 strain components: exx,eyy,ezz,exy,eyz,ezx
 c	3 = 6 stress components: sxx,syy,szz,sxy,syz,szx
 c	4 = two vertical tilt components: dux/dz,duy/dz
 c~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	character*80 outdir
+	character*160 outdir
 	integer iouts(NFIELDS)
-	character*80 outputs(NFIELDS)
+	character*160 outputs(NFIELDS)
 c
 c~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 c	LOCAL CONSTANTS
@@ -106,7 +106,7 @@ c~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	double precision xrec1,xrec2,yrec1,yrec2,dxrec,dyrec
 	double complex cxyrec1,cxyrec2
 	double complex cxyrec(NRECMAX)
-	character*80 infile,grndir,grnss,grnds,grncl
+	character*160 infile,grndir,grnss,grnds,grncl
 	character*180 dataline
 c~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 c	END DECLARATIONS

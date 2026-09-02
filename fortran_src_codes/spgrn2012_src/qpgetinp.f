@@ -9,7 +9,7 @@ c
       integer i,j,l,ir,ig,isg,is,is1,flen,iswap,nhypo
       double precision twindow,twinout,suppress,r1,r2,dr,dr1,dr2
       double precision dswap(11)
-      character*128 fswap
+      character*160 fswap
       character*180 comments
 c
 c     uniform receiver depth
@@ -114,7 +114,7 @@ c
         enddo
       enddo
 c
-      do flen=128,1,-1
+      do flen=160,1,-1
         if(spcgrndir(flen:flen).ne.' ')goto 200
       enddo
 200   continue
@@ -130,7 +130,7 @@ c
       call getdata(unit,comments)
       read(comments,*)stdgrndir
 c
-      do flen=128,1,-1
+      do flen=160,1,-1
         if(stdgrndir(flen:flen).ne.' ')goto 300
       enddo
 300   continue

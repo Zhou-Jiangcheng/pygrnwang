@@ -61,7 +61,7 @@ c
 	double precision srate,moment
 	double precision resolut(3)
         double precision u(10,nrmax)
-        character*80 inputfile,outdir,grnfile0(3),reports(3)
+        character*160 inputfile,outdir,grnfile0(3),reports(3)
 	character*160 grnfile(3)
 	character*180 dataline
 c

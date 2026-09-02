@@ -54,7 +54,7 @@ s = """#========================================================================
 #    stress tensor, vertical tilts, and los:
 #    dispfile, strainfile, stressfile, tiltfile, losfile
 #
-#    Note that all file or directory names should not be longer than 80
+#    Note that all file or directory names should not be longer than 160
 #    characters. Directories must be ended by (unix) or (dos)!
 #===============================================================================
 ''
@@ -117,7 +117,7 @@ s = """#========================================================================
 # 2. directory of the Green's functions and the three files for the
 #    fundamental Green's functions: grndir, grnfiles(3);
 #
-#    Note that all file or directory names should not be longer than 80
+#    Note that all file or directory names should not be longer than 160
 #    characters. Directories must be ended by (unix) or (dos)!
 #
 #    ELSE (homogeneous model) THEN

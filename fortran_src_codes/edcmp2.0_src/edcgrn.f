@@ -5,7 +5,7 @@ c	First implemented in Potsdam, Feb, 1999
 c	Last modified: Potsdam, Nov, 2001, by R. Wang
 c
 	integer ns,nrec
-	character*80 grndir,grnss0,grnds0,grncl0
+	character*160 grndir,grnss0,grnds0,grncl0
 c
 	include 'edcglobal.h'
 c~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

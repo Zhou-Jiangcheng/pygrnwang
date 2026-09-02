@@ -7,7 +7,7 @@ c
 	include 'edcglobal.h'
 c
 	integer nrec,iouts(NFIELDS)
-	character*80 outdir,infile,outputs(NFIELDS)
+	character*160 outdir,infile,outputs(NFIELDS)
 c
 c~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 c	ELASTIC PARAMETERS AT OBSERVATION DEPTH

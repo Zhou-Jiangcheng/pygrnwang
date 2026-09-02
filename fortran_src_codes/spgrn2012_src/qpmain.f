@@ -8,7 +8,7 @@ c     work space
 c
       integer i,j,ig,ldegcut,ierr,runtime
       integer time
-      character*128 arg,inputindex,inputfile,leftpart,rightpart
+      character*160 arg,inputindex,inputfile,leftpart,rightpart
 c     
 c
 c

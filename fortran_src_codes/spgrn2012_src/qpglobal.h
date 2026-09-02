@@ -59,7 +59,7 @@ c
       double precision disk(0:ldegmax),fdisk(0:ldegmax)
       double precision dplm1(0:ldegmax),rr0(ngrnmax)
       double complex comi,comi2
-      character*128 spcgrndir,stdgrndir,infofile,grnfile(ngrnmax),
+      character*160 spcgrndir,stdgrndir,infofile,grnfile(ngrnmax),
      &             rgrnfile(ngrnmax),tgrnfile(ngrnmax),
      &             pgrnfile(ngrnmax),stdgrnfile(ngrnmax)
       common /lgreen/ nogravity,selpsv,selsh
