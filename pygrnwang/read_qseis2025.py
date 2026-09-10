@@ -469,7 +469,7 @@ def seek_qseis2025(
             seismograms_resample[i] = resample(
                 seismograms[i], srate_old=srate_grn, srate_new=srate, zero_phase=True
             )[:len_after_resample]
-    if (wavelet_type == 1) and ("rate" not in output_type):
+    if (wavelet_type == 1) and ("rate" not in output_type) and (output_type != "velo"):
         seismograms_resample = np.cumsum(seismograms_resample, axis=1) / srate
     elif (wavelet_type == 2) and (("rate" in output_type) or (output_type == "velo")):
         seismograms_resample = (
