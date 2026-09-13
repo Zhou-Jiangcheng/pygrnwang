@@ -11,6 +11,7 @@ from .focal_mechanism import (
     tensor2full_tensor_matrix,
     plane2mt,
     mt2plane,
+    moment_from_moment_tensor,
 )
 from .utils import create_rotate_z_mat, read_material_nd, read_nd
 from .geo import rotate_rtz_to_enz, rotate_symmetric_tensor_series
@@ -114,7 +115,7 @@ def seek_edcmp2(
     output_type: str = "disp",
     times_mu: bool = False,
     area_km_sq: float = None,
-    model_name="ak135",
+    model_name="ak135fc",
     green_info=None,
 ):
     """
@@ -140,13 +141,21 @@ def seek_edcmp2(
     :param rotate: If True, rotate output from rtz to enz coordinate system.
     :param check_convert_pure_dp: If True, project focal mechanism onto the nearest
                                   pure double-couple before synthesizing.
+                                  The moment tensor is normalized to M0 = 1 either
+                                  way, so this flag only changes the mechanism, not
+                                  the amplitude. The returned values are therefore
+                                  per unit seismic moment; multiply by M0 in N·m
+                                  (or supply area_km_sq, which scales by the area
+                                  factor of M0 = mu * A [m²] * slip [m]) to get
+                                  physical units.
     :param output_type: One of 'disp', 'strain', 'stress', 'tilt'.
     :param times_mu: If True, return raw Green's function values (already multiplied by mu).
                      If False (default), divide by mu so units are per N·m.
     :param area_km_sq: Optional subfault area in km². When provided, the result is
                        multiplied by area in m² (area_km² * 1e6), scaling the output
                        by the subfault area contribution to M0 = mu * A [m²] * slip [m].
-    :param model_name: Earth model name used to look up mu (e.g. 'ak135').
+    :param model_name: Earth model for the mu lookup: either the built-in
+                       'ak135fc' or a path to an nd file.
     :param green_info: Pre-loaded green_lib_info dict. If None, reads green_lib_info.json
                        from path_green automatically.
     :return: 1-D numpy array of length cha_num (3 for disp, 6 for strain/stress, 2 for tilt).
@@ -196,10 +205,15 @@ def seek_edcmp2(
             mt_rotate[2, 2],
         ]
     )
+    # Both branches are normalised to M0 = 1, so that switching
+    # check_convert_pure_dp does not change the amplitude of the result.
+    m0 = moment_from_moment_tensor(mt)
+    if m0 == 0:
+        raise ValueError("focal_mechanism has a zero scalar moment")
     if check_convert_pure_dp:
         mt_dp = plane2mt(1, *mt2plane(mt)[0])
     else:
-        mt_dp = mt
+        mt_dp = mt / m0
     v_ned_green_north = np.zeros(cha_num, dtype=float)
 
     for i in range(5):
@@ -275,7 +289,7 @@ def seek_edcmp2_bulk(
     times_mu: bool = False,
     area_km_sq_arr: np.ndarray = None,
     slip_m_arr: np.ndarray = None,
-    model_name: str = "ak135",
+    model_name: str = "ak135fc",
     green_info=None,
 ):
     """
@@ -294,6 +308,13 @@ def seek_edcmp2_bulk(
                                  or (N, 6) for MT in NED.
     :param rotate: Rotate from rtz to enz.
     :param check_convert_pure_dp: Convert to pure double-couple if True.
+                                  Each moment tensor is normalized to M0 = 1 either
+                                  way, so this flag only changes the mechanism, not
+                                  the amplitude. The returned values are therefore
+                                  per unit seismic moment; multiply by M0 in N·m
+                                  (or supply area_km_sq_arr / slip_m_arr, which
+                                  supply the A and slip factors of
+                                  M0 = mu * A [m²] * slip [m]) to get physical units.
     :param output_type: 'disp', 'strain', 'stress', or 'tilt'.
     :param times_mu: If False, divide by mu (rho*beta^2).
     :param area_km_sq_arr: Optional array of subfault areas in km², shape (N,).
@@ -305,7 +326,8 @@ def seek_edcmp2_bulk(
                        When provided, each result row is multiplied by the
                        corresponding slip, scaling the Green's function output
                        by the slip contribution to M0 = mu * A [m²] * slip [m].
-    :param model_name: Earth model name for mu lookup.
+    :param model_name: Earth model for the mu lookup: either the built-in
+                       'ak135fc' or a path to an nd file.
     :param green_info: Pre-loaded green_lib_info dict (avoids re-reading JSON).
 
     :return: numpy array of shape (N, cha_num), one row per query point.
@@ -430,9 +452,16 @@ def seek_edcmp2_bulk(
         axis=1,
     )  # (N, 6)
 
+    # Both branches are normalised to M0 = 1, so that switching
+    # check_convert_pure_dp does not change the amplitude of the result.
+    m0_arr = moment_from_moment_tensor(mt_r.T)  # (N,)
+    if np.any(m0_arr == 0):
+        raise ValueError("focal_mechanism_arr contains a zero scalar moment")
     if check_convert_pure_dp:
         for n in range(N):
             mt_r[n] = plane2mt(1, *mt2plane(mt_r[n])[0])
+    else:
+        mt_r = mt_r / m0_arr[:, None]
 
     # mt_ind=3 contributes twice: once for mt_r[3], once extra for mt_r[0]
     weights = mt_r[:, :5].copy()  # (N, 5)

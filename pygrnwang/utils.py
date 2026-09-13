@@ -229,6 +229,12 @@ def read_nd(path_nd, with_Q=False):
 
 
 def read_material_nd(model_name, depth):
+    """
+    :param model_name: either the built-in "ak135fc" or a path to an nd file.
+                       Note this is not a TauP model name: "ak135" is not built in.
+    :param depth: depth in km.
+    :return: the nd row [depth, vp, vs, rho] at or just below depth.
+    """
     if model_name == "ak135fc":
         from .ak135fc import s as str_nd
 
@@ -241,6 +247,11 @@ def read_material_nd(model_name, depth):
                     lines_new.append(float(temp[j]))
         nd_model = np.array(lines_new).reshape(-1, 4)
     else:
+        if not os.path.isfile(model_name):
+            raise FileNotFoundError(
+                "model_name must be the built-in 'ak135fc' or a path to an nd file, "
+                "got %r" % (model_name,)
+            )
         nd_model = read_nd(model_name)
     ind = np.argwhere((nd_model[:, 0] - depth) >= 0)[0][0]
     return nd_model[ind]
