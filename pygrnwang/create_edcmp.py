@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 
 from .edcmp2inp import s as str_inp
-from .utils import call_exe
+from .utils import call_exe, cal_grid
 
 fm_base_list = (
     (315.0, 90.0, 0.0),  # [1,0,0,-1,0,0] m1
@@ -59,11 +59,13 @@ def create_inp_edcmp2(
     lines = lines[:96]
 
     lines[44] = "1\n"
-    nx = len(np.arange(dist_range[0], dist_range[1] + delta_dist, delta_dist))
+    dist_grid = cal_grid(dist_range[0], dist_range[1], delta_dist)
+    nx = len(dist_grid)
     lines[45] = "%d\n" % nx
     lines[46] = "(%f,0) (%f,0)\n" % (
-        dist_range[0] * 1e3,
-        dist_range[1] * 1e3,
+        dist_grid[0] * 1e3,
+        # keep the spacing at delta_dist; the end may pass dist_range[1]
+        dist_grid[-1] * 1e3,
     )
 
     lines[59] = "'%s'\n" % path_sub_dir

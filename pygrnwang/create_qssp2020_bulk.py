@@ -15,7 +15,7 @@ from .create_qssp2020 import (
     call_qssp2020,
     convert_pd2bin_qssp2020,
 )
-from .utils import group, convert_earth_model_nd2nd_without_Q
+from .utils import group, convert_earth_model_nd2nd_without_Q, cal_grid
 from .pytaup import taup_create_npz_file, create_tpts_table
 
 
@@ -280,11 +280,7 @@ def pre_process_qssp2020(
 
     # creating tp and ts tables
     npz_file = taup_create_npz_file(nd_file=path_nd_without_Q)
-    dist_kms = np.linspace(
-        dist_range[0],
-        dist_range[1],
-        round(np.ceil((dist_range[1] - dist_range[0]) / delta_dist)) + 1,
-    )
+    dist_kms = cal_grid(dist_range[0], dist_range[1], delta_dist)
     for event_depth in tqdm(event_depth_list, desc="Creating travel time tables"):
         for receiver_depth in receiver_depth_list:
             create_tpts_table(

@@ -2,13 +2,14 @@ import os
 import pickle
 import json
 import datetime
+import warnings
 from multiprocessing import Pool
 
 import numpy as np
 from tqdm import tqdm
 
 from .create_edcmp import create_inp_edcmp2, call_edcmp2, convert_edcmp2
-from .utils import group
+from .utils import group, cal_grid
 
 
 def _call_edcmp2_star(args):
@@ -53,9 +54,9 @@ def pre_process_edcmp2(
         green_info = json.load(fr)
 
     item_list = []
-    event_depth_list = np.arange(
+    event_depth_list = cal_grid(
         grn_source_depth_range[0],
-        grn_source_depth_range[1] + grn_source_delta_depth,
+        grn_source_depth_range[1],
         grn_source_delta_depth,
     )
     for event_depth in event_depth_list:
@@ -76,6 +77,24 @@ def pre_process_edcmp2(
                 item_list.append([event_depth, obs_depth, mt_ind])
 
     # Update the green_info dictionary with new observation and model parameters.
+    # seek_edcmp2 indexes the edcmp2 output on the grid used here, so record it;
+    # pre_process_edgrn2 wrote the edgrn2 grid into the same keys, and the two
+    # disagreeing means the caller passed different parameters to the two steps.
+    grid_keys = {
+        "grn_source_depth_range": list(grn_source_depth_range),
+        "grn_source_delta_depth": grn_source_delta_depth,
+        "grn_dist_range": list(grn_dist_range),
+        "grn_delta_dist": grn_delta_dist,
+        "obs_depth_list": list(obs_depth_list),
+    }
+    for key, value in grid_keys.items():
+        old = green_info.get(key, None)
+        if old is not None and old != value:
+            warnings.warn(
+                "pre_process_edcmp2 got %s=%r but pre_process_edgrn2 recorded %r; "
+                "the edcmp2 grid is the one seek_edcmp2 will use." % (key, value, old)
+            )
+        green_info[key] = value
     green_info["layered"] = layered
     if layered:
         green_info["lam"] = None
@@ -182,9 +201,9 @@ def convert_pd2bin_edcmp2_all(path_green, remove=False):
         green_info = json.load(fr)
     grn_source_depth_range = green_info["grn_source_depth_range"]
     grn_source_delta_depth = green_info["grn_source_delta_depth"]
-    event_depth_list = np.arange(
+    event_depth_list = cal_grid(
         grn_source_depth_range[0],
-        grn_source_depth_range[1] + grn_source_delta_depth,
+        grn_source_depth_range[1],
         grn_source_delta_depth,
     )
     obs_depth_list = green_info["obs_depth_list"]
@@ -194,7 +213,7 @@ def convert_pd2bin_edcmp2_all(path_green, remove=False):
     grn_dist_range = green_info["grn_dist_range"]
     grn_dist_delta = green_info["grn_delta_dist"]
     n_dist = len(
-        np.arange(grn_dist_range[0], grn_dist_range[1] + grn_dist_delta, grn_dist_delta)
+        cal_grid(grn_dist_range[0], grn_dist_range[1], grn_dist_delta)
     )
 
     output_observables = np.nonzero(np.array(green_info["output_observables"]))[0]

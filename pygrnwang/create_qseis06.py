@@ -131,7 +131,8 @@ def create_inp_qseis06(
         lines[44] = "%d\n" % res
         lines[45] = "%f %f\n" % (
             (dist_range[0] + (N_dist_group - 1) * N_each_group * delta_dist) * r_ratio,
-            dist_range[1] * r_ratio,
+            # keep the spacing at delta_dist: the last point may pass dist_range[1]
+            (dist_range[0] + (N_dist - 1) * delta_dist) * r_ratio,
         )
         path_inp = os.path.join(
             path_sub_dir, "%d_%d" % (N_dist_group - 1, order), "grn.inp"

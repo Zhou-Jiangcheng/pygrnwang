@@ -14,7 +14,7 @@ from .create_qseis2025 import (
     convert_pd2bin_qseis2025,
 )
 from .pytaup import create_tpts_table
-from .utils import group, convert_earth_model_nd2nd_without_Q
+from .utils import group, convert_earth_model_nd2nd_without_Q, cal_grid
 
 
 def _call_qseis2025_star(args):
@@ -102,11 +102,7 @@ def pre_process_qseis2025(
     convert_earth_model_nd2nd_without_Q(path_nd, path_nd_without_Q)
 
     # creating tp and ts tables
-    dist_kms = np.linspace(
-        dist_range[0],
-        dist_range[1],
-        round(np.ceil((dist_range[1] - dist_range[0]) / delta_dist)) + 1,
-    )
+    dist_kms = cal_grid(dist_range[0], dist_range[1], delta_dist)
     for event_depth in tqdm(event_depth_list, desc="Creating travel time tables"):
         for receiver_depth in receiver_depth_list:
             create_tpts_table(

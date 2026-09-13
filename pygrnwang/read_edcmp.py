@@ -13,7 +13,7 @@ from .focal_mechanism import (
     mt2plane,
     moment_from_moment_tensor,
 )
-from .utils import create_rotate_z_mat, read_material_nd, read_nd
+from .utils import create_rotate_z_mat, read_material_nd, read_nd, cal_grid
 from .geo import rotate_rtz_to_enz, rotate_symmetric_tensor_series
 
 _EDCMP_CHA_NUM = {"disp": 3, "strain": 6, "stress": 6, "tilt": 2}
@@ -165,9 +165,9 @@ def seek_edcmp2(
             green_info = json.load(fr)
     grn_source_depth_range = green_info["grn_source_depth_range"]
     grn_source_delta_depth = green_info["grn_source_delta_depth"]
-    event_depth_list = np.arange(
+    event_depth_list = cal_grid(
         grn_source_depth_range[0],
-        grn_source_depth_range[1] + grn_source_delta_depth,
+        grn_source_depth_range[1],
         grn_source_delta_depth,
     )
     obs_depth_list = green_info["obs_depth_list"]
@@ -177,9 +177,7 @@ def seek_edcmp2(
 
     grn_dist_range = green_info["grn_dist_range"]
     grn_dist_delta = green_info["grn_delta_dist"]
-    dist_list = np.arange(
-        grn_dist_range[0], grn_dist_range[1] + grn_dist_delta, grn_dist_delta
-    )
+    dist_list = cal_grid(grn_dist_range[0], grn_dist_range[1], grn_dist_delta)
 
     grn_event_depth = event_depth_list[
         np.argmin(np.abs(event_depth_list - event_depth_km))
@@ -344,9 +342,9 @@ def seek_edcmp2_bulk(
 
     grn_source_depth_range = green_info["grn_source_depth_range"]
     grn_source_delta_depth = green_info["grn_source_delta_depth"]
-    event_depth_arr = np.arange(
+    event_depth_arr = cal_grid(
         grn_source_depth_range[0],
-        grn_source_depth_range[1] + grn_source_delta_depth,
+        grn_source_depth_range[1],
         grn_source_delta_depth,
     )
     obs_depth_list = green_info["obs_depth_list"]
@@ -356,9 +354,7 @@ def seek_edcmp2_bulk(
 
     grn_dist_range = green_info["grn_dist_range"]
     grn_dist_delta = green_info["grn_delta_dist"]
-    dist_arr = np.arange(
-        grn_dist_range[0], grn_dist_range[1] + grn_dist_delta, grn_dist_delta
-    )
+    dist_arr = cal_grid(grn_dist_range[0], grn_dist_range[1], grn_dist_delta)
 
     cha_num = _get_edcmp_cha_num(output_type)
 

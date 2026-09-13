@@ -27,7 +27,8 @@ def create_inp_edgrn2(
     lines[40] = "%d %f %f\n" % (
         n_dist,
         grn_dist_range[0] * 1e3,
-        grn_dist_range[1] * 1e3,
+        # keep the spacing at grn_delta_dist; the end may pass grn_dist_range[1]
+        (grn_dist_range[0] + (n_dist - 1) * grn_delta_dist) * 1e3,
     )
     n_source_depth = (
         math.ceil(
@@ -39,7 +40,8 @@ def create_inp_edgrn2(
     lines[41] = "%d %f %f\n" % (
         n_source_depth,
         grn_source_depth_range[0] * 1e3,
-        grn_source_depth_range[1] * 1e3,
+        (grn_source_depth_range[0] + (n_source_depth - 1) * grn_delta_source_depth)
+        * 1e3,
     )
     lines[51] = "%d\n" % wavenumber_sampling_rate
     path_edgrn_obs_dep = str(os.path.join(path_green, "edgrn2", "%.2f" % obs_depth, ""))
