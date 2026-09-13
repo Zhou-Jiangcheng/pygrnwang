@@ -423,17 +423,19 @@ def create_grnlib_qseis06_parallel_multi_nodes(path_green, check_finished=False)
             "Pleasse check the process num!" % (processes_num, len(group_list[0]))
         )
     rank = comm.Get_rank()
-    ind_group = rank // processes_num
-    ind_para = rank - ind_group * processes_num
-    print(rank, ind_group, ind_para)
-    call_qseis06(
-        event_depth=group_list[ind_group][ind_para][0],
-        receiver_depth=group_list[ind_group][ind_para][1],
-        n_group=group_list[ind_group][ind_para][2],
-        order=group_list[ind_group][ind_para][3],
-        path_green=path_green,
-        check_finished=check_finished,
-    )
+    for ind_group in range(len(group_list)):
+        # the last group holds the remainder and may be shorter than processes_num
+        if rank >= len(group_list[ind_group]):
+            continue
+        print("ind_group:%d rank:%d" % (ind_group, rank))
+        call_qseis06(
+            event_depth=group_list[ind_group][rank][0],
+            receiver_depth=group_list[ind_group][rank][1],
+            n_group=group_list[ind_group][rank][2],
+            order=group_list[ind_group][rank][3],
+            path_green=path_green,
+            check_finished=check_finished,
+        )
     e = datetime.datetime.now()
     print("run time:" + str(e - s))
 

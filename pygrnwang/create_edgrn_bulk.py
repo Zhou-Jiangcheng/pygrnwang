@@ -134,6 +134,9 @@ def create_grnlib_edgrn2_parallel_multi_nodes(path_green, check_finished=False):
                 % (processes_num, len(group_list_edgrn[0]))
             )
         print("ind_group:%d rank:%d" % (ind_group, rank))
+        # the last group holds the remainder and may be shorter than processes_num
+        if rank >= len(group_list_edgrn[ind_group]):
+            continue
         call_edgrn2(
             obs_depth=group_list_edgrn[ind_group][rank],
             path_green=path_green,

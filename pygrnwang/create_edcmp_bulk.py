@@ -158,6 +158,9 @@ def create_grnlib_edcmp2_parallel_multi_nodes(path_green, check_finished=False):
                 % (processes_num, len(group_list_edcmp[0]))
             )
         print("ind_group:%d rank:%d" % (ind_group, rank))
+        # the last group holds the remainder and may be shorter than processes_num
+        if rank >= len(group_list_edcmp[ind_group]):
+            continue
         call_edcmp2(
             event_depth=group_list_edcmp[ind_group][rank][0],
             obs_depth=group_list_edcmp[ind_group][rank][1],
