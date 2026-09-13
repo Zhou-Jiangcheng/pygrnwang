@@ -4,7 +4,6 @@ import json
 import datetime
 from multiprocessing import Pool
 
-import numpy as np
 from tqdm import tqdm
 
 from .create_qseis06 import (
