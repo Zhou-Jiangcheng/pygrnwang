@@ -49,12 +49,16 @@ def create_inp_edgrn2(
         lines_earth = convert_earth_model_nd2inp(
             path_nd=path_nd, path_output="earth_model.dat"
         )
-    for i in range(len(lines_earth)):
-        temp = lines_earth[i].split()
-        lines_earth[i] = (
-            temp[0] + " " + " ".join("%.4f" % (float(_) * 1e3) for _ in temp[1:-2])
-        )
-        lines_earth[i] = lines_earth[i] + "\n"
+        # nd model is 'no depth[km] vp[km/s] vs[km/s] ro[g/cm^3] qp qs';
+        # edgrn2 wants 'no depth[m] vp[m/s] vs[m/s] ro[kg/m^3]' without qp/qs.
+        # The template lines kept above are already SI and have no qp/qs,
+        # so they must not go through this conversion.
+        for i in range(len(lines_earth)):
+            temp = lines_earth[i].split()
+            lines_earth[i] = (
+                temp[0] + " " + " ".join("%.4f" % (float(_) * 1e3) for _ in temp[1:-2])
+            )
+            lines_earth[i] = lines_earth[i] + "\n"
     if earth_model_layer_num is None:
         earth_model_layer_num = len(lines_earth)
     else:
