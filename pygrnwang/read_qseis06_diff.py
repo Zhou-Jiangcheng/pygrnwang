@@ -277,11 +277,12 @@ def seek_qseis06_strain_rate_diff(
             model_name=model_name,
         )
 
-    seismograms_resample = np.zeros((6, round(sampling_num * srate / srate_grn)))
+    len_after_resample = round(sampling_num * srate / srate_grn)
+    seismograms_resample = np.zeros((6, len_after_resample))
     for i in range(6):
         seismograms_resample[i] = resample(
             seismograms[i], srate_old=srate_grn, srate_new=srate, zero_phase=True
-        )
+        )[:len_after_resample]
 
     if only_seismograms:
         return seismograms_resample
@@ -367,11 +368,12 @@ def seek_qseis06_stress_rate_diff(
     lam = rho * vp**2 - 2 * mu
     seismograms = convert_strain2stress(strain_rate, lam, mu)
 
-    seismograms_resample = np.zeros((6, round(sampling_num * srate / srate_grn)))
+    len_after_resample = round(sampling_num * srate / srate_grn)
+    seismograms_resample = np.zeros((6, len_after_resample))
     for i in range(6):
         seismograms_resample[i] = resample(
             seismograms[i], srate_old=srate_grn, srate_new=srate, zero_phase=True
-        )
+        )[:len_after_resample]
 
     if only_seismograms:
         return seismograms_resample

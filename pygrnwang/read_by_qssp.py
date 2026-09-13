@@ -163,19 +163,15 @@ def call_qssp2020_read(path_green, path_inp, check_finished=False):
         return None
 
     if platform.system() == "Windows":
-        spgrn_process = subprocess.Popen(
-            [os.path.join(sys.exec_prefix, "bin", "qssp2020.exe")],
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-        )
-        spgrn_process.communicate(str.encode(path_inp))
+        path_exe = os.path.join(sys.exec_prefix, "Scripts", "qssp2020.exe")
     else:
-        spgrn_process = subprocess.Popen(
-            [os.path.join(sys.exec_prefix, "bin", "qssp2020.bin")],
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-        )
-        spgrn_process.communicate(str.encode(path_inp))
+        path_exe = os.path.join(sys.exec_prefix, "bin", "qssp2020.bin")
+    spgrn_process = subprocess.Popen(
+        [path_exe],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+    )
+    spgrn_process.communicate(str.encode(path_inp))
 
     with open(path_finished, "w") as fw:
         fw.writelines([])
@@ -263,12 +259,11 @@ def read_by_qssp(
         seismograms = np.roll(seismograms, -conv_shift)
         seismograms[:, -conv_shift:] = 0
 
-    seismograms_resample = np.zeros(
-        (seismograms.shape[0], round(sampling_num * srate / srate_grn))
-    )
+    len_after_resample = round(sampling_num * srate / srate_grn)
+    seismograms_resample = np.zeros((seismograms.shape[0], len_after_resample))
     for i in range(seismograms.shape[0]):
         seismograms_resample[i] = resample(
             seismograms[i], srate_old=srate_grn, srate_new=srate, zero_phase=True
-        )
+        )[:len_after_resample]
 
     return seismograms_resample
