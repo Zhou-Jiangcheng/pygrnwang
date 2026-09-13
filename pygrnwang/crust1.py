@@ -82,9 +82,11 @@ class CrustModel:
         if lon < -180:
             lon += 360
 
-        # Find the index in the data for given lat and lon
-        ilat = floor(90.0 - lat)
-        ilon = floor(180 + lon)
+        # Find the index in the data for given lat and lon.
+        # The cells are 1 deg wide, so the poles and lon = 180 land one past the
+        # last cell and have to be clamped back onto it.
+        ilat = min(179, max(0, floor(90.0 - lat)))
+        ilon = min(359, max(0, floor(180 + lon)))
 
         return int(ilat), int(ilon)
 

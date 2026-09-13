@@ -75,12 +75,6 @@ def create_inp_edgrn2(
 def call_edgrn2(obs_depth, path_green, check_finished=False):
     os.chdir(path_green)
     sub_sub_dir = str(os.path.join("edgrn2", "%.2f" % obs_depth))
-    if (
-        check_finished
-        and os.path.exists(os.path.join(sub_sub_dir, ".finished"))
-        and len(os.listdir(sub_sub_dir)) > 2
-    ):
-        return None
     path_inp = str(os.path.join(sub_sub_dir, "grn.inp"))
     path_finished = os.path.join(sub_sub_dir, ".finished")
 
