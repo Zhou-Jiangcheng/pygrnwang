@@ -57,7 +57,10 @@ def create_inp_qseis06(
     order=0,
 ):
     # when receiver depth is not 0, change dists in inp file
-    r_ratio = (6371 - receiver_depth) / 6371
+    if flat_earth_transform:
+        r_ratio = (6371 - receiver_depth) / 6371
+    else:
+        r_ratio = 1
     lines = str_inp.split("\n")
     lines = [line + "\n" for line in lines]
 
@@ -167,7 +170,10 @@ def create_inp_qseis06_points(
         os.path.join(path_green, "%.2f" % event_depth, "%.2f" % receiver_depth)
     )
     # when receiver depth is not 0, change dists in inp file
-    r_ratio = (6371 - receiver_depth) / 6371
+    if flat_earth_transform:
+        r_ratio = (6371 - receiver_depth) / 6371
+    else:
+        r_ratio = 1
     points = points * r_ratio
 
     lines = str_inp.split("\n")

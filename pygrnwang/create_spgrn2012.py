@@ -111,6 +111,7 @@ def call_spgrn2012(event_depth, receiver_depth, path_green, check_finished=False
         path_finished=path_finished,
         name="spgrn2012",
     )
+    return output
 
 
 if __name__ == "__main__":

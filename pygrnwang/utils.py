@@ -273,7 +273,9 @@ def read_material_nd(model_name, depth):
                 "got %r" % (model_name,)
             )
         nd_model = read_nd(model_name)
-    ind = np.argwhere((nd_model[:, 0] - depth) >= 0)[0][0]
+    inds = np.argwhere((nd_model[:, 0] - depth) >= 0)
+    # below the bottom of the model: use its deepest layer
+    ind = inds[0][0] if len(inds) > 0 else len(nd_model) - 1
     return nd_model[ind]
 
 
@@ -281,7 +283,9 @@ def read_layerd_material(path_layerd_dat, depth_in_km):
     # thickness, rho, vp, vs, qp, qs
     depth_in_m = depth_in_km * 1e3
     dat = np.loadtxt(path_layerd_dat)
-    ind = np.argwhere((np.cumsum(dat[:, 0]) - depth_in_m) >= 0)[0][0]
+    inds = np.argwhere((np.cumsum(dat[:, 0]) - depth_in_m) >= 0)
+    # below the bottom of the model: use its deepest layer
+    ind = inds[0][0] if len(inds) > 0 else len(dat) - 1
     return dat[ind]
 
 

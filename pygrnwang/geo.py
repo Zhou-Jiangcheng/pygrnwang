@@ -272,8 +272,10 @@ def select_df_geo(df: pd.DataFrame, lat_range, lon_range, time_range) -> pd.Data
     :param time_range: [time_min, time_max] in format "2000-01-01T00:00:00Z"
     return df_filtered
     """
-    time_range[0] = pd.to_datetime(time_range[0])
-    time_range[1] = pd.to_datetime(time_range[1])
+    # do not touch the caller's DataFrame or time_range
+    time_min = pd.to_datetime(time_range[0])
+    time_max = pd.to_datetime(time_range[1])
+    df = df.copy()
     df["time"] = pd.to_datetime(df["time"])
     df_filtered = df[
         (df["lon"] >= lon_range[0])
@@ -282,8 +284,8 @@ def select_df_geo(df: pd.DataFrame, lat_range, lon_range, time_range) -> pd.Data
         & (df["lon"] <= lon_range[1])
         & (df["lat"] >= lat_range[0])
         & (df["lat"] <= lat_range[1])
-        & (df["time"] >= time_range[0])
-        & (df["time"] <= time_range[1])
+        & (df["time"] >= time_min)
+        & (df["time"] <= time_max)
     ]
     return df_filtered
 

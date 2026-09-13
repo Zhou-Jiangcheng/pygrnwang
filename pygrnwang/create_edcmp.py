@@ -107,12 +107,6 @@ def call_edcmp2(event_depth, obs_depth, mt_ind, path_green, check_finished=False
             "",
         )
     )
-    if (
-        check_finished
-        and os.path.exists(os.path.join(sub_sub_dir, ".finished"))
-        and len(os.listdir(sub_sub_dir)) > 2
-    ):
-        return None
     path_inp = str(os.path.join(sub_sub_dir, "grn.inp"))
     path_finished = os.path.join(sub_sub_dir, ".finished")
 

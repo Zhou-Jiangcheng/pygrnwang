@@ -6,8 +6,8 @@ def plot_seismograms(seismograms, srate, ylabel="u (m)", cut_length=None):
     if cut_length is None:
         length = len(seismograms[0])
     else:
-        length = cut_length * srate
-    t = np.arange(0, round(length / srate), 1 / srate)
+        length = min(len(seismograms[0]), round(cut_length * srate))
+    t = np.arange(length) / srate
     plt.figure()
     plt.subplot(3, 1, 1)
     plt.plot(t, seismograms[0][:length], color="red", linewidth=0.2)

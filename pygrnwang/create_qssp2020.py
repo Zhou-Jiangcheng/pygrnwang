@@ -184,7 +184,7 @@ def create_inp_qssp2020(
             "%s.inp" % mt_com_list[ind_mt],
         )
     else:
-        return ValueError("mt_com wrong!!!")
+        raise ValueError("mt_com wrong!!!")
     with open(path_inp, "w") as fw:
         fw.writelines(lines + lines_earth_head + lines_earth + last_line)
     return path_inp
@@ -216,7 +216,7 @@ def call_qssp2020(
             )
         ).replace("'", "")
     else:
-        return ValueError("mt_com wrong!!!")
+        raise ValueError("mt_com wrong!!!")
 
     sub_dir = os.path.dirname(path_inp)
     path_finished = os.path.join(sub_dir, ".finished")

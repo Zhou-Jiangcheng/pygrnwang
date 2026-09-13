@@ -93,8 +93,7 @@ def _get_model(model_name, rebuild_npz=False):
         _MODEL_CACHE[model_name] = model_instance
         return model_instance
     except Exception as e:
-        print(f"Error loading model '{real_model_path}': {e}")
-        sys.exit(1)
+        raise RuntimeError(f"Error loading model '{real_model_path}': {e}") from e
 
 
 def _taup_create_npz_file_obspy(nd_file):
@@ -112,8 +111,7 @@ def _taup_create_npz_file_obspy(nd_file):
         taup_creator.load_velocity_model()
         taup_creator.run()
     except Exception as e:
-        print(f"Model build failed: {e}")
-        sys.exit(1)
+        raise RuntimeError(f"Model build failed for '{nd_file}': {e}") from e
     return npz_file
 
 
