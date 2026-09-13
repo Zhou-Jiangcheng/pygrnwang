@@ -288,7 +288,7 @@ def seek_spgrn2012(
                 mode="same",
                 method="auto",
             ).T
-            / srate
+            * srate
         )
 
     if only_seismograms:

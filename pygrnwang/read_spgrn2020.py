@@ -376,7 +376,7 @@ def seek_spgrn2020(
                 mode="same",
                 method="auto",
             ).T
-            / srate
+            * srate
         )
 
     if only_seismograms:
@@ -716,7 +716,7 @@ def synthesize_from_cache(
         for fi in range(seis.shape[0]):
             out[fi] = (
                 signal.convolve(seis[fi].T, kernel, mode="same", method="auto").T
-                / srate
+                * srate
             )
         seis = out
 
