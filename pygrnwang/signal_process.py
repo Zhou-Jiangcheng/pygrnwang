@@ -13,19 +13,25 @@ def taper(data, taper_length=None, max_percentage=0.05) -> np.ndarray:
 
 
 def cal_sos(srate, freq_band, butter_order=4):
+    """
+    :param srate: sampling rate in Hz.
+    :param freq_band: [low_freq, high_freq]. On either side None and 0 both mean
+                      "no corner frequency here", so [low, None] and [low, 0] give a
+                      highpass, [None, high] and [0, high] give a lowpass.
+    :param butter_order: order of the Butterworth filter.
+    :return: second-order sections, or None if no filter is needed.
+    """
     fn = srate / 2
-    if (freq_band[0] == 0) and (freq_band[1] != 0) and (freq_band[1] / fn < 1):
-        sos = signal.butter(
-            butter_order, freq_band[1] / fn, btype="lowpass", output="sos"
-        )
-    elif (freq_band[0] != 0) and ((freq_band[1] == 0) or (freq_band[1] / fn >= 1)):
-        sos = signal.butter(
-            butter_order, freq_band[0] / fn, btype="highpass", output="sos"
-        )
-    elif (freq_band[0] != 0) and (freq_band[1] != 0) and (freq_band[1] / fn < 1):
+    low = 0 if freq_band[0] is None else freq_band[0]
+    high = 0 if freq_band[1] is None else freq_band[1]
+    if (low == 0) and (high != 0) and (high / fn < 1):
+        sos = signal.butter(butter_order, high / fn, btype="lowpass", output="sos")
+    elif (low != 0) and ((high == 0) or (high / fn >= 1)):
+        sos = signal.butter(butter_order, low / fn, btype="highpass", output="sos")
+    elif (low != 0) and (high != 0) and (high / fn < 1):
         sos = signal.butter(
             butter_order,
-            [freq_band[0] / fn, freq_band[1] / fn],
+            [low / fn, high / fn],
             btype="bandpass",
             output="sos",
         )
@@ -76,9 +82,9 @@ def resample(data, srate_old: float, srate_new: float, zero_phase=True):
                     freq_band=[0, srate_new / 2],
                     zero_phase=zero_phase,
                 )
-                data = signal.resample(x=data, num=round(len(data) * q))
+                data = signal.resample(x=data, num=round(len(data) / q))
         elif srate_new > srate_old:
-            data = signal.resample(data, round(len(data) * q))
+            data = signal.resample(data, round(len(data) / q))
             data = filter_butter(
                 data=data,
                 srate=srate_new,
@@ -89,7 +95,11 @@ def resample(data, srate_old: float, srate_new: float, zero_phase=True):
 
 
 def linear_interp(data, N_new) -> np.ndarray:
+    """
+    Resample data to N_new samples by linear interpolation, mapping the first
+    and last samples of data onto the first and last samples of the result.
+    """
     points_loc = np.arange(0, len(data))
-    points_loc_new = np.linspace(0, len(data), N_new, endpoint=False)
+    points_loc_new = np.linspace(0, len(data) - 1, N_new)
     data_new = np.interp(points_loc_new, points_loc, data)
     return data_new
