@@ -469,7 +469,32 @@ def seek_qseis2025(
             seismograms_resample[i] = resample(
                 seismograms[i], srate_old=srate_grn, srate_new=srate, zero_phase=True
             )[:len_after_resample]
-    if (wavelet_type == 1) and ("rate" not in output_type) and (output_type != "velo"):
+    # wavelet_type == 1 (delta impulse): the library holds rate quantities
+    # (velo / volume_rate / strain_rate / ...).
+    # wavelet_type == 2 (tapered Heaviside): it holds disp / volume / strain / ...
+    if output_type == "acce":
+        if wavelet_type == 1:
+            seismograms_resample = (
+                signal.convolve(
+                    seismograms_resample.T,
+                    np.array([1, -1])[:, None],
+                    mode="same",
+                    method="auto",
+                ).T
+                * srate
+            )
+        elif wavelet_type == 2:
+            seismograms_resample = (
+                signal.convolve(
+                    seismograms_resample.T,
+                    np.array([1, -2, 1])[:, None],
+                    mode="same",
+                    method="auto",
+                ).T
+                * srate
+                * srate
+            )
+    elif (wavelet_type == 1) and ("rate" not in output_type) and (output_type != "velo"):
         seismograms_resample = np.cumsum(seismograms_resample, axis=1) / srate
     elif (wavelet_type == 2) and (("rate" in output_type) or (output_type == "velo")):
         seismograms_resample = (
@@ -479,25 +504,8 @@ def seek_qseis2025(
                 mode="same",
                 method="auto",
             ).T
-            / srate
+            * srate
         )
-    elif (wavelet_type == 1) and (output_type == "acce"):
-        seismograms_resample = (
-            signal.convolve(
-                seismograms_resample.T,
-                np.array([1, -1])[:, None],
-                mode="same",
-                method="auto",
-            ).T
-            / srate
-        )
-    elif (wavelet_type == 2) and (output_type == "acce"):
-        seismograms_resample = signal.convolve(
-            seismograms_resample.T,
-            np.array([1, -2, 1])[:, None],
-            mode="same",
-            method="auto",
-        ).T / (srate * srate)
 
     if only_seismograms:
         return seismograms_resample
