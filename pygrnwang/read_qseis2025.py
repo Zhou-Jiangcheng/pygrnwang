@@ -367,7 +367,9 @@ def seek_qseis2025(
 
     if output_type in one_com_list:
         uv = synthesize_rzv(time_series=time_series_list[0], m1=m1)
-        seismograms = np.array(uv)
+        # single component, but keep it 2-D (1, N) so that the shifting,
+        # zeroing and resampling below stay component-wise
+        seismograms = np.array(uv).reshape(1, -1)
     elif output_type in three_com_list:
         uz = -synthesize_rzv(time_series=time_series_list[0], m1=m1)
         ur = synthesize_rzv(time_series=time_series_list[1], m1=m1)
