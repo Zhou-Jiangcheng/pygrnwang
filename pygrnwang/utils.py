@@ -69,19 +69,24 @@ def shift_green2real_tpts(
     if s_count == p_count or s_count_new == p_count_new:
         return seismograms, first_p, first_s
 
+    n_samples = seismograms.shape[1]
     for i in range(seismograms.shape[0]):
-        green_before_p = seismograms[i][:p_count]
+        # own local name: green_before_p must stay the scalar parameter
+        before_p_part = seismograms[i][:p_count]
         p_s = linear_interp(seismograms[i][p_count:s_count], s_count_new - p_count_new)
         after_s = seismograms[i][s_count:]
         if len(after_s) > 0:
             after_s = linear_interp(
-                after_s, len(seismograms[i]) - len(green_before_p) - len(p_s)
+                after_s, max(0, n_samples - len(before_p_part) - len(p_s))
             )
-            seismograms[i] = np.concatenate([green_before_p, p_s, after_s])
+            row = np.concatenate([before_p_part, p_s, after_s])
         else:
-            seismograms[i] = np.concatenate([green_before_p, p_s])[
-                : len(seismograms[i])
-            ]
+            row = np.concatenate([before_p_part, p_s])
+        # the pieces do not always add up to the original length, e.g. when after_s
+        # is empty and the real S is earlier than the one in the library
+        if len(row) < n_samples:
+            row = np.concatenate([row, np.zeros(n_samples - len(row))])
+        seismograms[i] = row[:n_samples]
 
     return seismograms, first_p, first_s
 

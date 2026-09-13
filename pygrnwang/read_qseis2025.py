@@ -446,8 +446,11 @@ def seek_qseis2025(
         seismograms, first_p, first_s = shift_green2real_tpts(
             seismograms=seismograms,
             tpts_table=tpts_table,
+            # time from the start of the (already rolled) array to the P onset
             srate=srate_grn,
-            green_before_p=tpts_table["p_onset"] - time_reduction,
+            green_before_p=tpts_table["p_onset"]
+            - time_reduction
+            - ts_count / srate_grn,
             event_depth_km=event_depth_km,
             dist_in_km=dist_km,
             receiver_depth_km=receiver_depth_km,
