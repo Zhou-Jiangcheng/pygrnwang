@@ -208,15 +208,7 @@ def seek_spgrn2012(
         )[:]
 
     # --- 4. Post-processing (Time shifting, resampling) ---
-    # Get metadata from the nearest neighbor path (Metadata uses Nearest Neighbor)
-    path_greenfunc_meta = str(
-        os.path.join(
-            path_green,
-            "GreenFunc",
-            "%.2f" % grn_dep_source,
-            "%.2f" % grn_dep_receiver,
-        )
-    )
+    # Metadata uses nearest neighbor
     tp, ts = read_tpts_table(
         path_green=os.path.join(path_green, "GreenFunc"),
         event_depth_km=grn_dep_source,
