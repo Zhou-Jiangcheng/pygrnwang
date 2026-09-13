@@ -129,6 +129,6 @@ c
 	  enddo
 	  close(34)
 	endif
-1001	format(8E12.4)
+1001	format(8(1X,E20.12))
 	return
 	end
