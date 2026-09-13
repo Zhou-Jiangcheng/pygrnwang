@@ -9,6 +9,14 @@ import pandas as pd
 
 from .signal_process import linear_interp
 from .pytaup import cal_first_p_s
+from . import geo
+
+
+# These three live in geo; they used to be duplicated here verbatim.
+# Re-exported so the historical pygrnwang.utils import paths keep working.
+cal_max_dist_from_2d_points = geo.cal_max_dist_from_2d_points
+create_rotate_z_mat = geo.create_rotate_z_mat
+rotate_symmetric_tensor_series = geo.rotate_symmetric_tensor_series
 
 
 def read_source_array(source_inds, path_input, shift2corner=False, source_shapes=None):
@@ -109,95 +117,6 @@ def shift_green2real_tpts(
         seismograms[i] = row[:n_samples]
 
     return seismograms, first_p, first_s
-
-
-def cal_max_dist_from_2d_points(A: np.ndarray, B: np.ndarray):
-    """
-
-    :param A: (m,2)
-    :param B: (n,2)
-    :return: max_distance
-    """
-    # Calculate the differences in each dimension (broadcasting)
-    differences = A[:, np.newaxis, :] - B[np.newaxis, :, :]
-
-    # Square the differences and sum across columns (to get squared distances)
-    squared_distances = np.sum(differences**2, axis=2)
-
-    # Take the square root to get Euclidean distances
-    distances = np.sqrt(squared_distances)
-
-    # Find the maximum distance
-    max_distance = np.max(distances)
-    return max_distance
-
-
-def create_rotate_z_mat(gamma):
-    """
-    Generates a rotation matrix about the Z-axis.
-
-    Parameters:
-        gamma : float
-            Rotation angle in radians.
-
-    Returns:
-        R : numpy.ndarray
-            A 3x3 rotation matrix.
-    """
-    R = np.array(
-        [
-            [np.cos(gamma), -np.sin(gamma), 0],
-            [np.sin(gamma), np.cos(gamma), 0],
-            [0, 0, 1],
-        ]
-    )
-    return R
-
-
-def rotate_symmetric_tensor_series(tensor, gamma):
-    """
-    Rotates a series of symmetric tensors without using an explicit loop.
-
-    Parameters:
-        tensor: numpy array of shape (n, 6)
-            Each row is [xx, xy, xz, yy, yz, zz] representing a symmetric tensor.
-        gamma: float
-            Rotation angle (in radians) used to create the rotation matrix.
-
-    Returns:
-        rotated_tensor: numpy array of shape (n, 6)
-            Rotated tensor components in the same order as the input.
-    """
-    # Create the 3x3 rotation matrix (assumed to be defined elsewhere).
-    R = create_rotate_z_mat(gamma)
-    n = tensor.shape[0]
-
-    # Construct full symmetric matrices from the condensed tensor representation.
-    A = np.empty((n, 3, 3), dtype=tensor.dtype)
-    A[:, 0, 0] = tensor[:, 0]
-    A[:, 0, 1] = tensor[:, 1]
-    A[:, 0, 2] = tensor[:, 2]
-    A[:, 1, 0] = tensor[:, 1]
-    A[:, 1, 1] = tensor[:, 3]
-    A[:, 1, 2] = tensor[:, 4]
-    A[:, 2, 0] = tensor[:, 2]
-    A[:, 2, 1] = tensor[:, 4]
-    A[:, 2, 2] = tensor[:, 5]
-
-    # Rotate each tensor using batch matrix multiplication:
-    # Compute rotated_A = R.T @ A @ R for each tensor.
-    rotated_A = np.einsum("ij,njk,kl->nil", R.T, A, R)
-
-    # Extract the independent components from the rotated tensors.
-    rotated_tensor = np.empty((n, 6), dtype=tensor.dtype)
-    rotated_tensor[:, 0] = rotated_A[:, 0, 0]
-    rotated_tensor[:, 1] = rotated_A[:, 0, 1]
-    rotated_tensor[:, 2] = rotated_A[:, 0, 2]
-    rotated_tensor[:, 3] = rotated_A[:, 1, 1]
-    rotated_tensor[:, 4] = rotated_A[:, 1, 2]
-    rotated_tensor[:, 5] = rotated_A[:, 2, 2]
-
-    return rotated_tensor
 
 
 def convert_earth_model_nd2inp(path_nd, path_output):
