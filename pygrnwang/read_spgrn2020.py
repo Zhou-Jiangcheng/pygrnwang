@@ -343,10 +343,12 @@ def seek_spgrn2020(
         seismograms, first_p, first_s = shift_green2real_tpts(
             seismograms=seismograms,
             tpts_table=tpts_table,
+            # time from the start of the (already rolled) array to the P onset
             srate=srate_grn,
-            green_before_p=before_p,
+            green_before_p=green_before_p - ts_count / srate_grn,
             event_depth_km=event_depth_km,
             dist_in_km=dist_km,
+            receiver_depth_km=receiver_depth_km,
             model_name=model_name,
         )
 
@@ -606,11 +608,12 @@ def synthesize_from_cache(
     butter_order: int = 4,
     zero_phase: bool = False,
     n_keep: Union[int, None] = None,
+    model_name: str = "ak135fc",
 ):
     """Synthesize seismograms for a *list* of focal mechanisms from a cache.
 
-    Equivalent to calling :func:`seek_spgrn2020` once per focal mechanism with
-    ``shift=False`` and slicing the result to ``n_keep`` samples, but it reads
+    Equivalent to calling :func:`seek_spgrn2020` once per focal mechanism and
+    slicing the result to ``n_keep`` samples, but it reads
     each library block at most once (via ``cache``), runs the post-processing
     chain a single time over the stacked mechanisms, and -- when safe -- only
     processes the ``n_keep`` samples that survive.
@@ -690,6 +693,21 @@ def synthesize_from_cache(
         shifted = np.zeros_like(seis)
         shifted[..., a:] = seis[..., : N - a]
         seis = shifted
+
+    if shift:
+        # same alignment seek_spgrn2020 does, applied to each mechanism in turn
+        green_before_p_rolled = green_before_p - ts_count / srate_grn
+        for fi in range(seis.shape[0]):
+            seis[fi] = shift_green2real_tpts(
+                seismograms=seis[fi],
+                tpts_table=tpts_table,
+                green_before_p=green_before_p_rolled,
+                srate=srate_grn,
+                event_depth_km=event_depth_km,
+                dist_in_km=dist_km,
+                receiver_depth_km=receiver_depth_km,
+                model_name=model_name,
+            )[0]
 
     len_after_resample = round(sampling_num * srate / srate_grn)
     if int_srate:
