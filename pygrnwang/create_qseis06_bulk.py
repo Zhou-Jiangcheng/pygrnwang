@@ -15,7 +15,7 @@ from .create_qseis06 import (
     convert_pd2bin_qseis06,
 )
 from .pytaup import taup_create_npz_file, create_tpts_table
-from .utils import group, convert_earth_model_nd2nd_without_Q
+from .utils import group, convert_earth_model_nd2nd_without_Q, cal_grid
 
 
 # 新增：imap_unordered 的打包调用助手
@@ -114,11 +114,7 @@ def pre_process_qseis06(
 
     # creating tp and ts tables
     npz_file = taup_create_npz_file(nd_file=path_nd_without_Q)
-    dist_kms = np.linspace(
-        dist_range[0],
-        dist_range[1],
-        round(np.ceil((dist_range[1] - dist_range[0]) / delta_dist)) + 1,
-    )
+    dist_kms = cal_grid(dist_range[0], dist_range[1], delta_dist)
     for event_depth in tqdm(event_depth_list, desc="Creating travel time tables"):
         for receiver_depth in receiver_depth_list:
             create_tpts_table(
@@ -219,7 +215,7 @@ def pre_process_qseis06_strain_rate(
                 N_each_group,
                 diff_accu_order,
             )
-            points = np.linspace(dist_range[0], dist_range[1], N_dist)
+            points = cal_grid(dist_range[0], dist_range[1], delta_dist)
             for n_group in range(N_dist_group):
                 for order in range(diff_accu_order + 1):
                     points_n_o = points[
@@ -298,11 +294,7 @@ def pre_process_qseis06_strain_rate(
         convert_earth_model_nd2nd_without_Q(path_nd, path_nd_without_Q)
 
     # creating tp and ts tables
-    dist_kms = np.linspace(
-        dist_range[0],
-        dist_range[1],
-        round(np.ceil((dist_range[1] - dist_range[0]) / delta_dist)) + 1,
-    )
+    dist_kms = cal_grid(dist_range[0], dist_range[1], delta_dist)
     for event_depth in tqdm(event_depth_list, desc="Creating travel time tables"):
         for receiver_depth in receiver_depth_list:
             create_tpts_table(

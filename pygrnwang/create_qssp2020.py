@@ -5,7 +5,7 @@ import pandas as pd
 
 from .geo import d2m
 from .qssp2020inp import s as str_inp
-from .utils import convert_earth_model_nd2inp, call_exe
+from .utils import convert_earth_model_nd2inp, call_exe, cal_grid
 
 mt_com_list = ["mrr", "mtt", "mpp", "mrt", "mrp", "mtp"]
 output_type_list = [
@@ -45,7 +45,7 @@ def create_points(dist_range, delta_dist):
     """
     rmax = dist_range[1]
     rmin = dist_range[0]
-    points_lat = np.linspace(rmin, rmax, round(np.ceil((rmax - rmin) / delta_dist)) + 1)
+    points_lat = cal_grid(rmin, rmax, delta_dist)
     points_lat = points_lat * 1e3 / d2m
     points = np.concatenate([points_lat, np.zeros_like(points_lat)])
     points = points.reshape((2, -1)).T

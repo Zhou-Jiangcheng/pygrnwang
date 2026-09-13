@@ -1,5 +1,6 @@
 import os
 import sys
+import math
 import platform
 import subprocess
 
@@ -29,6 +30,25 @@ def read_source_array(source_inds, path_input, shift2corner=False, source_shapes
         else:
             source_array = np.concatenate([source_array, source_plane.copy()], axis=0)
     return source_array
+
+
+def cal_grid(v_min, v_max, delta):
+    """
+    The regular grid the library writers and the readers have to agree on:
+    v_min + i*delta for i = 0 .. n-1, n being the smallest count that reaches
+    v_max. When (v_max - v_min) is not a whole multiple of delta the last point
+    lands just past v_max; the spacing stays exactly delta, which is what every
+    reader assumes when it inverts an index with round((v - v_min) / delta).
+    Spanning [v_min, v_max] with n points instead would shrink the spacing below
+    delta and shift those indices.
+
+    :param v_min: first grid value.
+    :param v_max: the grid reaches at least this value.
+    :param delta: grid spacing.
+    :return: 1-D numpy array of grid values.
+    """
+    n = math.ceil((v_max - v_min) / delta) + 1
+    return v_min + np.arange(n) * delta
 
 
 def group(inp_list, num_in_each_group):
