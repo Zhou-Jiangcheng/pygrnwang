@@ -66,7 +66,7 @@ def create_inp_qseis2025(
     lines = str_inp.split("\n")
     lines = [line + "\n" for line in lines]
 
-    lines_earth = lines[209:-22]
+    lines_earth = lines[233:-22]
     lines_end = lines[-22:]
 
     # SOURCE PARAMETERS
