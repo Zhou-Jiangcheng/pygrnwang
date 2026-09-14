@@ -1,0 +1,56 @@
+{
+  "backend": "SPGRN2012",
+  "started_utc": "2026-09-14T02:28:55Z",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "python": "3.12.13",
+  "dependencies": {
+    "numpy": "2.3.5",
+    "scipy": "1.18.0",
+    "pandas": "3.0.0",
+    "matplotlib": "3.11.0",
+    "obspy": "1.5.0"
+  },
+  "source_depth_km": 10.0,
+  "receiver_depth_km": 0.0,
+  "moment_nm": 1000000000000000.0,
+  "strike_dip_rake_deg": [
+    30.0,
+    45.0,
+    90.0
+  ],
+  "azimuth_deg": 30.0,
+  "reuse": false,
+  "model": "Bundled AK135 elastic properties; illustrative constant Qp=600, Qs=300",
+  "outputs": {
+    "disp": {
+      "shape": [
+        3,
+        3,
+        256
+      ],
+      "components": [
+        "E",
+        "N",
+        "U"
+      ],
+      "unit": "m",
+      "finite": true,
+      "peak_absolute": 1.5146271724570058e-08
+    }
+  },
+  "sampling_interval_s": 4.0,
+  "time_window_s": 1020.0,
+  "distances_km": [
+    300.0,
+    600.0,
+    900.0
+  ],
+  "spec_time_window_s": 4092.0,
+  "max_frequency_hz": 0.0625,
+  "t0_s": -40.0,
+  "v0_km_s": 10.0,
+  "source_duration_s": 64.0,
+  "elapsed_seconds": 9.428,
+  "file_count": 15,
+  "output_bytes": 13154039
+}

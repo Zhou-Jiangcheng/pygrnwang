@@ -48,6 +48,71 @@ def pre_process_spgrn2020(
     earth_model_layer_num=None,
     physical_dispersion=0,
 ):
+    """Prepare the spgrn2020 library grid, input files and job groups.
+
+    Parameters
+    ----------
+    processes_num : int
+        Positive worker count used to group jobs; MPI rank count must match the prepared group width.
+    path_green : str
+        Absolute library root containing green_lib_info.json and backend subdirectories.
+    event_depth_list : list of float
+        Source depth nodes in km, positive down; supply a nonempty sorted list.
+    receiver_depth_list : list of float
+        Receiver depth nodes in km, positive down; supply a nonempty sorted list.
+    spec_time_window : float
+        Spectral calculation duration in seconds; it must cover the requested output window.
+    sampling_interval : float
+        Time step in seconds; choose it consistently with the highest modeled frequency.
+    max_frequency : float
+        Highest modeled frequency in Hz; must be compatible with the time step.
+    max_slowness : float
+        Maximum modeled slowness in s/km; in SPGRN, nonpositive requests the complete wavefield.
+    anti_alias : float
+        Dimensionless time-domain alias suppression factor; use a small positive value below 1.
+    gravity_fc : float
+        Critical frequency in Hz below which self-gravity is included together with the harmonic cutoff.
+    gravity_harmonic : int
+        Critical spherical harmonic degree for self-gravity.
+    cal_sph : int
+        1 enables spheroidal (P-SV) modes; 0 disables them.
+    cal_tor : int
+        1 enables toroidal (SH) modes; 0 disables them.
+    source_radius : float
+        Source patch radius in km.
+    cal_gf : int
+        1 updates source spectra; 0 reuses spectra with identical model and spectral parameters.
+    time_window : float
+        Output time-window duration in seconds.
+    green_before_p : float
+        Positive seconds before direct P at the start of an SPGRN2020 trace.
+    source_duration : float
+        Squared half-sinusoid source-time-function duration in seconds; zero requests the backend minimum.
+    dist_range : list of float
+        Minimum and maximum epicentral distances in km.
+    delta_dist_range : list of float
+        Smallest and largest distance increments in km at the near and far limits; equal values produce a regular grid.
+    path_nd : str or None, optional
+        Six-column named-discontinuity model path: depth (km), Vp/Vs (km/s), density (g/cm3), Qp/Qs. Bulk preprocessing requires a real path even though the signature default is None. Default: None.
+    earth_model_layer_num : int or None, optional
+        Number of numeric model rows retained, not the number of discontinuities; None retains all. Default: None.
+    physical_dispersion : int, optional
+        0 disables, 1 enables the backend physical-dispersion correction associated with attenuation. Default: 0.
+
+    Returns
+    -------
+    group_list : list
+        Jobs grouped by processes_num; the same groups are saved as a pickle file.
+
+    Raises
+    ------
+    OSError
+        Required files are missing or output paths cannot be read or written.
+
+    Notes
+    -----
+    See the spgrn2020 tutorial for a complete prepare, run and read workflow. Preprocessing writes inputs and travel-time/model metadata; run the matching create_grnlib function to calculate Green functions.
+    """
     item_list = []
     for event_depth in event_depth_list:
         for receiver_depth in receiver_depth_list:
@@ -142,6 +207,29 @@ def update_green_info_lib_json(path_green, event_depth, receiver_depth):
 
 
 def create_grnlib_spgrn2020_sequential(path_green, check_finished=False):
+    """Compute the prepared spgrn2020 library sequentially.
+
+    Parameters
+    ----------
+    path_green : str
+        Absolute library root containing green_lib_info.json and backend subdirectories.
+    check_finished : bool, optional
+        Reuse outputs marked finished. Markers do not verify that inputs are unchanged. Default: False.
+
+    Returns
+    -------
+    None
+        Writes backend inputs, metadata or output files to the library.
+
+    Raises
+    ------
+    OSError
+        Required files are missing or output paths cannot be read or written.
+
+    Notes
+    -----
+    See the spgrn2020 tutorial for a complete prepare, run and read workflow. Prepare jobs first. Backend runners can change the process working directory; use absolute paths and restore the caller directory if needed. Check output files and logs after execution.
+    """
     s = datetime.datetime.now()
     with open(os.path.join(path_green, "group_list.pkl"), "rb") as fr:
         group_list = pickle.load(fr)
@@ -155,6 +243,29 @@ def create_grnlib_spgrn2020_sequential(path_green, check_finished=False):
 
 
 def create_grnlib_spgrn2020_parallel(path_green, check_finished=False):
+    """Compute the prepared spgrn2020 library with local worker processes.
+
+    Parameters
+    ----------
+    path_green : str
+        Absolute library root containing green_lib_info.json and backend subdirectories.
+    check_finished : bool, optional
+        Reuse outputs marked finished. Markers do not verify that inputs are unchanged. Default: False.
+
+    Returns
+    -------
+    None
+        Writes backend inputs, metadata or output files to the library.
+
+    Raises
+    ------
+    OSError
+        Required files are missing or output paths cannot be read or written.
+
+    Notes
+    -----
+    See the spgrn2020 tutorial for a complete prepare, run and read workflow. Prepare jobs first. Backend runners can change the process working directory; use absolute paths and restore the caller directory if needed. Check output files and logs after execution. On Windows call under an if __name__ == "__main__" guard.
+    """
     s = datetime.datetime.now()
     with open(os.path.join(path_green, "group_list.pkl"), "rb") as fr:
         group_list = pickle.load(fr)
@@ -186,6 +297,33 @@ def create_grnlib_spgrn2020_parallel(path_green, check_finished=False):
 
 
 def create_grnlib_spgrn2020_parallel_multi_nodes(path_green, check_finished=False):
+    """Compute the prepared spgrn2020 library with MPI.
+
+    Parameters
+    ----------
+    path_green : str
+        Absolute library root containing green_lib_info.json and backend subdirectories.
+    check_finished : bool, optional
+        Reuse outputs marked finished. Markers do not verify that inputs are unchanged. Default: False.
+
+    Returns
+    -------
+    None
+        Writes backend inputs, metadata or output files to the library.
+
+    Raises
+    ------
+    OSError
+        Required files are missing or output paths cannot be read or written.
+    RuntimeError
+        mpi4py is unavailable.
+    ValueError
+        MPI rank count does not match the prepared group width.
+
+    Notes
+    -----
+    See the spgrn2020 tutorial for a complete prepare, run and read workflow. Prepare jobs first. Backend runners can change the process working directory; use absolute paths and restore the caller directory if needed. Check output files and logs after execution.
+    """
     s = datetime.datetime.now()
     MPI = _get_mpi()
     with open(os.path.join(path_green, "group_list.pkl"), "rb") as fr:

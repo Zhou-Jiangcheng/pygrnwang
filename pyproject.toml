@@ -31,6 +31,9 @@ qseis2025 = "pygrnwang.wrappers:run_qseis2025"
 
 [project.urls]
 Homepage = "https://github.com/Zhou-Jiangcheng/pygrnwang"
+Documentation = "https://zhou-jiangcheng.github.io/pygrnwang/"
+Source = "https://github.com/Zhou-Jiangcheng/pygrnwang"
+Issues = "https://github.com/Zhou-Jiangcheng/pygrnwang/issues"
 
 [tool.setuptools]
 package-dir = { "" = "." }

@@ -4,16 +4,27 @@ import numpy as np
 
 
 def read_green_info_spgrn(path_greenfunc: str, green_depth: float) -> dict:
-    """
-    read GreenInfo.dat
-    :param path_greenfunc:
-    :param green_depth: unit km
-    :return: {
-             "time_window": time_window, type float, unit s
-             "sampling_interval": sampling_interval, type float, unit s
-             "samples_num": int(samples_num), type int
-             "dist_list": dist_list, type list, unit km
-         }
+    """Read native SPGRN time sampling and distance nodes.
+
+    Parameters
+    ----------
+    path_greenfunc : str
+        SPGRN source/receiver depth folder containing GreenInfo and P/S table files.
+    green_depth : float
+        Exact source depth in km used in the GreenInfo filename.
+
+    Returns
+    -------
+    info : dict
+        time_window and sampling_interval in seconds, integer samples_num,
+        and dist_list in km.
+
+    Raises
+    ------
+    OSError
+        The GreenInfo file cannot be read.
+    ValueError
+        The file does not follow the expected backend format.
     """
     with open(
         os.path.join(path_greenfunc, "GreenInfo%.2f.dat" % green_depth), "r"

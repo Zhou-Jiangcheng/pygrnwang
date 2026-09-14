@@ -192,7 +192,53 @@ def read_by_qssp(
     green_info=None,
     check_finished=False,
 ):
-    """ """
+    """Synthesize a receiver from QSSP spectra using the historical direct runner.
+
+    Parameters
+    ----------
+    path_green : str
+        Absolute library root containing green_lib_info.json and backend subdirectories.
+    event_lat : float
+        Source latitude used for the output-name hash only; actual source coordinates are fixed at (0, 0).
+    event_lon : float
+        Source longitude used for the output-name hash only; actual source coordinates are fixed at (0, 0).
+    event_depth_km : float
+        Requested source depth in km, positive down.
+    receiver_lat : float
+        Receiver latitude in degrees.
+    receiver_lon : float
+        Receiver longitude in degrees.
+    receiver_depth_km : float
+        Requested receiver depth in km, positive down.
+    focal_mechanism : array_like
+        Either [strike, dip, rake] in degrees; [M0, strike, dip, rake]; six NED components [Mnn, Mne, Mnd, Mee, Med, Mdd]; or [M0, six components]. Three angles imply unit moment; seven entries normalize the six-component shape to M0. Moments are in N m.
+    srate : float
+        Positive output sampling rate in Hz.
+    read_name : str, optional
+        Output subdirectory name; hash derives it from query parameters. Default: 'hash'.
+    output_type : str, optional
+        Requested observable; supported values and units are listed in Notes. Default: 'disp'.
+    green_info : dict or None, optional
+        Preloaded green_lib_info.json mapping; None loads it from path_green. Default: None.
+    check_finished : bool, optional
+        Reuse outputs marked finished. Markers do not verify that inputs are unchanged. Default: False.
+
+    Returns
+    -------
+    seismograms : numpy.ndarray
+
+    Raises
+    ------
+    OSError
+        Required inputs or outputs cannot be accessed.
+    ValueError
+        Parameters do not describe a supported grid or observable.
+
+    Notes
+    -----
+
+    Current implementation limits: the generated native source is fixed at latitude/longitude (0, 0); event_lat/event_lon affect only the directory hash. Supply receiver coordinates relative to that actual source. The default hash omits the focal mechanism and output selections, so check_finished=True can reuse incompatible results after a mechanism change. The runner also expects the executable in the environment Scripts/bin directory. Prefer seek_qssp2020 for the standard precomputed-library workflow.
+    """
     if green_info is None:
         with open(os.path.join(path_green, "green_lib_info.json"), "r") as fr:
             green_info = json.load(fr)

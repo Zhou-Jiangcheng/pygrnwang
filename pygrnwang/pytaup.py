@@ -246,11 +246,38 @@ def _query_java_batch(
 def taup_time_java(
     event_depth_km, dist_km, phases_list, receiver_depth_km=0, model_name="ak135"
 ):
-    """Return all Java TauP arrivals; rayparameter remains in seconds/radian.
+    """Query all requested phase arrivals directly through Java TauP.
 
-    Requires a JDK (java and javac on PATH). The bridge is compiled lazily;
-    importing this module does not start Java. Supports built-in models and
-    .nd model paths, and preserves the phase/puristphase/time/rayparameter API.
+    Parameters
+    ----------
+    event_depth_km : float
+        Requested source depth in km, positive down.
+    dist_km : float
+        Epicentral distance in km; query within the stored distance grid.
+    phases_list : list of str
+        TauP phase names to request, for example ['P', 'p', 'S'].
+    receiver_depth_km : float, optional
+        Requested receiver depth in km, positive down. Default: 0.
+    model_name : str, optional
+        TauP built-in model name or path to a custom model. Use a model consistent with the Green library. Default: 'ak135'.
+
+    Returns
+    -------
+    arrivals : dict
+        Lists under phase, puristphase, time and rayparameter. Times are seconds
+        and ray parameters are seconds/radian, not seconds/degree. Missing
+        phases produce empty lists.
+
+    Raises
+    ------
+    RuntimeError
+        The model cannot be built or loaded, or the Java bridge fails.
+    OSError
+        A required file or executable cannot be accessed.
+
+    Notes
+    -----
+    Requires java and javac plus the bundled JAR. The bridge is compiled lazily. Built-in TauP names and .nd model paths are supported. This explicitly Java-only entry does not fall back to ObsPy.
     """
     return _query_java_batch(
         event_depth_km, [dist_km], [phases_list], receiver_depth_km, model_name
@@ -310,12 +337,28 @@ def _cal_first_p_s_java(
 # Public API (dispatches to the selected backend)
 # ============================================================================
 def taup_create_npz_file(nd_file):
-    """
-    Prepare a velocity model from an .nd file.
+    """Prepare a custom velocity-model path for the selected TauP backend.
 
-    obspy backend: builds and returns the corresponding .npz file.
-    Java backend : TauP reads .nd files directly, so the .nd path is returned
-                   unchanged (no build step needed).
+    Parameters
+    ----------
+    nd_file : str
+        Path to a named-discontinuity velocity model; the selected TauP backend reads or converts this file.
+
+    Returns
+    -------
+    model_path : str
+        Java returns nd_file unchanged; ObsPy builds and returns a sibling .npz path.
+
+    Raises
+    ------
+    RuntimeError
+        The model cannot be built or loaded, or the Java bridge fails.
+    OSError
+        A required file or executable cannot be accessed.
+
+    Notes
+    -----
+    Uses Java subprocesses when the bundled JAR, java and javac are available; otherwise uses ObsPy. Importing this module does not start a JVM. Runtime Java failures are reported rather than silently switching backends. Distances use 111.19492664455874 km per degree. The historical function name does not imply that every backend creates an NPZ file.
     """
     if _USE_JAVA:
         return nd_file
@@ -323,7 +366,35 @@ def taup_create_npz_file(nd_file):
 
 
 def cal_first_p(event_depth_km, dist_km, receiver_depth_km=0.0, model_name="ak135"):
-    """Calculate the first P arrival time for a single distance."""
+    """Calculate the earliest arrival from the configured P phase set.
+
+    Parameters
+    ----------
+    event_depth_km : float
+        Requested source depth in km, positive down.
+    dist_km : float
+        Epicentral distance in km; query within the stored distance grid.
+    receiver_depth_km : float, optional
+        Requested receiver depth in km, positive down. Default: 0.0.
+    model_name : str, optional
+        TauP built-in model name or path to a custom model. Use a model consistent with the Green library. Default: 'ak135'.
+
+    Returns
+    -------
+    arrival : float
+        Arrival time in seconds after origin; NaN when the selected phase set has no arrival.
+
+    Raises
+    ------
+    RuntimeError
+        The model cannot be built or loaded, or the Java bridge fails.
+    OSError
+        A required file or executable cannot be accessed.
+
+    Notes
+    -----
+    Uses Java subprocesses when the bundled JAR, java and javac are available; otherwise uses ObsPy. Importing this module does not start a JVM. Runtime Java failures are reported rather than silently switching backends. Distances use 111.19492664455874 km per degree. Phases: p, P, pP, Pg, Pn, Pdiff, PKP. The deeper endpoint is treated as source using reciprocity.
+    """
     if _USE_JAVA:
         return _cal_first_p_java(event_depth_km, dist_km, receiver_depth_km, model_name)
     else:
@@ -333,7 +404,35 @@ def cal_first_p(event_depth_km, dist_km, receiver_depth_km=0.0, model_name="ak13
 
 
 def cal_first_s(event_depth_km, dist_km, receiver_depth_km=0.0, model_name="ak135"):
-    """Calculate the first S arrival time for a single distance."""
+    """Calculate the earliest arrival from the configured S phase set.
+
+    Parameters
+    ----------
+    event_depth_km : float
+        Requested source depth in km, positive down.
+    dist_km : float
+        Epicentral distance in km; query within the stored distance grid.
+    receiver_depth_km : float, optional
+        Requested receiver depth in km, positive down. Default: 0.0.
+    model_name : str, optional
+        TauP built-in model name or path to a custom model. Use a model consistent with the Green library. Default: 'ak135'.
+
+    Returns
+    -------
+    arrival : float
+        Arrival time in seconds after origin; NaN when the selected phase set has no arrival.
+
+    Raises
+    ------
+    RuntimeError
+        The model cannot be built or loaded, or the Java bridge fails.
+    OSError
+        A required file or executable cannot be accessed.
+
+    Notes
+    -----
+    Uses Java subprocesses when the bundled JAR, java and javac are available; otherwise uses ObsPy. Importing this module does not start a JVM. Runtime Java failures are reported rather than silently switching backends. Distances use 111.19492664455874 km per degree. Phases: s, S, sS, pS, Sg, Sn, Sdiff, SKS. The deeper endpoint is treated as source using reciprocity.
+    """
     if _USE_JAVA:
         return _cal_first_s_java(event_depth_km, dist_km, receiver_depth_km, model_name)
     else:
@@ -343,7 +442,35 @@ def cal_first_s(event_depth_km, dist_km, receiver_depth_km=0.0, model_name="ak13
 
 
 def cal_first_p_s(event_depth_km, dist_km, receiver_depth_km=0.0, model_name="ak135"):
-    """Calculate the first P and S arrival times for a single distance."""
+    """Calculate first P and S arrivals for one geometry.
+
+    Parameters
+    ----------
+    event_depth_km : float
+        Requested source depth in km, positive down.
+    dist_km : float
+        Epicentral distance in km; query within the stored distance grid.
+    receiver_depth_km : float, optional
+        Requested receiver depth in km, positive down. Default: 0.0.
+    model_name : str, optional
+        TauP built-in model name or path to a custom model. Use a model consistent with the Green library. Default: 'ak135'.
+
+    Returns
+    -------
+    first_p, first_s : float
+        P and S arrival seconds after origin. Each can independently be NaN.
+
+    Raises
+    ------
+    RuntimeError
+        The model cannot be built or loaded, or the Java bridge fails.
+    OSError
+        A required file or executable cannot be accessed.
+
+    Notes
+    -----
+    Uses Java subprocesses when the bundled JAR, java and javac are available; otherwise uses ObsPy. Importing this module does not start a JVM. Runtime Java failures are reported rather than silently switching backends. Distances use 111.19492664455874 km per degree. Uses the same phase sets and endpoint reciprocity as cal_first_p and cal_first_s.
+    """
     if _USE_JAVA:
         return _cal_first_p_s_java(
             event_depth_km, dist_km, receiver_depth_km, model_name
@@ -382,6 +509,43 @@ def create_tpts_table(
     max_workers=None,  # Added parameter to control parallelism (obspy backend)
 ):
     # Ensure directory exists
+    """Write first P/S arrival tables for a depth pair and distance sequence.
+
+    Parameters
+    ----------
+    path_green : str
+        Absolute library root containing green_lib_info.json and backend subdirectories.
+    event_depth_km : float
+        Requested source depth in km, positive down.
+    receiver_depth_km : float
+        Requested receiver depth in km, positive down.
+    dist_km_list : sequence of float
+        Epicentral distances in km; output order follows this sequence.
+    model_name : str, optional
+        TauP built-in model name or path to a custom model. Use a model consistent with the Green library. Default: 'ak135'.
+    check_finished : bool, optional
+        Reuse outputs marked finished. Markers do not verify that inputs are unchanged. Default: False.
+    max_workers : int or None, optional
+        ObsPy process limit; None uses CPU count. Fewer than 50 distances use one worker; Java always batches in one process. Default: None.
+
+    Returns
+    -------
+    None
+        Writes tp_table.bin and ts_table.bin under source/receiver depth folders
+        named with two decimal places. Each file is one float32 second value
+        per input distance; NaN records a missing arrival.
+
+    Raises
+    ------
+    RuntimeError
+        The model cannot be built or loaded, or the Java bridge fails.
+    OSError
+        A required file or executable cannot be accessed.
+
+    Notes
+    -----
+    Uses Java subprocesses when the bundled JAR, java and javac are available; otherwise uses ObsPy. Importing this module does not start a JVM. Runtime Java failures are reported rather than silently switching backends. Distances use 111.19492664455874 km per degree. Java evaluates all distances in one subprocess; ObsPy may split them among workers. Model-cache files are built before workers start. Guard multiprocessing calls with if __name__ == "__main__".
+    """
     dir_path = os.path.join(
         path_green, "%.2f" % event_depth_km, "%.2f" % receiver_depth_km
     )
