@@ -1,6 +1,6 @@
 {
   "backend": "QSEIS2025",
-  "started_utc": "2026-09-14T02:21:50Z",
+  "started_utc": "2026-09-14T07:35:54Z",
   "platform": "Windows-11-10.0.26200-SP0",
   "python": "3.12.13",
   "dependencies": {
@@ -26,7 +26,7 @@
       "shape": [
         3,
         3,
-        256
+        201
       ],
       "components": [
         "E",
@@ -41,7 +41,7 @@
       "shape": [
         3,
         6,
-        256
+        201
       ],
       "components": [
         "EE",
@@ -59,7 +59,7 @@
       "shape": [
         3,
         6,
-        256
+        201
       ],
       "components": [
         "EE",
@@ -76,6 +76,10 @@
   },
   "sampling_interval_s": 0.5,
   "time_window_s": 127.5,
+  "output_time_range_s": [
+    0.0,
+    100.0
+  ],
   "distances_km": [
     30.0,
     60.0,
@@ -84,7 +88,7 @@
   "earth_model_numeric_rows": 24,
   "wavelet_type": 2,
   "wavelet_duration_samples": 4,
-  "elapsed_seconds": 14.575,
+  "elapsed_seconds": 13.259,
   "file_count": 80,
-  "output_bytes": 1287960
+  "output_bytes": 1266172
 }

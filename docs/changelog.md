@@ -6,6 +6,7 @@
 
 - Added an English user guide and API reference, with Chinese installation and QSEIS2025 quickstart pages.
 - Added small executable tutorials for QSEIS2025, QSEIS06, SPGRN2012, SPGRN2020, QSSP2020 and EDGRN/EDCMP.
+- Cropped all QSEIS2025 tutorial displacement, strain and stress arrays and figures to 0–100 s inclusive (201 samples at 0.5 s). The native 127.5 s, 256-sample Green's library and other backend examples retain their original windows.
 - Documented coordinate/component order, source normalization, time reduction, waveform units and solver-specific limitations.
 - Added strict documentation builds, example validation and GitHub Pages deployment configuration.
 
