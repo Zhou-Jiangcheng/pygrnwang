@@ -1,6 +1,6 @@
 {
   "backend": "QSSP2020",
-  "started_utc": "2026-09-14T02:29:14Z",
+  "started_utc": "2026-09-14T08:18:19Z",
   "platform": "Windows-11-10.0.26200-SP0",
   "python": "3.12.13",
   "dependencies": {
@@ -35,7 +35,7 @@
       ],
       "unit": "m",
       "finite": true,
-      "peak_absolute": 1.594559297046106e-08
+      "peak_absolute": 1.4524259876250708e-08
     }
   },
   "sampling_interval_s": 4.0,
@@ -48,11 +48,11 @@
   "spec_time_window_s": 4092.0,
   "max_frequency_hz": 0.0625,
   "harmonic_bounds": [
-    0,
-    800
+    2000,
+    8000
   ],
   "source_duration_s": 64.0,
-  "elapsed_seconds": 14.623,
+  "elapsed_seconds": 38.182,
   "file_count": 67,
-  "output_bytes": 66832402
+  "output_bytes": 346693604
 }

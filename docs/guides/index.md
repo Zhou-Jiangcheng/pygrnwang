@@ -8,6 +8,7 @@ these guides to prepare your own models, read results and expand a calculation.
 
 models
 reading
+backend-comparison
 taup
 parallel
 storage

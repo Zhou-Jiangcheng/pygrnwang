@@ -20,10 +20,10 @@ distance list from the completed backend metadata.
 ```
 
 ```{figure} ../_static/examples/spgrn2020.png
-:alt: SPGRN2020 displacement plotted relative to the library P arrival.
+:alt: SPGRN2020 displacement plotted in seconds since source origin.
 
-Displacement in metres. Zero on this figure is the library P arrival,
-not source origin.
+Displacement in metres versus seconds since source origin. Each trace's
+start time comes from its native binary record header.
 ```
 
 Outputs are under `examples/output/spgrn2020/`. `disp.npz` contains
@@ -38,10 +38,21 @@ long-period calculation. Source duration is in seconds. The example
 selects spheroidal and toroidal modes, disables the configured
 self-gravitation range and uses `cal_gf=1` for new spectra.
 
-`green_before_p=40` means the stored trace begins 40 s before direct P.
-The wrapper writes its negative as the Fortran start-time offset.
-With no reader adjustment, the example therefore plots
-`-40 + np.arange(n_samples) * 4` seconds relative to P.
+`max_slowness=0` selects SPGRN2020's existing full-wavefield branch,
+which chooses a model-dependent slowness limit and a larger low-frequency
+harmonic baseline. It does not restrict the calculation to zero slowness.
+The previous positive cutoff of 0.3 s/km underestimated the required
+low-frequency content at 300 km in this example. See the
+[controlled comparison](../guides/backend-comparison.md) for the evidence
+and the scope of the revised setting.
+
+`green_before_p=40` requests a window beginning approximately 40 s
+before direct P. The wrapper writes its negative as the Fortran start-time
+offset; Fortran rounds the resulting start time to the nearest integer
+second. The example reads that value from each native record header and
+plots `t_start + np.arange(n_samples) * 4` seconds since source origin.
+The three starts are 3, 40 and 78 s. Simply adding fractional P-table
+onsets to a -40 s plotting axis would not reproduce those stored starts.
 
 `dist_range` and `delta_dist_range` are in km. The backend can choose
 distance-dependent spacing; use the generated `dist_list` rather than
@@ -68,12 +79,13 @@ a repeated-query optimization, including cache lifetime and timing options.
 
 ## Limits and comparison
 
-A P-relative plot makes arrivals easy to compare, but source-origin
-timing requires adding each trace's P onset. SPGRN2012 and SPGRN2020
-can produce different-looking raw arrays simply because their start
-times differ. Match source, model, units and time origins before comparing.
+The storage window remains referenced to P even though the example now
+plots source-origin time. Compare backends using the saved time coordinates,
+matching source, model, units and processing. Raw sample indices do not
+identify the same physical time across these libraries.
 
-The tutorial's coarse grid and long source are not high-frequency or
-near-field convergence checks. Native Fortran binary metadata must be
-read with the matching package reader; do not treat it as headerless
-travel-time arrays.
+The revised example was checked against QSSP2020 at these three distances
+and this frequency band. Agreement is a numerical cross-check, not an
+absolute reference solution or validation for other depths, distances or
+frequencies. Native Fortran binary metadata must be read with the matching
+package reader; do not treat it as headerless travel-time arrays.

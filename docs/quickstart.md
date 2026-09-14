@@ -62,6 +62,21 @@ The executable script is included directly here, so the documentation and the te
 :linenos:
 ```
 
+## Longer-distance calculation
+
+Keep the introductory 100 s output above for 30/60/90 km. For 300/600/900 km,
+where major arrivals extend beyond that window, run:
+
+```console
+python examples/qseis2025.py --regional --observables all
+```
+
+This separate mode uses 4 s sampling, a 4092 s native window, a damping-compensated 64 s source
+and the flat-Earth transformation. It exports 0–1020 s to
+`examples/output/qseis2025-regional/`. See the
+[regional tutorial](backends/qseis2025.md#regional-waveforms-at-300-600-and-900-km)
+and [backend comparison](guides/backend-comparison.md) for results and limitations.
+
 ## Continue
 
 - [QSEIS2025 details](backends/qseis2025.md): time functions, observables and numerical settings.

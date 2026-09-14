@@ -21,8 +21,9 @@ library with the newer direct-observable workflow.
 python examples/qseis06.py
 ```
 
-This builds one 10 km source depth and a surface receiver at 30, 60 and
-90 km, using a 0.5 s interval and 127.5 s window. Like the QSEIS2025 example,
+The default near-distance mode builds one 10 km source depth and a
+surface receiver at 30, 60 and 90 km, using a 0.5 s interval and 127.5 s
+window. Like the default QSEIS2025 example,
 it uses 24 numeric model rows and no flat-Earth transformation. The source
 has strike/dip/rake 30°/45°/90° and moment `10^15 N m`.
 
@@ -41,10 +42,60 @@ Expect `disp.npz` with waveform shape `(3, 3, 256)`, `disp.png`,
 `summary.json` and a library beneath `examples/output/qseis06/`.
 `--reuse` rereads that library.
 
+## Regional waveforms at 300, 600 and 900 km
+
+Run the same script with the regional option:
+
+```console
+python examples/qseis06.py --regional
+```
+
+This selects 300, 600 and 900 km while retaining a 10 km source and
+surface receiver. It enables `flat_earth_transform=True` and keeps the
+same 24 numeric model rows. A 4 s interval and 4092 s native window give
+1024 library samples. After synthesis, the script saves 0–1020 s
+inclusive, or 256 samples, under `examples/output/qseis06-regional/`.
+The resulting `disp.npz` has shape `(3, 3, 256)` and a source-origin
+time axis.
+
+The regional source uses `wavelet_type=0, wavelet_duration=16` with
+1024 custom moment-rate samples spanning 0–64 s. The physical target is
+a normalized squared half-sinusoid. Before writing the input, the
+example multiplies its samples by `exp(2*pi*fi*t)` to compensate for
+QSEIS's numerical damping convention; `fi` is negative. The written
+samples are not renormalized: their area is approximately 0.9647094,
+while the effective physical pulse has unit area and a 32 s centroid.
+The [STF verification](../guides/backend-comparison.md#matching-the-effective-source-time-function)
+checks the actual pulse and its spectrum against the target.
+
+A custom type-0 pulse does not trigger the ordinary reader's automatic
+conversion between velocity and displacement. This example explicitly
+reads `output_type="velo"`, integrates once using `cumsum * dt`, and
+then saves displacement. The default near-distance example retains
+type 2 with four 0.5 s samples; its behavior is unchanged.
+
+```{figure} ../_static/examples/qseis06-regional.png
+:alt: QSEIS06 regional displacement at 300, 600 and 900 km.
+
+Regional displacement in metres, saved from 0 to 1020 s since source
+origin. The native 4092 s library window is retained.
+```
+
+Matching the effective source pulse does not make this truncated
+half-space model identical to the complete spherical model. The
+flat-Earth transformation does not restore the omitted deep structure,
+and the QSEIS numerical frequency range extends above the spherical
+examples' 0.0625 Hz cutoff. See
+[regional comparison limits](../guides/backend-comparison.md#qseis-at-the-same-regional-distances).
+Use `--regional --reuse` only for a completed library with the current
+custom source and matching regional parameters. A library from the
+earlier type-2 regional example must be rebuilt.
+
 ## Source, sampling and boundary parameters
 
-`wavelet_type=2` selects the tapered Heaviside, and
-`wavelet_duration=4` is four samples (2 s here). Type 1 instead stores a
+`wavelet_type=2` selects the tapered Heaviside. In the default
+near-distance mode, `wavelet_duration=4` is four samples (2 s).
+Type 1 instead stores a
 velocity-like kernel; the reader integrates/differentiates as required.
 `output_type` is `disp`, `velo` or `acce`.
 

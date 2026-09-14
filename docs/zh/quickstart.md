@@ -49,6 +49,19 @@ python examples/qseis2025.py --output-dir examples/output/qseis2025 --reuse
 
 复用运行会另写 `summary-reuse.json`，保留首次计算的摘要。仅对同一模型、网格和输出设置复用。改变计算参数时使用新目录，以免将旧库误认为新参数的结果。
 
+## 300、600、900 km 的远距离结果
+
+前面的默认入门示例保留 100 秒窗口。更远距离的主要到时超过 100 秒，使用独立选项：
+
+```bash
+python examples/qseis2025.py --regional --observables all
+python examples/qseis06.py --regional
+```
+
+远距离模式使用 4 秒采样、4092 秒原生计算窗，并启用平地球变换。它采用 64 秒归一化 sin² 自定义矩率函数，预先补偿 QSEIS 的数值阻尼，使实际 STF 与 SPGRN2020 一致；读取速率后只积分一次。保存发震后 0–1020 秒（256 点），分别输出到 `examples/output/qseis2025-regional/` 和 `examples/output/qseis06-regional/`。QSEIS2025 的位移为 `(3, 3, 256)`，应变、应力为 `(3, 6, 256)`。QSEIS06 仍标记为 deprecated。
+
+模型仍取前 24 个数值行形成分层半空间，与完整球形地球是不同近似，不能只凭相同距离判断结果应完全相等。参见[远距离教程](../backends/qseis2025.md#regional-waveforms-at-300-600-and-900-km)和[后端对照与球谐收敛](../guides/backend-comparison.md)。更改模式或参数时应新建输出目录并重算，不能复用旧库来更新参数。
+
 ## 完整脚本
 
 中英文页面直接引用同一脚本：
