@@ -1,4 +1,14 @@
-# QSEIS06: vector waveforms
+# QSEIS06 (deprecated): vector waveforms
+
+```{admonition} Deprecated
+:class: warning
+
+The QSEIS06 backend is deprecated in pygrnwang. Use
+[QSEIS2025](qseis2025.md) for new calculations. This tutorial and its
+interfaces remain available for existing workflows. Migration requires
+building a QSEIS2025 library and validating the numerical settings, source
+time function and output conventions.
+```
 
 QSEIS06 provides the established layered half-space vector workflow. The
 main reader returns displacement, velocity or acceleration. It remains

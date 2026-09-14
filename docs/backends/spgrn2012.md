@@ -1,4 +1,15 @@
-# SPGRN2012: reduced-time spherical waveforms
+# SPGRN2012 (deprecated): reduced-time spherical waveforms
+
+```{admonition} Deprecated
+:class: warning
+
+The SPGRN2012 backend is deprecated in pygrnwang. Use
+[SPGRN2020](spgrn2020.md) for new calculations. This tutorial and its
+interfaces remain available for existing workflows. Migration requires
+building a SPGRN2020 library and validating its sampling and time origin;
+SPGRN2020 uses windows referenced to P instead of SPGRN2012's reduction
+rule.
+```
 
 SPGRN2012 computes waveforms for a radially layered spherical Earth. Its
 time windows use a reduction offset and velocity, which makes it useful

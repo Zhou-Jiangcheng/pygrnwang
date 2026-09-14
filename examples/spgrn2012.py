@@ -1,4 +1,8 @@
-"""A small long-period SPGRN2012 library with explicit travel-time tables."""
+"""Deprecated SPGRN2012 tutorial; use spgrn2020.py for new calculations.
+
+Retained for existing long-period libraries with explicit travel-time tables.
+Migration requires rebuilding the library and validating sampling and time origin.
+"""
 import json
 from pathlib import Path
 

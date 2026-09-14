@@ -6,15 +6,19 @@ settings. Every tutorial below contains a complete build/read/plot script.
 | Backend | Formulation and use | Main reader outputs |
 | --- | --- | --- |
 | [QSEIS2025](qseis2025.md) | Layered half-space; dynamic waveforms with direct tensor/rotation outputs | Displacement, velocity, acceleration, strain/stress and rates, rotation and rate, volume |
-| [QSEIS06](qseis06.md) | Layered half-space; established vector waveform workflow | Displacement, velocity, acceleration; separate derivative-library tools |
-| [SPGRN2012](spgrn2012.md) | Spherical layered Earth; reduced-time waveform library | Displacement, velocity, acceleration |
+| [QSEIS06](qseis06.md) **(deprecated)** | Layered half-space; established vector waveform workflow | Displacement, velocity, acceleration; separate derivative-library tools |
+| [SPGRN2012](spgrn2012.md) **(deprecated)** | Spherical layered Earth; reduced-time waveform library | Displacement, velocity, acceleration |
 | [SPGRN2020](spgrn2020.md) | Spherical layered Earth; windows tied to direct P onset | Displacement, velocity, acceleration |
 | [QSSP2020](qssp2020.md) | Spherical layered Earth with optional self-gravitation and broad observables | Vector, tensor, rotation and gravity families; see conversion limitation |
 | [EDGRN → EDCMP](edgrn_edcmp.md) | Layered elastic half-space; static dislocation response | Displacement, strain, stress and tilt |
 
-QSEIS2025 is the recommended first tutorial. Older backends retain their
-own workflows and are not marked as deprecated. Selection depends on
-physics and validated parameter choices, not simply the newest year.
+QSEIS2025 is the recommended first tutorial. **QSEIS06 and SPGRN2012 are
+deprecated in pygrnwang.** Use [QSEIS2025](qseis2025.md) for new layered
+half-space calculations and [SPGRN2020](spgrn2020.md) for new spherical
+waveform libraries. The deprecated backends and their tutorials remain
+available for existing workflows. When migrating, rebuild the library and
+validate the model, sampling, source time function and time origin with
+the replacement backend.
 
 ## Shared tutorial setup
 

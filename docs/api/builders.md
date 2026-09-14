@@ -46,6 +46,8 @@ The native programs can change the process working directory. The Python executi
 
 ## create_qseis06_bulk
 
+**Deprecated backend: QSEIS06.** Use QSEIS2025 for new calculations. Rebuild the Green library and revalidate numerical settings, source and time conventions, and results when migrating.
+
 ```{eval-rst}
 .. autofunction:: pygrnwang.create_qseis06_bulk.pre_process_qseis06
 ```
@@ -93,6 +95,8 @@ The native programs can change the process working directory. The Python executi
 ```
 
 ## create_spgrn2012_bulk
+
+**Deprecated backend: SPGRN2012.** Use SPGRN2020 for new calculations. Rebuild the Green library and revalidate numerical settings, source and time conventions, and results when migrating.
 
 ```{eval-rst}
 .. autofunction:: pygrnwang.create_spgrn2012_bulk.pre_process_spgrn2012

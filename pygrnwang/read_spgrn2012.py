@@ -39,6 +39,13 @@ def seek_spgrn2012(
 ):
     """Synthesize spgrn2012 waveforms from a precomputed Green library.
 
+    .. warning::
+
+        SPGRN2012 is deprecated. Use SPGRN2020 for new calculations.
+        Rebuild the Green library with the replacement backend and revalidate
+        numerical settings, source and time conventions, and results; existing
+        libraries and parameter choices are not guaranteed to be interchangeable.
+
     Parameters
     ----------
     path_green : str
