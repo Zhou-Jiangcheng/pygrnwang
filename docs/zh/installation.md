@@ -26,10 +26,31 @@ Python 最低版本为 **3.9**。发布配置覆盖 Linux x86-64、Windows x86-6
 ```bash
 git clone https://github.com/Zhou-Jiangcheng/pygrnwang.git
 cd pygrnwang
-conda create -n pygrnwang -c conda-forge python=3.12 numpy scipy pandas obspy tqdm matplotlib gfortran
+conda create -n pygrnwang -c conda-forge python=3.12 numpy scipy pandas obspy tqdm matplotlib
 conda activate pygrnwang
+```
+
+**Windows** 使用本教程验证的编译器构建：
+
+```powershell
+conda install -c conda-forge "gfortran=15.2.0=hf1b5d6d_19"
+```
+
+**Linux 或 macOS** 使用：
+
+```bash
+conda install -c conda-forge gfortran
+```
+
+然后在同一激活环境中安装源码：
+
+```bash
 python -m pip install -e .
 ```
+
+Windows CI 使用 Conda gfortran 16.2.0 build 4 时，链接阶段找不到 `crt2.o`
+和 `default-manifest.o`。上面的精确版本选择了可工作的 15.2.0 工具链，
+不影响 Python ≥3.9 的支持范围。
 
 源码构建要求 `setuptools>=77`，pip 会处理隔离构建依赖。安装过程中将编译七个 Fortran 程序；修改 Fortran 后需要重新构建。
 

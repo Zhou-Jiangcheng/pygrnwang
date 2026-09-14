@@ -40,10 +40,32 @@ The example scripts live in the Git repository. Check out the revision matching 
 ```bash
 git clone https://github.com/Zhou-Jiangcheng/pygrnwang.git
 cd pygrnwang
-conda create -n pygrnwang -c conda-forge python=3.12 numpy scipy pandas obspy tqdm matplotlib gfortran
+conda create -n pygrnwang -c conda-forge python=3.12 numpy scipy pandas obspy tqdm matplotlib
 conda activate pygrnwang
+```
+
+Install the compiler for your platform. On **Windows**, use the toolchain build
+validated for this tutorial:
+
+```powershell
+conda install -c conda-forge "gfortran=15.2.0=hf1b5d6d_19"
+```
+
+On **Linux or macOS**:
+
+```bash
+conda install -c conda-forge gfortran
+```
+
+Then install the checkout in the same activated environment:
+
+```bash
 python -m pip install -e .
 ```
+
+The Windows CI run with Conda gfortran 16.2.0 build 4 failed to locate `crt2.o`
+and `default-manifest.o` during linking. The pin above selects the working
+15.2.0 build; it is a reproducible toolchain choice, not a Python version limit.
 
 `setuptools>=77` is required for source builds; pip installs the build requirements in its isolated build environment. The setup hook compiles seven Fortran executables. An editable installation makes Python source changes visible without reinstalling; changes to Fortran still require rebuilding.
 
