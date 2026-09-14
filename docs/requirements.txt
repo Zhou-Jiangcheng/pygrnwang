@@ -1,0 +1,146 @@
+accessible-pygments==0.0.5
+    # via pydata-sphinx-theme
+alabaster==1.0.0
+    # via sphinx
+babel==2.18.0
+    # via
+    #   pydata-sphinx-theme
+    #   sphinx
+beautifulsoup4==4.15.0
+    # via pydata-sphinx-theme
+certifi==2026.7.22
+    # via requests
+charset-normalizer==3.5.1
+    # via requests
+colorama==0.4.6 ; sys_platform == 'win32'
+    # via
+    #   sphinx
+    #   tqdm
+contourpy==1.4.0
+    # via matplotlib
+cycler==0.12.1
+    # via matplotlib
+decorator==5.3.1
+    # via obspy
+docutils==0.21.2
+    # via
+    #   myst-parser
+    #   pydata-sphinx-theme
+    #   sphinx
+fonttools==4.65.0
+    # via matplotlib
+greenlet==3.5.5 ; platform_machine == 'AMD64' or platform_machine == 'WIN32' or platform_machine == 'aarch64' or platform_machine == 'amd64' or platform_machine == 'ppc64le' or platform_machine == 'win32' or platform_machine == 'x86_64'
+    # via sqlalchemy
+idna==3.19
+    # via requests
+imagesize==2.0.1
+    # via sphinx
+jinja2==3.1.6
+    # via
+    #   myst-parser
+    #   pydata-sphinx-theme
+    #   sphinx
+kiwisolver==1.5.1
+    # via matplotlib
+lxml==6.1.3
+    # via obspy
+markdown-it-py==3.0.0
+    # via
+    #   mdit-py-plugins
+    #   myst-parser
+markupsafe==3.0.3
+    # via jinja2
+matplotlib==3.11.2
+    # via obspy
+mdit-py-plugins==0.6.1
+    # via myst-parser
+mdurl==0.1.2
+    # via markdown-it-py
+myst-parser==4.0.1
+    # via -r docs/requirements.in
+numpy==2.5.3
+    # via
+    #   -r docs/requirements.in
+    #   contourpy
+    #   matplotlib
+    #   obspy
+    #   pandas
+    #   scipy
+obspy==1.5.1
+    # via -r docs/requirements.in
+packaging==26.3
+    # via
+    #   matplotlib
+    #   sphinx
+pandas==3.0.5
+    # via -r docs/requirements.in
+pillow==12.3.0
+    # via matplotlib
+pydata-sphinx-theme==0.21.0
+    # via -r docs/requirements.in
+pygments==2.21.0
+    # via
+    #   accessible-pygments
+    #   pydata-sphinx-theme
+    #   sphinx
+pyparsing==3.3.2
+    # via matplotlib
+python-dateutil==2.9.0.post0
+    # via
+    #   matplotlib
+    #   pandas
+pyyaml==6.0.3
+    # via myst-parser
+requests==2.34.2
+    # via
+    #   obspy
+    #   pydata-sphinx-theme
+    #   sphinx
+roman-numerals==4.1.0
+    # via roman-numerals-py
+roman-numerals-py==4.1.0
+    # via sphinx
+scipy==1.18.1
+    # via
+    #   -r docs/requirements.in
+    #   obspy
+setuptools==84.0.0
+    # via obspy
+six==1.17.0
+    # via python-dateutil
+snowballstemmer==3.1.1
+    # via sphinx
+soupsieve==2.9.2
+    # via beautifulsoup4
+sphinx==8.2.3
+    # via
+    #   -r docs/requirements.in
+    #   myst-parser
+    #   pydata-sphinx-theme
+    #   sphinx-design
+sphinx-design==0.7.0
+    # via -r docs/requirements.in
+sphinxcontrib-applehelp==2.0.0
+    # via sphinx
+sphinxcontrib-devhelp==2.0.0
+    # via sphinx
+sphinxcontrib-htmlhelp==2.1.0
+    # via sphinx
+sphinxcontrib-jsmath==1.0.1
+    # via sphinx
+sphinxcontrib-qthelp==2.0.0
+    # via sphinx
+sphinxcontrib-serializinghtml==2.0.0
+    # via sphinx
+sqlalchemy==2.0.52
+    # via obspy
+tqdm==4.70.1
+    # via -r docs/requirements.in
+typing-extensions==4.16.0
+    # via
+    #   beautifulsoup4
+    #   sqlalchemy
+tzdata==2026.4 ; sys_platform == 'emscripten' or sys_platform == 'win32'
+    # via pandas
+urllib3==2.7.0
+    # via requests

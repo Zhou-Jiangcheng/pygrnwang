@@ -1,0 +1,67 @@
+name: Tutorial calculations
+
+on:
+  pull_request:
+    paths: ["examples/**", "pygrnwang/**", "fortran_src_codes/**", "setup.py", "pyproject.toml", ".github/workflows/examples.yml"]
+  push:
+    branches: [main]
+    paths: ["examples/**", "pygrnwang/**", "fortran_src_codes/**", "setup.py", "pyproject.toml", ".github/workflows/examples.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  examples:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash -el {0}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: conda-incubator/setup-miniconda@v4
+        with:
+          miniforge-version: latest
+          python-version: "3.12"
+          activate-environment: pygrnwang-examples
+          channels: conda-forge
+          channel-priority: strict
+      - name: Install scientific environment and compiler
+        run: |
+          conda install -y -c conda-forge numpy scipy pandas obspy tqdm matplotlib gfortran pip
+          gfortran --version
+      - name: Build and install this checkout
+        run: python -m pip install -e .
+      - name: QSEIS2025 displacement and tensors
+        run: python examples/qseis2025.py --observables all
+      - name: QSEIS06
+        run: python examples/qseis06.py
+      - name: SPGRN2012
+        run: python examples/spgrn2012.py
+      - name: SPGRN2020
+        run: python examples/spgrn2020.py
+      - name: QSSP2020 spectra and time-domain synthesis
+        run: python examples/qssp2020.py
+      - name: EDGRN followed by EDCMP
+        run: python examples/edgrn_edcmp.py
+      - name: Upload calculation evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: tutorial-results-${{ matrix.os }}
+          path: |
+            examples/output/**/summary.json
+            examples/output/**/*.png
+            examples/output/**/*.npz
+            examples/output/**/*.inp
+            examples/output/**/.finished
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 14

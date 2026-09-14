@@ -64,6 +64,62 @@ def seek_qseis06_strain_rate_diff(
     model_name="ak135fc",
     green_info=None,
 ):
+    """Calculate strain rate by finite differencing a QSEIS06 perturbation library.
+
+    Parameters
+    ----------
+    path_green : str
+        Absolute library root containing green_lib_info.json and backend subdirectories.
+    event_depth_km : float
+        Requested source depth in km, positive down.
+    receiver_depth_km : float
+        Requested receiver depth in km, positive down.
+    az_deg : float
+        Source-to-receiver azimuth in degrees clockwise from north.
+    dist_km : float
+        Epicentral distance in km; query within the stored distance grid.
+    focal_mechanism : array_like
+        Either [strike, dip, rake] in degrees; [M0, strike, dip, rake]; six NED components [Mnn, Mne, Mnd, Mee, Med, Mdd]; or [M0, six components]. Three angles imply unit moment; seven entries normalize the six-component shape to M0. Moments are in N m.
+    srate : float
+        Positive output sampling rate in Hz.
+    before_p : float or None, optional
+        Seconds before the library P onset at the new first sample. None preserves the native window. Default: None.
+    pad_zeros : bool, optional
+        Shift to source-origin time using zero padding. Use separately from before_p. Default: False.
+    shift : bool, optional
+        Correct the time axis using P/S arrivals recomputed for the requested geometry and model. Default: False.
+    only_seismograms : bool, optional
+        Return just the waveform array when True; False returns the array and six metadata fields. Default: True.
+    model_name : str, optional
+        TauP built-in model name or path to a custom model. Use a model consistent with the Green library. Default: 'ak135fc'.
+    green_info : dict or None, optional
+        Preloaded green_lib_info.json mapping; None loads it from path_green. Default: None.
+
+    Returns
+    -------
+    series : numpy.ndarray
+        Shape (6, N), in the condensed tensor layout described in Notes, as strain rate.
+    metadata : tuple, conditional
+        With only_seismograms=False returns (series, tpts_table, first_p,
+        first_s, grn_dep_source, grn_dep_receiver, grn_dist). Arrival seconds are
+        relative to source origin; first_p/first_s are None unless shift=True.
+        Grid depth and distance values are km.
+
+    Raises
+    ------
+    OSError
+        A perturbation waveform or travel-time table is missing.
+    KeyError
+        A normal waveform library was supplied instead of a finite-difference library.
+    ValueError
+        Time alignment or resampling parameters are invalid.
+
+    Notes
+    -----
+    Requires pre_process_qseis06_strain_rate and all depth/radial perturbation jobs, not a normal QSEIS06 waveform library. The finite-difference metadata uses dist_range/delta_dist and stores k_dr, dz and diff_accu_order. Avoid zero distance and depth perturbations above the surface. The six pre-rotation rows are [e_tt, e_rt, -e_tz, e_rr, -e_rz, e_zz]; the historical reader applies rotate_symmetric_tensor_series with -az_deg, whereas QSEIS2025 uses +az_deg. Verify the azimuth/sign mapping independently before treating these rows as geographic ENU. Strain rate is 1/s and stress rate is Pa/s for moments in N m. See the QSEIS06 tutorial; QSEIS2025 can compute these observables directly.
+
+    This advanced historical workflow currently requires retained ASCII outputs: its binary detector looks for grn_tz.npy, and the binary call omits the required sampling_num argument. Keep convert_pd2bin=False and remove_pd=False when executing perturbation jobs. No deprecation or numerical equivalence with QSEIS2025 is implied.
+    """
     if green_info is None:
         with open(os.path.join(path_green, "green_lib_info.json"), "r") as fr:
             green_info = json.load(fr)
@@ -300,6 +356,27 @@ def seek_qseis06_strain_rate_diff(
 
 def convert_strain2stress(strain, lam, mu):
     # ee en ez nn nz zz
+    """Apply isotropic Hooke law to a tensor strain or strain-rate series.
+
+    Parameters
+    ----------
+    strain : numpy.ndarray
+        Tensor strain or strain-rate series with shape (6, N) in [ee, en, eu, nn, nu, uu] order.
+    lam : float
+        First Lame parameter in Pa for the homogeneous half-space.
+    mu : float
+        Shear modulus in Pa for the homogeneous half-space.
+
+    Returns
+    -------
+    stress : numpy.ndarray
+        Shape (6, N), same ordering as input; Pa for strain input or Pa/s for
+        strain-rate input when lam and mu are in Pa.
+
+    Notes
+    -----
+    Off-diagonal terms are physical tensor strain, not doubled engineering strain.
+    """
     stress = np.zeros_like(strain)
     s = strain[0, :] + strain[3, :] + strain[5, :]
     stress[0, :] = lam * s + 2 * mu * strain[0, :]
@@ -326,6 +403,62 @@ def seek_qseis06_stress_rate_diff(
     model_name="ak135fc",
     green_info=None,
 ):
+    """Calculate stress rate by finite differencing a QSEIS06 perturbation library.
+
+    Parameters
+    ----------
+    path_green : str
+        Absolute library root containing green_lib_info.json and backend subdirectories.
+    event_depth_km : float
+        Requested source depth in km, positive down.
+    receiver_depth_km : float
+        Requested receiver depth in km, positive down.
+    az_deg : float
+        Source-to-receiver azimuth in degrees clockwise from north.
+    dist_km : float
+        Epicentral distance in km; query within the stored distance grid.
+    focal_mechanism : array_like
+        Either [strike, dip, rake] in degrees; [M0, strike, dip, rake]; six NED components [Mnn, Mne, Mnd, Mee, Med, Mdd]; or [M0, six components]. Three angles imply unit moment; seven entries normalize the six-component shape to M0. Moments are in N m.
+    srate : float
+        Positive output sampling rate in Hz.
+    before_p : float or None, optional
+        Seconds before the library P onset at the new first sample. None preserves the native window. Default: None.
+    pad_zeros : bool, optional
+        Shift to source-origin time using zero padding. Use separately from before_p. Default: False.
+    shift : bool, optional
+        Correct the time axis using P/S arrivals recomputed for the requested geometry and model. Default: False.
+    only_seismograms : bool, optional
+        Return just the waveform array when True; False returns the array and six metadata fields. Default: True.
+    model_name : str, optional
+        TauP built-in model name or path to a custom model. Use a model consistent with the Green library. Default: 'ak135fc'.
+    green_info : dict or None, optional
+        Preloaded green_lib_info.json mapping; None loads it from path_green. Default: None.
+
+    Returns
+    -------
+    series : numpy.ndarray
+        Shape (6, N), in the condensed tensor layout described in Notes, as stress rate.
+    metadata : tuple, conditional
+        With only_seismograms=False returns (series, tpts_table, first_p,
+        first_s, grn_dep_source, grn_dep_receiver, grn_dist). Arrival seconds are
+        relative to source origin; first_p/first_s are None unless shift=True.
+        Grid depth and distance values are km.
+
+    Raises
+    ------
+    OSError
+        A perturbation waveform or travel-time table is missing.
+    KeyError
+        A normal waveform library was supplied instead of a finite-difference library.
+    ValueError
+        Time alignment or resampling parameters are invalid.
+
+    Notes
+    -----
+    Requires pre_process_qseis06_strain_rate and all depth/radial perturbation jobs, not a normal QSEIS06 waveform library. The finite-difference metadata uses dist_range/delta_dist and stores k_dr, dz and diff_accu_order. Avoid zero distance and depth perturbations above the surface. The six pre-rotation rows are [e_tt, e_rt, -e_tz, e_rr, -e_rz, e_zz]; the historical reader applies rotate_symmetric_tensor_series with -az_deg, whereas QSEIS2025 uses +az_deg. Verify the azimuth/sign mapping independently before treating these rows as geographic ENU. Strain rate is 1/s and stress rate is Pa/s for moments in N m. See the QSEIS06 tutorial; QSEIS2025 can compute these observables directly.
+
+    This advanced historical workflow currently requires retained ASCII outputs: its binary detector looks for grn_tz.npy, and the binary call omits the required sampling_num argument. Keep convert_pd2bin=False and remove_pd=False when executing perturbation jobs. No deprecation or numerical equivalence with QSEIS2025 is implied.
+    """
     if green_info is None:
         with open(os.path.join(path_green, "green_lib_info.json"), "r") as fr:
             green_info = json.load(fr)

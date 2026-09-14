@@ -1,0 +1,60 @@
+{
+  "backend": "EDGRN2 + EDCMP2",
+  "started_utc": "2026-09-14T02:31:46Z",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "python": "3.12.13",
+  "dependencies": {
+    "numpy": "2.3.5",
+    "scipy": "1.18.0",
+    "pandas": "3.0.0",
+    "matplotlib": "3.11.0",
+    "obspy": "1.5.0"
+  },
+  "source_depth_km": 10.0,
+  "receiver_depth_km": 0.0,
+  "moment_nm": 1000000000000000.0,
+  "strike_dip_rake_deg": [
+    30.0,
+    45.0,
+    90.0
+  ],
+  "azimuth_deg": 30.0,
+  "reuse": false,
+  "model": "Bundled AK135 elastic properties; illustrative constant Qp=600, Qs=300",
+  "outputs": {
+    "disp": {
+      "shape": [
+        3,
+        3
+      ],
+      "components": [
+        "E",
+        "N",
+        "U"
+      ],
+      "unit": "m",
+      "finite": true,
+      "peak_absolute": 1.3879000536362958e-06
+    }
+  },
+  "distances_km": [
+    30.0,
+    60.0,
+    90.0
+  ],
+  "earth_model_numeric_rows": 24,
+  "source_grid_km": [
+    10.0,
+    11.0
+  ],
+  "distance_grid_km": [
+    0.0,
+    30.0,
+    60.0,
+    90.0,
+    120.0
+  ],
+  "elapsed_seconds": 3.111,
+  "file_count": 53,
+  "output_bytes": 176775
+}

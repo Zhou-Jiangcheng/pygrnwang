@@ -5,12 +5,23 @@ import numpy as np
 
 
 def convert_mt_axis(mt, convert_flag):
-    """
-    convert moment tensor from one axis to another axis.
-    :param mt: moment tensor , if in ned axis, [M11, M12, M13, M22, M23, M33],
-                               if in rtp axis, [Mrr, Mtt, Mpp, Mrt, Mrp, Mtp].
-    :param convert_flag: 'ned2rtp' or 'rtp2ned'.
-    :return:
+    """Convert six moment components between NED and spherical RTP axes.
+
+    Parameters
+    ----------
+    mt : array_like
+        Six NED moment components [Mnn, Mne, Mnd, Mee, Med, Mdd] in N m unless a coordinate flag specifies otherwise.
+    convert_flag : str
+        Either ned2rtp or rtp2ned. RTP ordering is [Mrr, Mtt, Mpp, Mrt, Mrp, Mtp] with outward radial, colatitude and longitude axes.
+
+    Returns
+    -------
+    converted : list or array_like
+        Six components in the target ordering, retaining input physical units.
+
+    Notes
+    -----
+    See the scientific conventions guide. NED means north, east, down; waveform output uses different axis conventions. An unrecognized flag currently returns the input unchanged; use only the documented flags.
     """
     if convert_flag == "ned2rtp":
         Mtt = mt[0]
@@ -32,21 +43,28 @@ def convert_mt_axis(mt, convert_flag):
 
 
 def tensor2full_tensor_matrix(mt, flag="ned") -> np.ndarray:
-    """
-    create full moment tensor matrix from 6 components.
-    :param mt: in NED axis, [M11, M12, M13, M22, M23, M33].
-               in rtp axis, [mrr, mtt, mpp, mrt, mrp, mtp]
-    :param flag: 'ned'/'rtp'
-    :return: full moment tensor matrix,
-    in NED axis,
-    np.array([[M11, M12, M13],
-              [M12, M22, M23],
-              [M13, M23, M33]])
-    in rtp axis,
-    np.array([[mrr, mrt, mrp],
-              [mrt, mtt, mtp],
-              [mrp, mtp, mpp],
-            ])
+    """Expand six symmetric tensor components into a full matrix.
+
+    Parameters
+    ----------
+    mt : array_like
+        Six NED moment components [Mnn, Mne, Mnd, Mee, Med, Mdd] in N m unless a coordinate flag specifies otherwise.
+    flag : str, optional
+        ned uses [Mnn, Mne, Mnd, Mee, Med, Mdd]; rtp uses [Mrr, Mtt, Mpp, Mrt, Mrp, Mtp]. Default: 'ned'.
+
+    Returns
+    -------
+    matrix : numpy.ndarray
+        Shape (3, 3), with rows and columns in the selected axis order.
+
+    Raises
+    ------
+    ValueError
+        flag is neither ned nor rtp.
+
+    Notes
+    -----
+    See the scientific conventions guide. NED means north, east, down; waveform output uses different axis conventions.
     """
     mpq = np.zeros((3, 3))
     if flag == "ned":
@@ -75,6 +93,23 @@ def tensor2full_tensor_matrix(mt, flag="ned") -> np.ndarray:
 
 
 def moment_from_moment_tensor(mt):
+    """Compute scalar moment from the Frobenius norm of a NED tensor.
+
+    Parameters
+    ----------
+    mt : array_like
+        Six NED moment components [Mnn, Mne, Mnd, Mee, Med, Mdd] in N m unless a coordinate flag specifies otherwise.
+
+    Returns
+    -------
+    moment : float or numpy.ndarray
+        sqrt((Mnn^2 + Mee^2 + Mdd^2 + 2*Mne^2 + 2*Mnd^2 + 2*Med^2)/2),
+        in the input moment units. Component-first batches return one value per tensor.
+
+    Notes
+    -----
+    See the scientific conventions guide. NED means north, east, down; waveform output uses different axis conventions.
+    """
     m0 = np.sqrt(
         1
         / 2
@@ -91,10 +126,26 @@ def moment_from_moment_tensor(mt):
 
 
 def check_convert_fm(focal_mechanism):
-    """
+    """Convert a supported focal mechanism to six NED moment components.
 
-    :param focal_mechanism:
-    :return: [M11, M12, M13, M22, M23, M33]
+    Parameters
+    ----------
+    focal_mechanism : array_like
+        Either [strike, dip, rake] in degrees; [M0, strike, dip, rake]; six NED components [Mnn, Mne, Mnd, Mee, Med, Mdd]; or [M0, six components]. Three angles imply unit moment; seven entries normalize the six-component shape to M0. Moments are in N m.
+
+    Returns
+    -------
+    mt : list of float
+        [Mnn, Mne, Mnd, Mee, Med, Mdd] in N m.
+
+    Raises
+    ------
+    ValueError
+        The input length is not 3, 4, 6 or 7.
+
+    Notes
+    -----
+    See the scientific conventions guide. NED means north, east, down; waveform output uses different axis conventions. A six-component input retains its magnitude. A seven-entry input uses the first value as M0 and normalizes the remaining shape; the shape must have nonzero scalar moment.
     """
     if len(focal_mechanism) == 3:
         mt = plane2mt(1, focal_mechanism[0], focal_mechanism[1], focal_mechanism[2])
@@ -126,6 +177,23 @@ def check_convert_fm(focal_mechanism):
 
 
 def cal_m0_from_mt(mt):
+    """Compute scalar moment from the Frobenius norm of a NED tensor.
+
+    Parameters
+    ----------
+    mt : array_like
+        Six NED moment components [Mnn, Mne, Mnd, Mee, Med, Mdd] in N m unless a coordinate flag specifies otherwise.
+
+    Returns
+    -------
+    moment : float or numpy.ndarray
+        sqrt((Mnn^2 + Mee^2 + Mdd^2 + 2*Mne^2 + 2*Mnd^2 + 2*Med^2)/2),
+        in the input moment units. Component-first batches return one value per tensor.
+
+    Notes
+    -----
+    See the scientific conventions guide. NED means north, east, down; waveform output uses different axis conventions.
+    """
     m0 = np.sqrt(
         1
         / 2
@@ -142,20 +210,23 @@ def cal_m0_from_mt(mt):
 
 
 def mt2plane(mt):
-    """
+    """Extract two nodal planes and principal axes from a NED moment tensor.
 
-    :param mt: in NED axis, [M11, M12, M13, M22, M23, M33].
-    :return: [[strike1, dip1, rake1], [strike2, dip2, rake2],
-    n1, d1, n2, d2, t, b, p, eigenvalues]
+    Parameters
+    ----------
+    mt : array_like
+        Six NED moment components [Mnn, Mne, Mnd, Mee, Med, Mdd] in N m unless a coordinate flag specifies otherwise.
 
-    n is the normal vector of the plane, in NED axis.
-    d is the rupture vector on the plane, in NED axis.
+    Returns
+    -------
+    result : list
+        [plane1, plane2, n1, d1, n2, d2, t, b, p, eigenvalues]. Each plane is
+        [strike, dip, rake] in degrees; each vector has shape (3,) in NED.
+        Eigenvalues retain the input moment units.
 
-    n points in the negative direction of D, i.e. upwards
-
-    When the dip angle is 0,
-
-    return: [pl1, pl2, n1, d1, n2, d2, t, b, p, eigenvalues]
+    Notes
+    -----
+    See the scientific conventions guide. NED means north, east, down; waveform output uses different axis conventions. For non-double-couple tensors, the planes describe the extracted orientation; they do not reconstruct arbitrary isotropic or CLVD contributions. Repeated eigenvalues make orientation nonunique.
     """
     M = tensor2full_tensor_matrix(mt)
     [eigenvalues, eigenvectors] = np.linalg.eig(M)
@@ -274,14 +345,27 @@ def mt2plane(mt):
 
 
 def plane2mt(M0, strike, dip, rake):
-    """
+    """Convert a double-couple mechanism to a NED moment tensor.
 
-    :param M0: scalar moment, unit: Nm
-    :param strike: strike angle, unit: degree
-    :param dip: dip angle, unit: degree
-    :param rake: rake angle, unit: degree
-    :return: mt : numpy array
-        in NEZ(NED) axis, [M11, M12, M13, M22, M23, M33].
+    Parameters
+    ----------
+    M0 : float
+        Scalar seismic moment in N m.
+    strike : float
+        Strike angle in degrees clockwise from north.
+    dip : float
+        Dip angle in degrees from horizontal.
+    rake : float
+        Rake angle in degrees in the fault plane.
+
+    Returns
+    -------
+    mt : numpy.ndarray
+        Shape (6,), [Mnn, Mne, Mnd, Mee, Med, Mdd], in N m.
+
+    Notes
+    -----
+    See the scientific conventions guide. NED means north, east, down; waveform output uses different axis conventions.
     """
     strike, dip, rake = strike * np.pi / 180, dip * np.pi / 180, rake * np.pi / 180
 
@@ -313,15 +397,25 @@ def plane2mt(M0, strike, dip, rake):
 
 
 def plane2nd(strike, dip, rake) -> Tuple[np.ndarray, np.ndarray]:
-    """
+    """Compute the fault normal and slip unit vectors in NED coordinates.
 
-    :param strike: unit: degree
-    :param dip: unit: degree
-    :param rake: unit: degree
-    :return: n, np.ndarray
-             normal vector of the fault plane, in NED axis.
-             d, np.ndarray
-             rupture vector on the fault plane, in NED axis.
+    Parameters
+    ----------
+    strike : float
+        Strike angle in degrees clockwise from north.
+    dip : float
+        Dip angle in degrees from horizontal.
+    rake : float
+        Rake angle in degrees in the fault plane.
+
+    Returns
+    -------
+    n, d : numpy.ndarray
+        Two shape-(3,) vectors; n is oriented upward (nonpositive down component).
+
+    Notes
+    -----
+    See the scientific conventions guide. NED means north, east, down; waveform output uses different axis conventions.
     """
     strike, dip, rake = strike * np.pi / 180, dip * np.pi / 180, rake * np.pi / 180
     sin_strike, cos_strike = np.sin(strike), np.cos(strike)
@@ -346,11 +440,25 @@ def plane2nd(strike, dip, rake) -> Tuple[np.ndarray, np.ndarray]:
 
 
 def plane2tbp(strike, dip, rake) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """
-    :param strike: unit: degree
-    :param dip: unit: degree
-    :param rake: unit: degree
-    :return: [np.array(t), np.array(b), np.array(p)]
+    """Compute tension, neutral and pressure axes for a double couple.
+
+    Parameters
+    ----------
+    strike : float
+        Strike angle in degrees clockwise from north.
+    dip : float
+        Dip angle in degrees from horizontal.
+    rake : float
+        Rake angle in degrees in the fault plane.
+
+    Returns
+    -------
+    t, b, p : numpy.ndarray
+        Three shape-(3,) NED unit vectors, each oriented into the lower hemisphere.
+
+    Notes
+    -----
+    See the scientific conventions guide. NED means north, east, down; waveform output uses different axis conventions.
     """
     n, d = plane2nd(strike, dip, rake)
     t = 1 / np.sqrt(2) * (n + d)

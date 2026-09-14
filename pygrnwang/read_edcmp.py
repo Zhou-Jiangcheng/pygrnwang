@@ -117,47 +117,52 @@ def seek_edcmp2(
     model_name="ak135fc",
     green_info=None,
 ):
-    """
-    Read static deformation from edcmp2 Green's function library for a single query point.
+    """Read static EDCMP deformation at the nearest stored geometry.
 
-    Uses nearest-neighbor lookup in source depth, receiver depth, and epicentral distance.
-    The result is synthesized from 5 elementary MT components stored per grid node.
+    Parameters
+    ----------
+    path_green : str
+        Absolute library root containing green_lib_info.json and backend subdirectories.
+    event_depth_km : float
+        Requested source depth in km, positive down.
+    receiver_depth_km : float
+        Requested receiver depth in km, positive down.
+    az_deg : float
+        Source-to-receiver azimuth in degrees clockwise from north.
+    dist_km : float
+        Epicentral distance in km; query within the stored distance grid.
+    focal_mechanism : array_like
+        Either [strike, dip, rake] in degrees; [M0, strike, dip, rake]; six NED components [Mnn, Mne, Mnd, Mee, Med, Mdd]; or [M0, six components]. Three angles imply unit moment; seven entries normalize the six-component shape to M0. Moments are in N m.
+    rotate : bool, optional
+        Rotate vector output to east, north, up when True; False retains radial, transverse, up. Tensor layouts are specified in Notes. Default: True.
+    check_convert_pure_dp : bool, optional
+        Project to the double-couple mechanism extracted by mt2plane. Both branches normalize scalar moment to one; False does not preserve input moment magnitude. Default: True.
+    output_type : str, optional
+        Requested observable; supported values and units are listed in Notes. Default: 'disp'.
+    times_mu : bool, optional
+        True retains raw rigidity-scaled Green values; False divides by source-node shear modulus from model_name. Default: False.
+    area_km_sq : float or None, optional
+        Multiply the result by this area in km2 converted to m2. Does not automatically supply the missing rigidity or slip factor. Default: None.
+    model_name : str, optional
+        TauP built-in model name or path to a custom model. Use a model consistent with the Green library. Default: 'ak135fc'.
+    green_info : dict or None, optional
+        Preloaded green_lib_info.json mapping; None loads it from path_green. Default: None.
 
-    Output components for each output_type:
-      disp   (3): east, north, up  [m / (N·m)]
-      strain (6): ee, en, ez, nn, nz, zz  [1 / (N·m)]
-      stress (6): ee, en, ez, nn, nz, zz  [Pa / (N·m)]
-      tilt   (2): east tilt, north tilt  [rad / (N·m)]
-    (all divided by mu = rho*beta^2 unless times_mu=True)
+    Returns
+    -------
+    deformation : numpy.ndarray
+        Shape (C,): C=3 for disp, 6 for strain/stress, 2 for tilt.
 
-    :param path_green: Root directory of the Green's function library.
-    :param event_depth_km: Event (source) depth in km.
-    :param receiver_depth_km: Receiver depth in km.
-    :param az_deg: Azimuth from source to receiver in degrees (measured from north).
-    :param dist_km: Epicentral distance in km.
-    :param focal_mechanism: [strike, dip, rake] in degrees, or
-                            [M11, M12, M13, M22, M23, M33] moment tensor in N·m.
-    :param rotate: If True, rotate output from rtz to enz coordinate system.
-    :param check_convert_pure_dp: If True, project focal mechanism onto the nearest
-                                  pure double-couple before synthesizing.
-                                  The moment tensor is normalized to M0 = 1 either
-                                  way, so this flag only changes the mechanism, not
-                                  the amplitude. The returned values are therefore
-                                  per unit seismic moment; multiply by M0 in N·m
-                                  (or supply area_km_sq, which scales by the area
-                                  factor of M0 = mu * A [m²] * slip [m]) to get
-                                  physical units.
-    :param output_type: One of 'disp', 'strain', 'stress', 'tilt'.
-    :param times_mu: If True, return raw Green's function values (already multiplied by mu).
-                     If False (default), divide by mu so units are per N·m.
-    :param area_km_sq: Optional subfault area in km². When provided, the result is
-                       multiplied by area in m² (area_km² * 1e6), scaling the output
-                       by the subfault area contribution to M0 = mu * A [m²] * slip [m].
-    :param model_name: Earth model for the mu lookup: either the built-in
-                       'ak135fc' or a path to an nd file.
-    :param green_info: Pre-loaded green_lib_info dict. If None, reads green_lib_info.json
-                       from path_green automatically.
-    :return: 1-D numpy array of length cha_num (3 for disp, 6 for strain/stress, 2 for tilt).
+    Raises
+    ------
+    OSError
+        Library or material-model files cannot be read.
+    ValueError
+        Output type is unsupported, a mechanism has zero scalar moment, or arrays have incompatible shapes.
+
+    Notes
+    -----
+    Supported output_type values: disp, strain, stress, tilt. With rotate=True vector rows are east, north, up, tensor rows are [ee, en, eu, nn, nu, uu], and tilt rows are east, north. With rotate=False vectors are radial, transverse, up and tensors are [rr, rt, ru, tt, tu, uu]. All mechanisms are normalized to unit scalar moment. With times_mu=False and no area/slip factor, output is per N m: displacement m/(N m), strain 1/(N m), stress Pa/(N m), tilt rad/(N m). Multiply by the desired seismic moment to obtain physical values. Alternatively times_mu=True with area in km2 and slip in m supplies the mu*A*slip scaling; the single-query function requires applying slip externally. Area alone with times_mu=False does not restore rigidity. Material lookup accepts built-in ak135fc or a four-column no-Q ND path; it is independent of the model metadata. Use the same elastic structure as the library. See the EDGRN/EDCMP tutorial.
     """
     if green_info is None:
         with open(os.path.join(path_green, "green_lib_info.json"), "r") as fr:
@@ -289,45 +294,54 @@ def seek_edcmp2_bulk(
     model_name: str = "ak135fc",
     green_info=None,
 ):
-    """
-    Bulk version of seek_edcmp2. Synthesizes all N query points in a single
-    vectorized pass (no Python loop).
+    """Read static EDCMP deformation for a batch of query geometries.
 
-    Requires convert_pd2bin_edcmp2_all to have been called first to generate
-    edcmp2_{output_type}.bin files in path_green.
+    Parameters
+    ----------
+    path_green : str
+        Absolute library root containing green_lib_info.json and backend subdirectories.
+    event_depth_km_arr : array_like
+        Source depths in km, shape (N,).
+    receiver_depth_km_arr : array_like
+        Receiver depths in km, shape (N,).
+    az_deg_arr : array_like
+        Source-to-receiver clockwise azimuths from north in degrees, shape (N,).
+    dist_km_arr : array_like
+        Epicentral distances in km, shape (N,).
+    focal_mechanism_arr : array_like
+        N mechanisms, shape (N, 3), (N, 4), (N, 6) or (N, 7), using check_convert_fm conventions; magnitude is normalized away.
+    rotate : bool, optional
+        Rotate vector output to east, north, up when True; False retains radial, transverse, up. Tensor layouts are specified in Notes. Default: True.
+    check_convert_pure_dp : bool, optional
+        Project to the double-couple mechanism extracted by mt2plane. Both branches normalize scalar moment to one; False does not preserve input moment magnitude. Default: True.
+    output_type : str, optional
+        Requested observable; supported values and units are listed in Notes. Default: 'disp'.
+    times_mu : bool, optional
+        True retains raw rigidity-scaled Green values; False divides by source-node shear modulus from model_name. Default: False.
+    area_km_sq_arr : array_like or None, optional
+        Subfault areas in km2, shape (N,), multiplied after conversion to m2. Default: None.
+    slip_m_arr : array_like or None, optional
+        Subfault slips in m, shape (N,), multiplied into output rows. Default: None.
+    model_name : str, optional
+        TauP built-in model name or path to a custom model. Use a model consistent with the Green library. Default: 'ak135fc'.
+    green_info : dict or None, optional
+        Preloaded green_lib_info.json mapping; None loads it from path_green. Default: None.
 
-    :param path_green: Root directory of the Green's function library.
-    :param event_depth_km_arr: Array of event depths in km, shape (N,).
-    :param receiver_depth_km_arr: Array of receiver depths in km, shape (N,).
-    :param az_deg_arr: Array of azimuths in degrees, shape (N,).
-    :param dist_km_arr: Array of epicentral distances in km, shape (N,).
-    :param focal_mechanism_arr: Array of focal mechanisms, shape (N, 3) for [strike,dip,rake]
-                                 or (N, 6) for MT in NED.
-    :param rotate: Rotate from rtz to enz.
-    :param check_convert_pure_dp: Convert to pure double-couple if True.
-                                  Each moment tensor is normalized to M0 = 1 either
-                                  way, so this flag only changes the mechanism, not
-                                  the amplitude. The returned values are therefore
-                                  per unit seismic moment; multiply by M0 in N·m
-                                  (or supply area_km_sq_arr / slip_m_arr, which
-                                  supply the A and slip factors of
-                                  M0 = mu * A [m²] * slip [m]) to get physical units.
-    :param output_type: 'disp', 'strain', 'stress', or 'tilt'.
-    :param times_mu: If False, divide by mu (rho*beta^2).
-    :param area_km_sq_arr: Optional array of subfault areas in km², shape (N,).
-                        When provided, each result row is multiplied by the
-                        corresponding area in m² (area_km² * 1e6), scaling the
-                        Green's function output by the subfault area contribution
-                        to the seismic moment M0 = mu * A [m²] * slip [m].
-    :param slip_m_arr: Optional array of subfault slips in m, shape (N,).
-                       When provided, each result row is multiplied by the
-                       corresponding slip, scaling the Green's function output
-                       by the slip contribution to M0 = mu * A [m²] * slip [m].
-    :param model_name: Earth model for the mu lookup: either the built-in
-                       'ak135fc' or a path to an nd file.
-    :param green_info: Pre-loaded green_lib_info dict (avoids re-reading JSON).
+    Returns
+    -------
+    deformation : numpy.ndarray
+        Shape (N, C), one row per query; C=3 for disp, 6 for strain/stress, 2 for tilt.
 
-    :return: numpy array of shape (N, cha_num), one row per query point.
+    Raises
+    ------
+    OSError
+        Library or material-model files cannot be read.
+    ValueError
+        Output type is unsupported, a mechanism has zero scalar moment, or arrays have incompatible shapes.
+
+    Notes
+    -----
+    Supported output_type values: disp, strain, stress, tilt. With rotate=True vector rows are east, north, up, tensor rows are [ee, en, eu, nn, nu, uu], and tilt rows are east, north. With rotate=False vectors are radial, transverse, up and tensors are [rr, rt, ru, tt, tu, uu]. All mechanisms are normalized to unit scalar moment. With times_mu=False and no area/slip factor, output is per N m: displacement m/(N m), strain 1/(N m), stress Pa/(N m), tilt rad/(N m). Multiply by the desired seismic moment to obtain physical values. Alternatively times_mu=True with area in km2 and slip in m supplies the mu*A*slip scaling; the single-query function requires applying slip externally. Area alone with times_mu=False does not restore rigidity. Material lookup accepts built-in ak135fc or a four-column no-Q ND path; it is independent of the model metadata. Use the same elastic structure as the library. See the EDGRN/EDCMP tutorial. Run convert_pd2bin_edcmp2_all first. The batch reader requires root-level edcmp2_<output_type>.bin files.
     """
     event_depth_km_arr = np.asarray(event_depth_km_arr, dtype=float)
     receiver_depth_km_arr = np.asarray(receiver_depth_km_arr, dtype=float)

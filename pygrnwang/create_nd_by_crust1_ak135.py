@@ -15,27 +15,41 @@ def create_nd_by_crust1_ak135(
     no_low_velo_layer: bool = False,
     layered_crust: bool = True,
 ):
-    """
-    Merge the CRUST1.0 model (without water and upper_sediments) of a given location
-    with the AK135fc model.
-    Note, the mantle flag in output nd file is fake, it is only for convenient to call taup.
-    Args:
-        lat: latitude, unit deg
-        lon: longitude, unit deg
-        path_crust1: Dir contains crust1.vp,crust1.vs,crust1.rho,crust1.bnds.
-            (data in repo https://github.com/jrleeman/Crust1.0.git is recommended)
-        path_ak135: Path to ak135fc.nd, without water, with Qp,Qs in the last two cols.
-        path_output: Path to output nd file.
-        no_low_velo_layer: Ensure that the combination of CRUST1.0 and AK135fc models
-            produces no spurious low-velocity zones at the interface, which may remove
-            several layers in the upper-mantle of the AK135fc model.
-        layered_crust: If True (default), encode every CRUST1.0 layer above
-            the mantle as a constant-property layer using repeated interface
-            depths. If False, retain linear interpolation between CRUST1.0
-            layer-top samples. In both modes, the rows immediately above and
-            below the ``mantle`` marker have the same depth.
-    Returns:
-        nd_new: np.ndarray [[dep, vp, vs, rho, qp, qs], ... ]
+    """Join a location-specific CRUST1.0 crust to an AK135 mantle model.
+
+    Parameters
+    ----------
+    lat : float
+        Latitude in degrees.
+    lon : float
+        Longitude in degrees.
+    path_crust1 : str
+        Directory containing crust1.vp, crust1.vs, crust1.rho and crust1.bnds.
+    path_ak135 : str
+        Six-column no-water AK135 ND file with Qp and Qs in the last columns.
+    path_output : str
+        Destination path for the converted model.
+    no_low_velo_layer : bool, optional
+        Remove conflicting shallow mantle rows to avoid an artificial low-velocity join. Default: False.
+    layered_crust : bool, optional
+        True repeats interface depths to encode constant-property CRUST1 layers; False uses linear interpolation between layer tops. Default: True.
+
+    Returns
+    -------
+    model : numpy.ndarray
+        Shape (N, 6): depth km, Vp/Vs km/s, density g/cm3, Qp/Qs.
+        The corresponding ND file is also written to path_output.
+
+    Raises
+    ------
+    OSError
+        A required model file is unavailable.
+    ValueError
+        The CRUST1 columns lack suitable crust/mantle rows or increasing layer depths.
+
+    Notes
+    -----
+    Water and upper sediments are omitted. CRUST1 rows use Qp=927.34 and Qs=599.99. The mantle label is placed for TauP compatibility; verify that it represents the intended model discontinuity.
     """
     crust1 = CrustModel(path_crust1)
     crust1_dict = crust1.get_point(lat, lon)

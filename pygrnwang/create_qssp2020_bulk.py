@@ -212,6 +212,85 @@ def pre_process_qssp2020(
     physical_dispersion=0,
     check_finished_tpts_table=False,
 ):
+    """Prepare the qssp2020 library grid, input files and job groups.
+
+    Parameters
+    ----------
+    processes_num : int
+        Positive worker count used to group jobs; MPI rank count must match the prepared group width.
+    path_green : str
+        Absolute library root containing green_lib_info.json and backend subdirectories.
+    event_depth_list : list of float
+        Source depth nodes in km, positive down; supply a nonempty sorted list.
+    receiver_depth_list : list of float
+        Receiver depth nodes in km, positive down; supply a nonempty sorted list.
+    spec_time_window : float
+        Spectral calculation duration in seconds; it must cover the requested output window.
+    sampling_interval : float
+        Time step in seconds; choose it consistently with the highest modeled frequency.
+    max_frequency : float
+        Highest modeled frequency in Hz; must be compatible with the time step.
+    max_slowness : float
+        Maximum modeled slowness in s/km; in SPGRN, nonpositive requests the complete wavefield.
+    anti_alias : float
+        Dimensionless time-domain alias suppression factor; use a small positive value below 1.
+    turning_point_filter : int
+        1 selects the QSSP turning-depth filter; 0 disables it.
+    turning_point_d1 : float
+        Minimum allowed turning depth in km when the turning-point filter is enabled.
+    turning_point_d2 : float
+        Maximum allowed turning depth in km when the turning-point filter is enabled.
+    free_surface_filter : int
+        QSSP switch: 1 includes free-surface reflection, 0 removes it.
+    gravity_fc : float
+        Critical frequency in Hz below which self-gravity is included together with the harmonic cutoff.
+    gravity_harmonic : int
+        Critical spherical harmonic degree for self-gravity.
+    cal_sph : int
+        1 enables spheroidal (P-SV) modes; 0 disables them.
+    cal_tor : int
+        1 enables toroidal (SH) modes; 0 disables them.
+    min_harmonic : int
+        Minimum cutoff spherical harmonic degree used by QSSP.
+    max_harmonic : int
+        Maximum cutoff spherical harmonic degree used by QSSP.
+    source_radius : float
+        Source patch radius in km.
+    source_duration : float
+        Squared half-sinusoid source-time-function duration in seconds; zero requests the backend minimum.
+    output_observables : list of int
+        Eleven 0/1 flags: displacement, velocity, acceleration, strain, strain rate, stress, stress rate, rotation, rotation rate, gravitation, gravimeter.
+    time_window : float
+        Output time-window duration in seconds.
+    time_reduction : float
+        QSSP trace start time in seconds relative to source origin, not a velocity.
+    dist_range : list of float
+        Minimum and maximum epicentral distances in km.
+    delta_dist : float
+        Positive regular distance increment in km. The last grid point can exceed the requested maximum by less than one increment.
+    path_nd : str or None, optional
+        Six-column named-discontinuity model path: depth (km), Vp/Vs (km/s), density (g/cm3), Qp/Qs. Bulk preprocessing requires a real path even though the signature default is None. Default: None.
+    earth_model_layer_num : int or None, optional
+        Number of numeric model rows retained, not the number of discontinuities; None retains all. Default: None.
+    physical_dispersion : int, optional
+        0 disables, 1 enables the backend physical-dispersion correction associated with attenuation. Default: 0.
+    check_finished_tpts_table : bool, optional
+        Reuse existing P/S table files without validating their model or grid provenance. Default: False.
+
+    Returns
+    -------
+    None
+        Writes backend inputs, metadata or output files to the library.
+
+    Raises
+    ------
+    OSError
+        Required files are missing or output paths cannot be read or written.
+
+    Notes
+    -----
+    See the qssp2020 tutorial for a complete prepare, run and read workflow. Preprocessing writes inputs and travel-time/model metadata; run the matching create_grnlib function to calculate Green functions. A first computation must include both spectral and time-domain stages.
+    """
     print("Preprocessing")
     pre_process_spec(
         processes_num,
@@ -334,6 +413,35 @@ def pre_process_qssp2020(
 def create_grnlib_qssp2020_sequential(
     path_green, cal_spec=True, check_finished=False, convert_pd2bin=True, remove_pd=True
 ):
+    """Compute the prepared qssp2020 library sequentially.
+
+    Parameters
+    ----------
+    path_green : str
+        Absolute library root containing green_lib_info.json and backend subdirectories.
+    cal_spec : bool, optional
+        Compute spectra before time-domain synthesis. Keep True for a new QSSP library; False requires compatible existing spectra. Default: True.
+    check_finished : bool, optional
+        Reuse outputs marked finished. Markers do not verify that inputs are unchanged. Default: False.
+    convert_pd2bin : bool, optional
+        Convert completed ASCII waveforms to the compact float32 reader format. Default: True.
+    remove_pd : bool, optional
+        Delete original ASCII output; retain it while validating a new calculation. Default: True.
+
+    Returns
+    -------
+    None
+        Writes backend inputs, metadata or output files to the library.
+
+    Raises
+    ------
+    OSError
+        Required files are missing or output paths cannot be read or written.
+
+    Notes
+    -----
+    See the qssp2020 tutorial for a complete prepare, run and read workflow. Prepare jobs first. Backend runners can change the process working directory; use absolute paths and restore the caller directory if needed. Check output files and logs after execution.
+    """
     if cal_spec:
         with open(os.path.join(path_green, "group_list_spec.pkl"), "rb") as fr:
             group_list_spec = pickle.load(fr)
@@ -363,6 +471,35 @@ def create_grnlib_qssp2020_sequential(
 def create_grnlib_qssp2020_parallel(
     path_green, cal_spec=True, check_finished=False, convert_pd2bin=True, remove_pd=True
 ):
+    """Compute the prepared qssp2020 library with local worker processes.
+
+    Parameters
+    ----------
+    path_green : str
+        Absolute library root containing green_lib_info.json and backend subdirectories.
+    cal_spec : bool, optional
+        Compute spectra before time-domain synthesis. Keep True for a new QSSP library; False requires compatible existing spectra. Default: True.
+    check_finished : bool, optional
+        Reuse outputs marked finished. Markers do not verify that inputs are unchanged. Default: False.
+    convert_pd2bin : bool, optional
+        Convert completed ASCII waveforms to the compact float32 reader format. Default: True.
+    remove_pd : bool, optional
+        Delete original ASCII output; retain it while validating a new calculation. Default: True.
+
+    Returns
+    -------
+    None
+        Writes backend inputs, metadata or output files to the library.
+
+    Raises
+    ------
+    OSError
+        Required files are missing or output paths cannot be read or written.
+
+    Notes
+    -----
+    See the qssp2020 tutorial for a complete prepare, run and read workflow. Prepare jobs first. Backend runners can change the process working directory; use absolute paths and restore the caller directory if needed. Check output files and logs after execution. On Windows call under an if __name__ == "__main__" guard.
+    """
     tasks = []
 
     if cal_spec:
@@ -409,6 +546,33 @@ def create_grnlib_qssp2020_parallel(
 
 
 def create_grnlib_qssp2020_spec_parallel_multi_nodes(path_green, check_finished=False):
+    """Compute the prepared qssp2020 library with MPI.
+
+    Parameters
+    ----------
+    path_green : str
+        Absolute library root containing green_lib_info.json and backend subdirectories.
+    check_finished : bool, optional
+        Reuse outputs marked finished. Markers do not verify that inputs are unchanged. Default: False.
+
+    Returns
+    -------
+    None
+        Writes backend inputs, metadata or output files to the library.
+
+    Raises
+    ------
+    OSError
+        Required files are missing or output paths cannot be read or written.
+    RuntimeError
+        mpi4py is unavailable.
+    ValueError
+        MPI rank count does not match the prepared group width.
+
+    Notes
+    -----
+    See the qssp2020 tutorial for a complete prepare, run and read workflow. Prepare jobs first. Backend runners can change the process working directory; use absolute paths and restore the caller directory if needed. Check output files and logs after execution.
+    """
     s = datetime.datetime.now()
     MPI = _get_mpi()
     with open(os.path.join(path_green, "group_list_spec.pkl"), "rb") as fr:
@@ -448,6 +612,33 @@ def create_grnlib_qssp2020_spec_parallel_multi_nodes(path_green, check_finished=
 
 
 def create_grnlib_qssp2020_func_parallel_multi_nodes(path_green, check_finished=False):
+    """Compute the prepared qssp2020 library with MPI.
+
+    Parameters
+    ----------
+    path_green : str
+        Absolute library root containing green_lib_info.json and backend subdirectories.
+    check_finished : bool, optional
+        Reuse outputs marked finished. Markers do not verify that inputs are unchanged. Default: False.
+
+    Returns
+    -------
+    None
+        Writes backend inputs, metadata or output files to the library.
+
+    Raises
+    ------
+    OSError
+        Required files are missing or output paths cannot be read or written.
+    RuntimeError
+        mpi4py is unavailable.
+    ValueError
+        MPI rank count does not match the prepared group width.
+
+    Notes
+    -----
+    See the qssp2020 tutorial for a complete prepare, run and read workflow. Prepare jobs first. Backend runners can change the process working directory; use absolute paths and restore the caller directory if needed. Check output files and logs after execution.
+    """
     s = datetime.datetime.now()
     MPI = _get_mpi()
     with open(os.path.join(path_green, "group_list_func.pkl"), "rb") as fr:
@@ -488,6 +679,27 @@ def create_grnlib_qssp2020_func_parallel_multi_nodes(path_green, check_finished=
 
 
 def convert_pd2bin_qssp2020_all(path_green):
+    """Convert all completed qssp2020 outputs to float32 binary libraries.
+
+    Parameters
+    ----------
+    path_green : str
+        Absolute library root containing green_lib_info.json and backend subdirectories.
+
+    Returns
+    -------
+    None
+        Writes backend inputs, metadata or output files to the library.
+
+    Raises
+    ------
+    OSError
+        Required files are missing or output paths cannot be read or written.
+
+    Notes
+    -----
+    See the qssp2020 tutorial for a complete prepare, run and read workflow. Conversion is a storage operation; it does not resample or change physical units.
+    """
     print("converting ascii files to byte files")
     with open(os.path.join(path_green, "green_lib_info.json"), "r") as fr:
         green_info = json.load(fr)
