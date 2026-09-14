@@ -7,26 +7,28 @@ import numpy as np
 
 
 class CrustModel:
-    """
-    Top level model object to retreive information from the LLNL Crust 1.0
-    model.
+    """Load the nine-layer CRUST1.0 global one-degree model.
 
-    Attributes
+    Parameters
     ----------
-    vp : ndarray
-    P-wave velocity model
+    path_crust1 : str
+        Directory containing crust1.vp, crust1.vs, crust1.rho and crust1.bnds.
 
-    vs : ndarray
-    S-wave velocity model
+    Returns
+    -------
+    model : CrustModel
+        Model arrays vp, vs, rho and bnds with shape (180, 360, 9).
 
-    rho : ndarray
-    Density model
+    Raises
+    ------
+    OSError
+        One of the four CRUST1 files cannot be read.
+    ValueError
+        The model files do not contain the expected grid size.
 
-    bnds : ndarray
-    Elevation of the top of the given layer with respect to sea level model
-
-    layer_names : list
-    Names of the nine possible layers in the model
+    Notes
+    -----
+    Vp/Vs are km/s, density is g/cm3, and layer boundary elevations are km relative to sea level. Only get_point is part of the supported query interface.
     """
 
     def __init__(self, path_crust1):
@@ -91,24 +93,24 @@ class CrustModel:
         return int(ilat), int(ilon)
 
     def get_point(self, lat, lon):
-        """
-        Returns a model for a given latitude and longitude. Note that the model
-        is only defined on a 1 degree grid starting at 89.5 and -179.5.
+        """Select the CRUST1.0 grid cell at a geographic location.
 
-        Paramaters
+        Parameters
         ----------
         lat : float
-        Latitude of interest
-
-        lat : flaot
-        Longitude of interest
+            Latitude in degrees.
+        lon : float
+            Longitude in degrees.
 
         Returns
         -------
-        model_layers : dict
-        Dictionary of layers with the keys as layer names and the values as
-        a list of vp, vs, density, layer thickness, and the top of the layer
-        with respect to sea level.
+        layers : dict
+            Layer names map to [Vp km/s, Vs km/s, density g/cm3, thickness km,
+            top elevation km]. Layers thinner than 0.01 km are omitted except mantle.
+
+        Notes
+        -----
+        Grid selection is nearest enclosing one-degree cell, without spatial interpolation. Depth is the negative of elevation.
         """
 
         # Get index for arrays of data at this location

@@ -29,42 +29,74 @@ def read_syn(
     butter_order: int = 4,
     zero_phase: bool = False,
 ):
-    """
-    Unified interface to read synthetic seismograms using different methods.
+    """Read dynamic synthetic waveforms through an explicit backend selector.
 
-    :param path_green: Root directory of the data.
-    :param event_depth_km: Event depth in km.
-    :param receiver_depth_km: Receiver depth in km.
-    :param az_deg: Azimuth in degrees.
-    :param dist_km: Epicentral distance in km.
-    :param focal_mechanism: [strike, dip, rake] or [M11, M12, M13, M22, M23, M33].
-    :param srate: Sampling rate in Hz.
-    :param output_type: disp | velo | strain | strain_rate |
-            stress | stress_rate | rota | rota_rate.
-    :param before_p: Time before P-wave.
-    :param pad_zeros: Pad with zeros.
-    :param shift: Shift seismograms based on tpts.
-    :param rotate: Rotate rtz2ned.
-    :param only_seismograms: Return only seismograms.
-    :param model_name: Model name.
-    :param green_info: Green's function library info.
-    :param interpolate_type:
-            0 for nearest neighbor,
-            1 for trilinear interpolation (Source Depth, Receiver Depth, Distance).
-    :param freq_band: Frequency band for bandpass filter [low_freq, high_freq] in Hz.
-            Use None or [None, None] for no filtering (default).
-            Use [low_freq, None] for highpass, [None, high_freq] for lowpass.
-    :param butter_order: Order of Butterworth filter (default: 4).
-    :param zero_phase: Whether to use zero-phase filtering (default: False).
-    :return: (
-            seismograms_resample,
-            tpts_table,
-            first_p,
-            first_s,
-            grn_dep_source,
-            grn_dep_receiver,
-            grn_dist,
-        )
+    Parameters
+    ----------
+    method : str
+        One of qseis2025, qssp2020, spgrn2020 or spgrn2012; QSEIS06 and EDCMP have separate readers.
+    path_green : str
+        Absolute library root containing green_lib_info.json and backend subdirectories.
+    event_depth_km : float
+        Requested source depth in km, positive down.
+    receiver_depth_km : float
+        Requested receiver depth in km, positive down.
+    az_deg : float
+        Source-to-receiver azimuth in degrees clockwise from north.
+    dist_km : float
+        Epicentral distance in km; query within the stored distance grid.
+    focal_mechanism : array_like
+        Either [strike, dip, rake] in degrees; [M0, strike, dip, rake]; six NED components [Mnn, Mne, Mnd, Mee, Med, Mdd]; or [M0, six components]. Three angles imply unit moment; seven entries normalize the six-component shape to M0. Moments are in N m.
+    srate : float
+        Positive output sampling rate in Hz.
+    output_type : str, optional
+        Requested observable; supported values and units are listed in Notes. Default: 'disp'.
+    rotate : bool, optional
+        Rotate vector output to east, north, up when True; False retains radial, transverse, up. Tensor layouts are specified in Notes. Default: True.
+    before_p : float or None, optional
+        Seconds before the library P onset at the new first sample. None preserves the native window. Default: None.
+    pad_zeros : bool, optional
+        Shift to source-origin time using zero padding. Use separately from before_p. Default: False.
+    shift : bool, optional
+        Correct the time axis using P/S arrivals recomputed for the requested geometry and model. Default: False.
+    only_seismograms : bool, optional
+        Return just the waveform array when True; False returns the array and six metadata fields. Default: True.
+    model_name : str, optional
+        TauP built-in model name or path to a custom model. Use a model consistent with the Green library. Default: 'ak135fc'.
+    green_info : dict or None, optional
+        Preloaded green_lib_info.json mapping; None loads it from path_green. Default: None.
+    interpolate_type : int, optional
+        0 selects nearest neighbor; 1 interpolates source depth, receiver depth and distance. Returned grid metadata remains nearest neighbor. Default: 0.
+    freq_band : sequence of float or None, optional
+        Two cutoff frequencies [low, high] in Hz. None disables filtering in readers; a missing corner selects lowpass or highpass. Default: None.
+    butter_order : int, optional
+        Butterworth filter order. Default: 4.
+    zero_phase : bool, optional
+        True applies forward/backward filtering; False uses causal filtering. Default: False.
+
+    Returns
+    -------
+    seismograms : numpy.ndarray
+        Shape (C, N): C=3 for vectors, 6 for tensors or 1 for scalar outputs,
+        with physical units and component conventions of the selected backend.
+    metadata : tuple, conditional
+        With only_seismograms=False returns the seven-tuple (seismograms,
+        tpts_table, first_p, first_s, grn_dep_source, grn_dep_receiver, grn_dist).
+        Arrival times are seconds after origin; first_p/first_s are None unless
+        shift=True. Grid coordinates are nearest stored nodes in km.
+
+    Raises
+    ------
+    ValueError
+        method is unsupported or a selected reader rejects its parameters.
+    OSError
+        The selected reader cannot access required library files.
+    KeyError
+        Metadata does not describe the selected backend.
+
+    Notes
+    -----
+    Dispatches unchanged keyword arguments to the selected seek function. Vector rotate=True means east, north, up; native tensor layouts and time origins differ by backend. Consult seek_qseis2025, seek_qssp2020, seek_spgrn2020 or seek_spgrn2012 for supported observables, units and tpts_table availability. No automatic backend detection, grid conversion or physical normalization is performed.
     """
     kwargs = {
         "path_green": path_green,
