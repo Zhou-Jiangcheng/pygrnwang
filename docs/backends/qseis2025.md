@@ -20,6 +20,8 @@ by the API.
 
 The source depth is 10 km, receiver depth 0 km, and distances are 30, 60 and
 90 km. The 0.5 s sample interval and 127.5 s window produce 256 native samples.
+After synthesis, every saved example waveform and figure is cropped to
+0–100 s inclusive (201 samples); the library keeps its full native window.
 The model uses the first 24 numeric rows and disables the flat-Earth
 transformation for this small half-space example. Moment is `10^15 N m`.
 
@@ -31,13 +33,15 @@ transformation for this small half-space example. Moment is `10^15 N m`.
 ```{figure} ../_static/examples/qseis2025.png
 :alt: Three-component QSEIS2025 displacement at three epicentral distances.
 
-Example displacement in metres. The horizontal axis is time since source
-origin because this example uses zero time reduction.
+Example displacement in metres with a fixed 0–100 s horizontal axis. Time is
+measured from source origin because this example uses zero time reduction.
 ```
 
 Results are under `examples/output/qseis2025/`. `disp.npz` contains the
 three distance traces, component labels, seconds and units; its waveform
-array has shape `(3, 3, 256)`. `summary.json` records checks and run details.
+array has shape `(3, 3, 201)` and includes both 0 s and 100 s.
+`summary.json` records checks and run details. The solver library still
+contains 256 samples per trace.
 Use `python examples/qseis2025.py --reuse` to read the completed library
 again without launching the solver.
 
@@ -51,21 +55,24 @@ python examples/qseis2025.py --observables all --output-dir examples/output/qsei
 
 This enables displacement, strain and stress; it writes `strain.npz/png`
 and `stress.npz/png` in addition to displacement. The tensor arrays have
-shape `(3, 6, 256)` and components EE, EN, EU, NN, NU, UU. Strain is
-dimensionless and stress is in Pa after the script's explicit moment scaling.
+shape `(3, 6, 201)` and components EE, EN, EU, NN, NU, UU. All three
+observables are cropped to 0–100 s inclusive before saving arrays and plots.
+Strain is dimensionless and stress is in Pa after the script's explicit
+moment scaling.
 
 ```{figure} ../_static/examples/qseis2025-strain.png
 :alt: Six ENU strain tensor components from the QSEIS2025 tensor tutorial.
 
-Dimensionless tensor strain at 30, 60 and 90 km; shear entries are tensor
-strains rather than engineering shear.
+Dimensionless tensor strain at 30, 60 and 90 km, cropped to 0–100 s since
+source origin; shear entries are tensor strains rather than engineering shear.
 ```
 
 ```{figure} ../_static/examples/qseis2025-stress.png
 :alt: Six ENU stress tensor components from the QSEIS2025 tensor tutorial.
 
-Stress in Pa for the same moment and geometry. The surface receiver's
-traction components can be zero under the free-surface boundary condition.
+Stress in Pa for the same moment and geometry, cropped to 0–100 s since source
+origin. The surface receiver's traction components can be zero under the
+free-surface boundary condition.
 ```
 
 The five `output_observables` positions are:

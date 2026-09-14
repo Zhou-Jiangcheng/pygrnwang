@@ -32,7 +32,11 @@ Each run writes `ak135_tutorial.nd`, `library/`, `disp.npz`, `disp.png` and
 `summary.json`. QSEIS2025 `--observables all` also writes strain and stress arrays
 and figures. The arrays contain physical values for M0 = 10^15 N m. They record
 the components, units, distance grid and (for dynamic outputs) each trace's time
-axis. Figures use Matplotlib's noninteractive Agg backend.
+axis. QSEIS2025 crops displacement, strain and stress to 0–100 s inclusive
+before saving NPZ arrays and figures; every plot uses a fixed 0–100 s x-axis.
+At 0.5 s spacing, its saved displacement has shape `(3, 3, 201)` and its
+saved tensor outputs have shape `(3, 6, 201)`. Figures use Matplotlib's
+noninteractive Agg backend.
 
 Use `--reuse` only with the same script and observables as a successful earlier
 run. It reads and plots the existing library without rebuilding it and saves
@@ -49,8 +53,11 @@ Qs is unused where Vs is zero. Discontinuity labels are retained for TauP.
 
 QSEIS and EDGRN use the first 24 numeric rows (down to 809.5 km) as a regional
 layered half-space approximation; the spherical solvers use the full model.
-QSEIS uses 0.5 s sampling and a 127.5 s output window. The spherical tutorials
-use 4 s sampling, a 4092 s spectral window and a 1020 s output window, with a
+QSEIS uses 0.5 s sampling and a native 127.5 s window (256 samples).
+QSEIS2025 then crops its saved example outputs to 0–100 s (201 samples);
+its solver library remains unchanged. QSEIS06 retains all 256 samples.
+The spherical tutorials use 4 s sampling, a 4092 s spectral window and a
+1020 s output window, with a
 64 s source duration and 0.0625 Hz cutoff. The longer spectral window reduces
 periodic contamination in the shorter output window. QSSP's harmonic limit
 is 800; these settings demonstrate the workflow and are not a convergence
@@ -63,7 +70,9 @@ finite source corners can exceed a boundary even when the reference point
 lies on it. The material lookup uses the generated four-column `library/noQ.nd`.
 
 Each dynamic output is checked for three distances, the requested component
-count, exactly 256 samples, finite values and a nonzero signal at each distance.
+count, finite values and a nonzero signal at each distance. QSEIS2025's
+saved outputs contain exactly 201 samples over 0–100 s inclusive; the other
+dynamic tutorials retain 256 samples.
 Static output is checked for shape `(3, 3)`, finite values and a nonzero result.
 A successful tutorial checks installation and data flow; research calculations
 also require physical validation and parameter convergence tests.
