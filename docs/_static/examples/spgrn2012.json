@@ -1,6 +1,6 @@
 {
   "backend": "SPGRN2012",
-  "started_utc": "2026-09-14T02:28:55Z",
+  "started_utc": "2026-09-14T12:36:13Z",
   "platform": "Windows-11-10.0.26200-SP0",
   "python": "3.12.13",
   "dependencies": {
@@ -35,22 +35,135 @@
       ],
       "unit": "m",
       "finite": true,
-      "peak_absolute": 1.5146271724570058e-08
+      "peak_absolute": 1.4704159041575959E-08
     }
   },
   "sampling_interval_s": 4.0,
-  "time_window_s": 1020.0,
+  "time_window_s": 4092.0,
+  "native_samples": 1024,
+  "output_window_s": 1020.0,
+  "output_time_ranges_s": [
+    [
+      -10.0,
+      1010.0
+    ],
+    [
+      20.0,
+      1040.0
+    ],
+    [
+      50.0,
+      1070.0
+    ]
+  ],
   "distances_km": [
     300.0,
     600.0,
     900.0
   ],
   "spec_time_window_s": 4092.0,
-  "max_frequency_hz": 0.0625,
+  "max_frequency_hz": 0.125,
+  "last_retained_frequency_hz": 0.124755859375,
+  "nyquist_bin_zero": true,
   "t0_s": -40.0,
   "v0_km_s": 10.0,
+  "trace_start_times_s": [
+    -10.0,
+    20.0,
+    50.0
+  ],
+  "native_source_duration_s": 0.0,
   "source_duration_s": 64.0,
-  "elapsed_seconds": 9.428,
-  "file_count": 15,
-  "output_bytes": 13154039
+  "effective_source_duration_s": 64.0,
+  "physical_source_time_function": {
+    "shape": "normalized_sin_squared_moment_rate",
+    "duration_s": 64.0,
+    "physical_integral": 1.0,
+    "centroid_s": 32.0
+  },
+  "full_wavefield": true,
+  "max_slowness_s_km": 0.0,
+  "source_radius_km": 0.0,
+  "spectral_settings": {
+    "requested_max_frequency_hz": 0.125,
+    "nyquist_frequency_hz": 0.125,
+    "highest_computed_frequency_hz": 0.124755859375,
+    "nyquist_bin_zeroed": true,
+    "nyquist_bin_zeroed_source": "Fortran inverse FFT sets bin nf + 1 to zero",
+    "sampling_interval_s": 4.0,
+    "fft_samples": 1024,
+    "frequency_spacing_hz": 0.000244140625,
+    "computed_frequency_samples": 512,
+    "spec_time_window_s": 4092.0,
+    "fft_period_s": 4096.0,
+    "anti_alias": 0.01,
+    "fi_hz": -0.00017893935519517278,
+    "fi_window_s": 4096.0,
+    "fi_source": "Validated library anti_alias and the solver window formula",
+    "ldegup": 5293,
+    "native_header": {
+      "nt": 1024,
+      "ntcut": 1024,
+      "dt": 4.0,
+      "nf": 512,
+      "nfcut": 512,
+      "df": 0.000244140625,
+      "ldegup": 5293
+    },
+    "native_header_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\spgrn2012-matched-band\\library\\GreenSpec\\10.00\\0.00\\T_grn_d10.00",
+    "validation_source": "Native Fortran spectrum header and library metadata"
+  },
+  "source_time_function": {
+    "scheme_id": "normalized_sin_squared_64s_complex_frequency_forward_v1",
+    "physical_source_time_function": {
+      "shape": "normalized_sin_squared_moment_rate",
+      "duration_s": 64.0,
+      "physical_integral": 1.0,
+      "centroid_s": 32.0
+    },
+    "native_source_duration_s": 0.0,
+    "effective_source_duration_s": 64.0,
+    "method": "full-period damped-domain analytic forward convolution of native impulse velocity",
+    "spectral_division": false,
+    "fitted_amplitude": false,
+    "fitted_time_shift": false,
+    "native": {
+      "fft_header": {
+        "nt": 1024,
+        "ntcut": 1024,
+        "dt": 4.0,
+        "nf": 512,
+        "nfcut": 512,
+        "df": 0.000244140625,
+        "ldegup": 5293
+      },
+      "fft_period_s": 4096.0,
+      "fi_hz": -0.00017893935519517278,
+      "requested_max_frequency_hz": 0.125,
+      "last_retained_frequency_hz": 0.124755859375,
+      "nyquist_bin_zero": true,
+      "trace_start_times_s": [
+        -10.0,
+        20.0,
+        50.0
+      ],
+      "input_sha256": "e023149349e01edf39da2212e00b13f2ade104807e8757ed79ec03d5db4cfa43",
+      "native_velocity_sha256": "26efb10c519beddc78a54b7671377f37cd6edec971972a94ad27b8415f0987d3"
+    },
+    "physical_rate_integral": 1.0000000000000013,
+    "analytic_transform_relative_l2_vs_quadrature": 1.752096421854238E-15,
+    "damped_dc_coefficient": 0.9647432173888302,
+    "integration": "cumsum of matched velocity times 4 s, then retain the first 256 samples",
+    "archive_sha256": {
+      "velocity-impulse.npz": "da082632511beae4dde16f11c64242b88d18a70c9e9e0d54098fe54bd0bff6ef",
+      "velocity-matched.npz": "9688322761b709bd9b3ec722e6b23d5bac8fa4129a08706ca9e6c5ec19c10bfe",
+      "source_time_function.npz": "8d6bce58c173b165991160331c80f4d329bd61f2d82a40f0671eb65b5300e0a1",
+      "disp.npz": "cd8a44eb4430c0347cc00fb7b61ccdf7b2dcdfe2895a0bcc5dca6d46de8e4663"
+    }
+  },
+  "elapsed_seconds": 44.696,
+  "file_count": 19,
+  "output_bytes": 213288806,
+  "post_run_verification_utc": "2026-09-14T12:37:45Z",
+  "verification_note": "Fresh native runtime and output-size fields; metadata and figures checked by a compatible reread with the final example script."
 }

@@ -33,7 +33,7 @@ time coordinates; the summary records the run.
 ## Parameter choices
 
 `spec_time_window=4092` s exceeds `time_window=1020` s. The 4 s sample
-interval, 0.0625 Hz cutoff and 64 s source duration define this small
+interval, 0.125 Hz cutoff and 64 s source duration define this small
 long-period calculation. Source duration is in seconds. The example
 selects spheroidal and toroidal modes, disables the configured
 self-gravitation range and uses `cal_gf=1` for new spectra.

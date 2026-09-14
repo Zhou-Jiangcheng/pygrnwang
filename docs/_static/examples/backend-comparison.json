@@ -1,5 +1,5 @@
 {
-  "created_utc": "2026-09-14T08:44:14.062806+00:00",
+  "created_utc": "2026-09-14T12:47:49.897352+00:00",
   "reference": "SPGRN2020 full wavefield (max_slowness=0)",
   "method": "Linear interpolation to 1 s on all five backends' common valid origin-time interval at each distance through 500 s",
   "fitted_time_shifts": false,
@@ -28,12 +28,12 @@
   ],
   "provenance": {
     "qseis06": {
-      "npz_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qseis06-regional-shared-stf\\disp.npz",
+      "npz_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qseis06-matched-band\\disp.npz",
       "npz_sha256": "721ef7bf98e8bd26020c87c4f08d81616b7bbcd14a0dd122223005bb71cef3e6",
-      "summary_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qseis06-regional-shared-stf\\summary.json",
+      "summary_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qseis06-matched-band\\summary-reuse.json",
       "summary": {
         "backend": "QSEIS06",
-        "started_utc": "2026-09-14T08:39:10Z",
+        "started_utc": "2026-09-14T12:45:20Z",
         "platform": "Windows-11-10.0.26200-SP0",
         "python": "3.12.13",
         "dependencies": {
@@ -52,7 +52,7 @@
           90.0
         ],
         "azimuth_deg": 30.0,
-        "reuse": false,
+        "reuse": true,
         "model": "Bundled AK135 elastic properties; illustrative constant Qp=600, Qs=300",
         "outputs": {
           "disp": {
@@ -72,6 +72,7 @@
           }
         },
         "sampling_interval_s": 4.0,
+        "max_frequency_hz": 0.125,
         "time_window_s": 4092.0,
         "distances_km": [
           300.0,
@@ -89,6 +90,7 @@
         "wavelet_duration_s": 64.0,
         "flat_earth_transform": true,
         "regional": true,
+        "source_radius_ratio": 0.05,
         "source_time_function": {
           "scheme_id": "normalized_sin_squared_64s_damping_compensated_v1",
           "duration_s": 64.0,
@@ -111,7 +113,8 @@
           "target_centroid_s": 32.0,
           "effective_centroid_s": 32.00000073412074,
           "effective_rate_relative_l2": 1.9884466105608343e-06,
-          "spectral_relative_l2_0_to_0_0625_hz": 1.7577432851302247e-06,
+          "spectral_relative_l2_0_to_0_125_hz": 1.7827637217585575e-06,
+          "validated_max_frequency_hz": 0.125,
           "spectral_max_absolute_error_0_to_0_0625_hz": 1.5646882209943217e-06,
           "physical_validation_limits": {
             "area_absolute_error": 1e-08,
@@ -127,9 +130,51 @@
           "description_relative_path": "../source_time_function.json",
           "samples_sha256": "338b4f06ebd8d08487d654680d42ec451effbace3de55d48a38a3a3d4a38c7c3"
         },
-        "elapsed_seconds": 242.44,
+        "physical_source_time_function": {
+          "shape": "normalized_sin_squared_moment_rate",
+          "duration_s": 64.0,
+          "physical_integral": 1.0,
+          "centroid_s": 32.0
+        },
+        "spectral_settings": {
+          "requested_max_frequency_hz": 0.125,
+          "nyquist_frequency_hz": 0.125,
+          "highest_computed_frequency_hz": 0.124755859375,
+          "nyquist_bin_zeroed": true,
+          "nyquist_bin_zeroed_source": "Fortran inverse FFT sets bin nf + 1 to zero",
+          "sampling_interval_s": 4.0,
+          "fft_samples": 1024,
+          "frequency_spacing_hz": 0.000244140625,
+          "computed_frequency_samples": 512,
+          "spec_time_window_s": 4092.0,
+          "fft_period_s": 4096.0,
+          "anti_alias": 0.01,
+          "fi_hz": -0.00017911427147591097,
+          "fi_window_s": 4092.0,
+          "fi_source": "Validated library anti_alias and the solver window formula",
+          "ldegup": null,
+          "native_header": {
+            "nt": 1024,
+            "ntcut": 1024,
+            "dt": 4.0,
+            "nf": 512,
+            "nfcut": 512,
+            "df": 0.000244140625,
+            "ldegup": null
+          },
+          "native_header_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qseis06-matched-band\\library\\10.00\\0.00\\0_0\\ss.tz",
+          "validation_source": "Native input, all native T_sec output rows, and library metadata; nf, nfcut and df derived from qsgetinp.f (not stored in the text header)",
+          "native_input_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qseis06-matched-band\\library\\10.00\\0.00\\0_0\\grn.inp",
+          "native_output_columns": [
+            "T_sec",
+            "Uz0001",
+            "Uz0002",
+            "Uz0003"
+          ]
+        },
+        "elapsed_seconds": 0.274,
         "file_count": 31,
-        "output_bytes": 1240827
+        "output_bytes": 1240889
       },
       "native_time_ranges_s": [
         [
@@ -145,7 +190,7 @@
           1020.0
         ]
       ],
-      "library_metadata_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qseis06-regional-shared-stf\\library\\green_lib_info.json",
+      "library_metadata_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qseis06-matched-band\\library\\green_lib_info.json",
       "library_metadata": {
         "processes_num": 1,
         "event_depth_list": [
@@ -174,18 +219,54 @@
         "wavelet_duration": 16,
         "wavelet_type": 0,
         "flat_earth_transform": true,
-        "path_nd": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qseis06-regional-shared-stf\\ak135_tutorial.nd",
-        "path_nd_without_Q": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qseis06-regional-shared-stf\\library\\noQ.nd",
+        "path_nd": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qseis06-matched-band\\ak135_tutorial.nd",
+        "path_nd_without_Q": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qseis06-matched-band\\library\\noQ.nd",
         "earth_model_layer_num": 24
+      },
+      "verified_spectral_settings": {
+        "requested_max_frequency_hz": 0.125,
+        "nyquist_frequency_hz": 0.125,
+        "highest_computed_frequency_hz": 0.124755859375,
+        "nyquist_bin_zeroed": true,
+        "nyquist_bin_zeroed_source": "Fortran inverse FFT sets bin nf + 1 to zero",
+        "sampling_interval_s": 4.0,
+        "fft_samples": 1024,
+        "frequency_spacing_hz": 0.000244140625,
+        "computed_frequency_samples": 512,
+        "spec_time_window_s": 4092.0,
+        "fft_period_s": 4096.0,
+        "anti_alias": 0.01,
+        "fi_hz": -0.00017911427147591097,
+        "fi_window_s": 4092.0,
+        "fi_source": "Validated library anti_alias and the solver window formula",
+        "ldegup": null,
+        "native_header": {
+          "nt": 1024,
+          "ntcut": 1024,
+          "dt": 4.0,
+          "nf": 512,
+          "nfcut": 512,
+          "df": 0.000244140625,
+          "ldegup": null
+        },
+        "native_header_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qseis06-matched-band\\library\\10.00\\0.00\\0_0\\ss.tz",
+        "validation_source": "Native input, all native T_sec output rows, and library metadata; nf, nfcut and df derived from qsgetinp.f (not stored in the text header)",
+        "native_input_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qseis06-matched-band\\library\\10.00\\0.00\\0_0\\grn.inp",
+        "native_output_columns": [
+          "T_sec",
+          "Uz0001",
+          "Uz0002",
+          "Uz0003"
+        ]
       }
     },
     "qseis2025": {
-      "npz_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qseis2025-regional-shared-stf\\disp.npz",
+      "npz_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qseis2025-matched-band\\disp.npz",
       "npz_sha256": "721ef7bf98e8bd26020c87c4f08d81616b7bbcd14a0dd122223005bb71cef3e6",
-      "summary_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qseis2025-regional-shared-stf\\summary.json",
+      "summary_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qseis2025-matched-band\\summary-reuse.json",
       "summary": {
         "backend": "QSEIS2025",
-        "started_utc": "2026-09-14T08:39:20Z",
+        "started_utc": "2026-09-14T12:45:27Z",
         "platform": "Windows-11-10.0.26200-SP0",
         "python": "3.12.13",
         "dependencies": {
@@ -204,7 +285,7 @@
           90.0
         ],
         "azimuth_deg": 30.0,
-        "reuse": false,
+        "reuse": true,
         "model": "Bundled AK135 elastic properties; illustrative constant Qp=600, Qs=300",
         "outputs": {
           "disp": {
@@ -260,6 +341,7 @@
           }
         },
         "sampling_interval_s": 4.0,
+        "max_frequency_hz": 0.125,
         "time_window_s": 4092.0,
         "output_time_range_s": [
           0.0,
@@ -277,6 +359,8 @@
         "wavelet_duration_s": 64.0,
         "flat_earth_transform": true,
         "regional": true,
+        "source_radius_ratio": 0.05,
+        "point_source": false,
         "source_time_function": {
           "scheme_id": "normalized_sin_squared_64s_damping_compensated_v1",
           "duration_s": 64.0,
@@ -299,7 +383,8 @@
           "target_centroid_s": 32.0,
           "effective_centroid_s": 32.00000073412074,
           "effective_rate_relative_l2": 1.9884466105608343e-06,
-          "spectral_relative_l2_0_to_0_0625_hz": 1.7577432851302247e-06,
+          "spectral_relative_l2_0_to_0_125_hz": 1.7827637217585575e-06,
+          "validated_max_frequency_hz": 0.125,
           "spectral_max_absolute_error_0_to_0_0625_hz": 1.5646882209943217e-06,
           "physical_validation_limits": {
             "area_absolute_error": 1e-08,
@@ -315,9 +400,51 @@
           "description_relative_path": "../source_time_function.json",
           "samples_sha256": "338b4f06ebd8d08487d654680d42ec451effbace3de55d48a38a3a3d4a38c7c3"
         },
-        "elapsed_seconds": 248.391,
+        "physical_source_time_function": {
+          "shape": "normalized_sin_squared_moment_rate",
+          "duration_s": 64.0,
+          "physical_integral": 1.0,
+          "centroid_s": 32.0
+        },
+        "spectral_settings": {
+          "requested_max_frequency_hz": 0.125,
+          "nyquist_frequency_hz": 0.125,
+          "highest_computed_frequency_hz": 0.124755859375,
+          "nyquist_bin_zeroed": true,
+          "nyquist_bin_zeroed_source": "Fortran inverse FFT sets bin nf + 1 to zero",
+          "sampling_interval_s": 4.0,
+          "fft_samples": 1024,
+          "frequency_spacing_hz": 0.000244140625,
+          "computed_frequency_samples": 512,
+          "spec_time_window_s": 4092.0,
+          "fft_period_s": 4096.0,
+          "anti_alias": 0.01,
+          "fi_hz": -0.00017911427147591097,
+          "fi_window_s": 4092.0,
+          "fi_source": "Validated library anti_alias and the solver window formula",
+          "ldegup": null,
+          "native_header": {
+            "nt": 1024,
+            "ntcut": 1024,
+            "dt": 4.0,
+            "nf": 512,
+            "nfcut": 512,
+            "df": 0.000244140625,
+            "ldegup": null
+          },
+          "native_header_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qseis2025-matched-band\\library\\10.00\\0.00\\0_0\\ss.tz",
+          "validation_source": "Native input, all native T_sec output rows, and library metadata; nf, nfcut and df derived from qsgetinp.f (not stored in the text header)",
+          "native_input_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qseis2025-matched-band\\library\\10.00\\0.00\\0_0\\grn.inp",
+          "native_output_columns": [
+            "T_sec",
+            "Uz0001",
+            "Uz0002",
+            "Uz0003"
+          ]
+        },
+        "elapsed_seconds": 0.956,
         "file_count": 83,
-        "output_bytes": 3833713
+        "output_bytes": 3833775
       },
       "native_time_ranges_s": [
         [
@@ -333,7 +460,7 @@
           1020.0
         ]
       ],
-      "library_metadata_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qseis2025-regional-shared-stf\\library\\green_lib_info.json",
+      "library_metadata_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qseis2025-matched-band\\library\\green_lib_info.json",
       "library_metadata": {
         "processes_num": 1,
         "event_depth_list": [
@@ -362,18 +489,54 @@
         "wavelet_duration": 16,
         "wavelet_type": 0,
         "flat_earth_transform": true,
-        "path_nd": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qseis2025-regional-shared-stf\\ak135_tutorial.nd",
-        "path_nd_without_Q": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qseis2025-regional-shared-stf\\library\\noQ.nd",
+        "path_nd": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qseis2025-matched-band\\ak135_tutorial.nd",
+        "path_nd_without_Q": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qseis2025-matched-band\\library\\noQ.nd",
         "earth_model_layer_num": 24
+      },
+      "verified_spectral_settings": {
+        "requested_max_frequency_hz": 0.125,
+        "nyquist_frequency_hz": 0.125,
+        "highest_computed_frequency_hz": 0.124755859375,
+        "nyquist_bin_zeroed": true,
+        "nyquist_bin_zeroed_source": "Fortran inverse FFT sets bin nf + 1 to zero",
+        "sampling_interval_s": 4.0,
+        "fft_samples": 1024,
+        "frequency_spacing_hz": 0.000244140625,
+        "computed_frequency_samples": 512,
+        "spec_time_window_s": 4092.0,
+        "fft_period_s": 4096.0,
+        "anti_alias": 0.01,
+        "fi_hz": -0.00017911427147591097,
+        "fi_window_s": 4092.0,
+        "fi_source": "Validated library anti_alias and the solver window formula",
+        "ldegup": null,
+        "native_header": {
+          "nt": 1024,
+          "ntcut": 1024,
+          "dt": 4.0,
+          "nf": 512,
+          "nfcut": 512,
+          "df": 0.000244140625,
+          "ldegup": null
+        },
+        "native_header_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qseis2025-matched-band\\library\\10.00\\0.00\\0_0\\ss.tz",
+        "validation_source": "Native input, all native T_sec output rows, and library metadata; nf, nfcut and df derived from qsgetinp.f (not stored in the text header)",
+        "native_input_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qseis2025-matched-band\\library\\10.00\\0.00\\0_0\\grn.inp",
+        "native_output_columns": [
+          "T_sec",
+          "Uz0001",
+          "Uz0002",
+          "Uz0003"
+        ]
       }
     },
     "spgrn2012": {
-      "npz_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\spgrn2012\\disp.npz",
-      "npz_sha256": "a8f8cfe6c893a3dfa66bf3a98fb19ff9286eff799a529096e55b469d37ba4fc7",
-      "summary_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\spgrn2012\\summary-reuse.json",
+      "npz_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\spgrn2012-matched-band\\disp.npz",
+      "npz_sha256": "cd8a44eb4430c0347cc00fb7b61ccdf7b2dcdfe2895a0bcc5dca6d46de8e4663",
+      "summary_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\spgrn2012-matched-band\\summary-reuse.json",
       "summary": {
         "backend": "SPGRN2012",
-        "started_utc": "2026-09-14T02:37:36Z",
+        "started_utc": "2026-09-14T12:37:45Z",
         "platform": "Windows-11-10.0.26200-SP0",
         "python": "3.12.13",
         "dependencies": {
@@ -408,24 +571,135 @@
             ],
             "unit": "m",
             "finite": true,
-            "peak_absolute": 1.5146271724570058e-08
+            "peak_absolute": 1.4704159041575959e-08
           }
         },
         "sampling_interval_s": 4.0,
-        "time_window_s": 1020.0,
+        "time_window_s": 4092.0,
+        "native_samples": 1024,
+        "output_window_s": 1020.0,
+        "output_time_ranges_s": [
+          [
+            -10.0,
+            1010.0
+          ],
+          [
+            20.0,
+            1040.0
+          ],
+          [
+            50.0,
+            1070.0
+          ]
+        ],
         "distances_km": [
           300.0,
           600.0,
           900.0
         ],
         "spec_time_window_s": 4092.0,
-        "max_frequency_hz": 0.0625,
+        "max_frequency_hz": 0.125,
+        "last_retained_frequency_hz": 0.124755859375,
+        "nyquist_bin_zero": true,
         "t0_s": -40.0,
         "v0_km_s": 10.0,
+        "trace_start_times_s": [
+          -10.0,
+          20.0,
+          50.0
+        ],
+        "native_source_duration_s": 0.0,
         "source_duration_s": 64.0,
-        "elapsed_seconds": 0.115,
-        "file_count": 15,
-        "output_bytes": 13154039
+        "effective_source_duration_s": 64.0,
+        "physical_source_time_function": {
+          "shape": "normalized_sin_squared_moment_rate",
+          "duration_s": 64.0,
+          "physical_integral": 1.0,
+          "centroid_s": 32.0
+        },
+        "full_wavefield": true,
+        "max_slowness_s_km": 0.0,
+        "source_radius_km": 0.0,
+        "spectral_settings": {
+          "requested_max_frequency_hz": 0.125,
+          "nyquist_frequency_hz": 0.125,
+          "highest_computed_frequency_hz": 0.124755859375,
+          "nyquist_bin_zeroed": true,
+          "nyquist_bin_zeroed_source": "Fortran inverse FFT sets bin nf + 1 to zero",
+          "sampling_interval_s": 4.0,
+          "fft_samples": 1024,
+          "frequency_spacing_hz": 0.000244140625,
+          "computed_frequency_samples": 512,
+          "spec_time_window_s": 4092.0,
+          "fft_period_s": 4096.0,
+          "anti_alias": 0.01,
+          "fi_hz": -0.00017893935519517278,
+          "fi_window_s": 4096.0,
+          "fi_source": "Validated library anti_alias and the solver window formula",
+          "ldegup": 5293,
+          "native_header": {
+            "nt": 1024,
+            "ntcut": 1024,
+            "dt": 4.0,
+            "nf": 512,
+            "nfcut": 512,
+            "df": 0.000244140625,
+            "ldegup": 5293
+          },
+          "native_header_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\spgrn2012-matched-band\\library\\GreenSpec\\10.00\\0.00\\T_grn_d10.00",
+          "validation_source": "Native Fortran spectrum header and library metadata"
+        },
+        "source_time_function": {
+          "scheme_id": "normalized_sin_squared_64s_complex_frequency_forward_v1",
+          "physical_source_time_function": {
+            "shape": "normalized_sin_squared_moment_rate",
+            "duration_s": 64.0,
+            "physical_integral": 1.0,
+            "centroid_s": 32.0
+          },
+          "native_source_duration_s": 0.0,
+          "effective_source_duration_s": 64.0,
+          "method": "full-period damped-domain analytic forward convolution of native impulse velocity",
+          "spectral_division": false,
+          "fitted_amplitude": false,
+          "fitted_time_shift": false,
+          "native": {
+            "fft_header": {
+              "nt": 1024,
+              "ntcut": 1024,
+              "dt": 4.0,
+              "nf": 512,
+              "nfcut": 512,
+              "df": 0.000244140625,
+              "ldegup": 5293
+            },
+            "fft_period_s": 4096.0,
+            "fi_hz": -0.00017893935519517278,
+            "requested_max_frequency_hz": 0.125,
+            "last_retained_frequency_hz": 0.124755859375,
+            "nyquist_bin_zero": true,
+            "trace_start_times_s": [
+              -10.0,
+              20.0,
+              50.0
+            ],
+            "input_sha256": "e023149349e01edf39da2212e00b13f2ade104807e8757ed79ec03d5db4cfa43",
+            "native_velocity_sha256": "26efb10c519beddc78a54b7671377f37cd6edec971972a94ad27b8415f0987d3"
+          },
+          "physical_rate_integral": 1.0000000000000013,
+          "analytic_transform_relative_l2_vs_quadrature": 1.752096421854238e-15,
+          "damped_dc_coefficient": 0.9647432173888302,
+          "integration": "cumsum of matched velocity times 4 s, then retain the first 256 samples",
+          "archive_sha256": {
+            "velocity-impulse.npz": "da082632511beae4dde16f11c64242b88d18a70c9e9e0d54098fe54bd0bff6ef",
+            "velocity-matched.npz": "9688322761b709bd9b3ec722e6b23d5bac8fa4129a08706ca9e6c5ec19c10bfe",
+            "source_time_function.npz": "8d6bce58c173b165991160331c80f4d329bd61f2d82a40f0671eb65b5300e0a1",
+            "disp.npz": "cd8a44eb4430c0347cc00fb7b61ccdf7b2dcdfe2895a0bcc5dca6d46de8e4663"
+          }
+        },
+        "elapsed_seconds": 0.164,
+        "file_count": 19,
+        "output_bytes": 213288806
       },
       "native_time_ranges_s": [
         [
@@ -441,10 +715,10 @@
           1070.0
         ]
       ],
-      "library_metadata_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\spgrn2012\\library\\green_lib_info.json",
+      "library_metadata_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\spgrn2012-matched-band\\library\\green_lib_info.json",
       "library_metadata": {
         "processes_num": 1,
-        "path_green": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\spgrn2012\\library",
+        "path_green": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\spgrn2012-matched-band\\library",
         "event_depth_list": [
           10.0
         ],
@@ -453,8 +727,8 @@
         ],
         "spec_time_window": 4092.0,
         "sampling_interval": 4.0,
-        "max_frequency": 0.0625,
-        "max_slowness": 0.3,
+        "max_frequency": 0.125,
+        "max_slowness": 0.0,
         "anti_alias": 0.01,
         "gravity_fc": 0.0,
         "gravity_harmonic": 0,
@@ -462,10 +736,10 @@
         "cal_tor": 1,
         "source_radius": 0.0,
         "cal_gf": 1,
-        "time_window": 1020.0,
+        "time_window": 4092.0,
         "t0": -40.0,
         "v0": 10.0,
-        "source_duration": 64.0,
+        "source_duration": 0.0,
         "dist_range": [
           300.0,
           900.0
@@ -474,25 +748,54 @@
           300.0,
           300.0
         ],
-        "path_nd": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\spgrn2012\\ak135_tutorial.nd",
+        "path_nd": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\spgrn2012-matched-band\\ak135_tutorial.nd",
         "earth_model_layer_num": null,
         "physical_dispersion": 0,
-        "path_nd_without_Q": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\spgrn2012\\library\\noQ.nd",
+        "path_nd_without_Q": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\spgrn2012-matched-band\\library\\noQ.nd",
         "dist_list": [
           300.0,
           600.0,
           900.0
         ],
-        "samples_num": 256
+        "samples_num": 1024
+      },
+      "verified_spectral_settings": {
+        "requested_max_frequency_hz": 0.125,
+        "nyquist_frequency_hz": 0.125,
+        "highest_computed_frequency_hz": 0.124755859375,
+        "nyquist_bin_zeroed": true,
+        "nyquist_bin_zeroed_source": "Fortran inverse FFT sets bin nf + 1 to zero",
+        "sampling_interval_s": 4.0,
+        "fft_samples": 1024,
+        "frequency_spacing_hz": 0.000244140625,
+        "computed_frequency_samples": 512,
+        "spec_time_window_s": 4092.0,
+        "fft_period_s": 4096.0,
+        "anti_alias": 0.01,
+        "fi_hz": -0.00017893935519517278,
+        "fi_window_s": 4096.0,
+        "fi_source": "Validated library anti_alias and the solver window formula",
+        "ldegup": 5293,
+        "native_header": {
+          "nt": 1024,
+          "ntcut": 1024,
+          "dt": 4.0,
+          "nf": 512,
+          "nfcut": 512,
+          "df": 0.000244140625,
+          "ldegup": 5293
+        },
+        "native_header_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\spgrn2012-matched-band\\library\\GreenSpec\\10.00\\0.00\\T_grn_d10.00",
+        "validation_source": "Native Fortran spectrum header and library metadata"
       }
     },
     "spgrn2020": {
-      "npz_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\spgrn2020-converged\\disp.npz",
-      "npz_sha256": "a47b399ab45892abdcba5ec0237c0ba3a6bea035a8eb5c3f7c21884ac8a77401",
-      "summary_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\spgrn2020-converged\\summary.json",
+      "npz_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\spgrn2020-matched-band\\disp.npz",
+      "npz_sha256": "c37197e6b7f71a977c9ea727d0d455ed5809108cde0d51992c234ef74ac7b687",
+      "summary_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\spgrn2020-matched-band\\summary-reuse.json",
       "summary": {
         "backend": "SPGRN2020",
-        "started_utc": "2026-09-14T08:17:58Z",
+        "started_utc": "2026-09-14T12:36:49Z",
         "platform": "Windows-11-10.0.26200-SP0",
         "python": "3.12.13",
         "dependencies": {
@@ -511,7 +814,7 @@
           90.0
         ],
         "azimuth_deg": 30.0,
-        "reuse": false,
+        "reuse": true,
         "model": "Bundled AK135 elastic properties; illustrative constant Qp=600, Qs=300",
         "outputs": {
           "disp": {
@@ -527,7 +830,7 @@
             ],
             "unit": "m",
             "finite": true,
-            "peak_absolute": 1.4550723940949578e-08
+            "peak_absolute": 1.4688964615463429e-08
           }
         },
         "sampling_interval_s": 4.0,
@@ -538,7 +841,7 @@
           900.0
         ],
         "spec_time_window_s": 4092.0,
-        "max_frequency_hz": 0.0625,
+        "max_frequency_hz": 0.125,
         "green_before_p_s": 40.0,
         "source_duration_s": 64.0,
         "max_slowness_s_km": 0.0,
@@ -548,9 +851,45 @@
           40.0,
           78.0
         ],
-        "elapsed_seconds": 17.141,
+        "physical_source_time_function": {
+          "shape": "normalized_sin_squared_moment_rate",
+          "duration_s": 64.0,
+          "physical_integral": 1.0,
+          "centroid_s": 32.0
+        },
+        "spectral_settings": {
+          "requested_max_frequency_hz": 0.125,
+          "nyquist_frequency_hz": 0.125,
+          "highest_computed_frequency_hz": 0.124755859375,
+          "nyquist_bin_zeroed": true,
+          "nyquist_bin_zeroed_source": "Fortran inverse FFT sets bin nf + 1 to zero",
+          "sampling_interval_s": 4.0,
+          "fft_samples": 1024,
+          "frequency_spacing_hz": 0.000244140625,
+          "computed_frequency_samples": 512,
+          "spec_time_window_s": 4092.0,
+          "fft_period_s": 4096.0,
+          "anti_alias": 0.01,
+          "fi_hz": -0.00017893935519517278,
+          "fi_window_s": 4096.0,
+          "fi_source": "Validated library anti_alias and the solver window formula",
+          "ldegup": 4304,
+          "native_header": {
+            "nt": 1024,
+            "ntcut": 1024,
+            "dt": 4.0,
+            "nf": 512,
+            "nfcut": 512,
+            "df": 0.000244140625,
+            "ldegup": 4304
+          },
+          "native_header_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\spgrn2020-matched-band\\library\\GreenSpec\\10.00\\0.00\\T_grn_d10.00",
+          "validation_source": "Native Fortran spectrum header and library metadata"
+        },
+        "source_radius_km": 0.0,
+        "elapsed_seconds": 0.141,
         "file_count": 15,
-        "output_bytes": 121654111
+        "output_bytes": 279069176
       },
       "native_time_ranges_s": [
         [
@@ -566,10 +905,10 @@
           1098.0
         ]
       ],
-      "library_metadata_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\spgrn2020-converged\\library\\green_lib_info.json",
+      "library_metadata_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\spgrn2020-matched-band\\library\\green_lib_info.json",
       "library_metadata": {
         "processes_num": 1,
-        "path_green": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\spgrn2020-converged\\library",
+        "path_green": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\spgrn2020-matched-band\\library",
         "event_depth_list": [
           10.0
         ],
@@ -578,7 +917,7 @@
         ],
         "spec_time_window": 4092.0,
         "sampling_interval": 4.0,
-        "max_frequency": 0.0625,
+        "max_frequency": 0.125,
         "max_slowness": 0.0,
         "anti_alias": 0.01,
         "gravity_fc": 0.0,
@@ -598,25 +937,54 @@
           300.0,
           300.0
         ],
-        "path_nd": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\spgrn2020-converged\\ak135_tutorial.nd",
+        "path_nd": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\spgrn2020-matched-band\\ak135_tutorial.nd",
         "earth_model_layer_num": null,
         "physical_dispersion": 0,
-        "path_nd_without_Q": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\spgrn2020-converged\\library\\noQ.nd",
+        "path_nd_without_Q": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\spgrn2020-matched-band\\library\\noQ.nd",
         "dist_list": [
           300.0,
           600.0,
           900.0
         ],
         "samples_num": 256
+      },
+      "verified_spectral_settings": {
+        "requested_max_frequency_hz": 0.125,
+        "nyquist_frequency_hz": 0.125,
+        "highest_computed_frequency_hz": 0.124755859375,
+        "nyquist_bin_zeroed": true,
+        "nyquist_bin_zeroed_source": "Fortran inverse FFT sets bin nf + 1 to zero",
+        "sampling_interval_s": 4.0,
+        "fft_samples": 1024,
+        "frequency_spacing_hz": 0.000244140625,
+        "computed_frequency_samples": 512,
+        "spec_time_window_s": 4092.0,
+        "fft_period_s": 4096.0,
+        "anti_alias": 0.01,
+        "fi_hz": -0.00017893935519517278,
+        "fi_window_s": 4096.0,
+        "fi_source": "Validated library anti_alias and the solver window formula",
+        "ldegup": 4304,
+        "native_header": {
+          "nt": 1024,
+          "ntcut": 1024,
+          "dt": 4.0,
+          "nf": 512,
+          "nfcut": 512,
+          "df": 0.000244140625,
+          "ldegup": 4304
+        },
+        "native_header_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\spgrn2020-matched-band\\library\\GreenSpec\\10.00\\0.00\\T_grn_d10.00",
+        "validation_source": "Native Fortran spectrum header and library metadata"
       }
     },
     "qssp2020": {
-      "npz_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qssp2020-converged\\disp.npz",
-      "npz_sha256": "13d692c5c1d8b4026b5532e134b07c3fa390699e7c65974e0c97f74a08301640",
-      "summary_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qssp2020-converged\\summary.json",
+      "npz_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qssp2020-matched-band\\disp.npz",
+      "npz_sha256": "90bf684e73b47dbb5c003970908340aa0004ca3fe55c9eeff7ca2e7a2c4cd3a3",
+      "summary_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qssp2020-matched-band\\summary-reuse.json",
       "summary": {
         "backend": "QSSP2020",
-        "started_utc": "2026-09-14T08:18:19Z",
+        "started_utc": "2026-09-14T12:38:27Z",
         "platform": "Windows-11-10.0.26200-SP0",
         "python": "3.12.13",
         "dependencies": {
@@ -635,7 +1003,7 @@
           90.0
         ],
         "azimuth_deg": 30.0,
-        "reuse": false,
+        "reuse": true,
         "model": "Bundled AK135 elastic properties; illustrative constant Qp=600, Qs=300",
         "outputs": {
           "disp": {
@@ -651,7 +1019,7 @@
             ],
             "unit": "m",
             "finite": true,
-            "peak_absolute": 1.4524259876250708e-08
+            "peak_absolute": 1.4577784680315633e-08
           }
         },
         "sampling_interval_s": 4.0,
@@ -662,15 +1030,51 @@
           900.0
         ],
         "spec_time_window_s": 4092.0,
-        "max_frequency_hz": 0.0625,
+        "max_frequency_hz": 0.125,
         "harmonic_bounds": [
           2000,
           8000
         ],
         "source_duration_s": 64.0,
-        "elapsed_seconds": 38.182,
+        "physical_source_time_function": {
+          "shape": "normalized_sin_squared_moment_rate",
+          "duration_s": 64.0,
+          "physical_integral": 1.0,
+          "centroid_s": 32.0
+        },
+        "spectral_settings": {
+          "requested_max_frequency_hz": 0.125,
+          "nyquist_frequency_hz": 0.125,
+          "highest_computed_frequency_hz": 0.124755859375,
+          "nyquist_bin_zeroed": true,
+          "nyquist_bin_zeroed_source": "Fortran inverse FFT sets bin nf + 1 to zero",
+          "sampling_interval_s": 4.0,
+          "fft_samples": 1024,
+          "frequency_spacing_hz": 0.000244140625,
+          "computed_frequency_samples": 512,
+          "spec_time_window_s": 4092.0,
+          "fft_period_s": 4096.0,
+          "anti_alias": 0.01,
+          "fi_hz": -0.00017893935519517278,
+          "fi_window_s": 4096.0,
+          "fi_source": "Validated library anti_alias and the solver window formula",
+          "ldegup": 2001,
+          "native_header": {
+            "nt": 1024,
+            "ntcut": 1024,
+            "dt": 4.0,
+            "nf": 512,
+            "nfcut": 512,
+            "df": 0.000244140625,
+            "ldegup": 2001
+          },
+          "native_header_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qssp2020-matched-band\\library\\GreenSpec\\10.00\\0.00\\U_Green_10.00km",
+          "validation_source": "Native Fortran spectrum header and library metadata"
+        },
+        "source_radius_km": 0.0,
+        "elapsed_seconds": 0.137,
         "file_count": 67,
-        "output_bytes": 346693604
+        "output_bytes": 689936808
       },
       "native_time_ranges_s": [
         [
@@ -686,7 +1090,7 @@
           1020.0
         ]
       ],
-      "library_metadata_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qssp2020-converged\\library\\green_lib_info.json",
+      "library_metadata_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qssp2020-matched-band\\library\\green_lib_info.json",
       "library_metadata": {
         "processes_num": 1,
         "event_depth_list": [
@@ -697,7 +1101,7 @@
         ],
         "spec_time_window": 4092.0,
         "sampling_interval": 4.0,
-        "max_frequency": 0.0625,
+        "max_frequency": 0.125,
         "max_slowness": 0.3,
         "anti_alias": 0.01,
         "turning_point_filter": 0,
@@ -733,18 +1137,48 @@
           900.0
         ],
         "grn_delta_dist": 300.0,
-        "path_nd": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qssp2020-converged\\ak135_tutorial.nd",
-        "path_nd_without_Q": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qssp2020-converged\\library\\noQ.nd",
+        "path_nd": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qssp2020-matched-band\\ak135_tutorial.nd",
+        "path_nd_without_Q": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qssp2020-matched-band\\library\\noQ.nd",
         "earth_model_layer_num": null,
         "physical_dispersion": 0
+      },
+      "verified_spectral_settings": {
+        "requested_max_frequency_hz": 0.125,
+        "nyquist_frequency_hz": 0.125,
+        "highest_computed_frequency_hz": 0.124755859375,
+        "nyquist_bin_zeroed": true,
+        "nyquist_bin_zeroed_source": "Fortran inverse FFT sets bin nf + 1 to zero",
+        "sampling_interval_s": 4.0,
+        "fft_samples": 1024,
+        "frequency_spacing_hz": 0.000244140625,
+        "computed_frequency_samples": 512,
+        "spec_time_window_s": 4092.0,
+        "fft_period_s": 4096.0,
+        "anti_alias": 0.01,
+        "fi_hz": -0.00017893935519517278,
+        "fi_window_s": 4096.0,
+        "fi_source": "Validated library anti_alias and the solver window formula",
+        "ldegup": 2001,
+        "native_header": {
+          "nt": 1024,
+          "ntcut": 1024,
+          "dt": 4.0,
+          "nf": 512,
+          "nfcut": 512,
+          "df": 0.000244140625,
+          "ldegup": 2001
+        },
+        "native_header_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qssp2020-matched-band\\library\\GreenSpec\\10.00\\0.00\\U_Green_10.00km",
+        "validation_source": "Native Fortran spectrum header and library metadata"
       }
     }
   },
   "limitations": [
     "QSEIS uses a transformed finite-depth model over a half-space; spherical examples use the complete Earth model.",
     "QSEIS uses a damping-compensated custom 64 s sin-squared rate matching the SPGRN2020/QSSP physical source to the recorded interpolation tolerance.",
-    "SPGRN2012 retains its legacy real-frequency source; displacement integration windows still differ between backends.",
-    "QSEIS Nyquist frequency is 0.125 Hz; spherical examples use a 0.0625 Hz spectral cutoff.",
+    "SPGRN2012 uses a forward-convolved full-period impulse response with the same physical 64 s moment-rate pulse.",
+    "All backends use dt=4 s and the 0.125 Hz Nyquist band; the highest computed frequency is 0.124755859375 Hz and the Nyquist bin is zero.",
+    "The standard QSEIS pair uses source_radius_ratio=0.05 spatial smoothing; the spherical examples use point sources.",
     "Displacement integration baselines and native time windows differ between backends.",
     "Thresholds check these tutorial settings; they do not establish general backend equivalence."
   ],
@@ -753,152 +1187,152 @@
       "distance_km": 300.0,
       "backends": {
         "qseis06": {
-          "relative_l2": 0.1268393762564497,
-          "correlation": 0.9978012347506638,
+          "relative_l2": 0.1274095051616407,
+          "correlation": 0.9979871053405536,
           "peak_absolute_m": 1.3862526806476928e-08,
-          "reference_peak_absolute_m": 1.4550723940949578e-08,
+          "reference_peak_absolute_m": 1.4688964615463429e-08,
           "absolute_peak_time_s": 120.0,
           "components": {
             "E": {
-              "relative_l2": 0.21142254076778422,
-              "correlation": 0.9954862113979258,
+              "relative_l2": 0.21415812731783365,
+              "correlation": 0.9959376175677032,
               "peak_absolute_m": 4.718671664468096e-09,
-              "reference_peak_absolute_m": 5.495577975110608e-09,
+              "reference_peak_absolute_m": 5.434959575901812e-09,
               "absolute_peak_time_s": 88.0
             },
             "N": {
-              "relative_l2": 0.2114225407677834,
-              "correlation": 0.9954862113979263,
+              "relative_l2": 0.214158127317834,
+              "correlation": 0.9959376175677029,
               "peak_absolute_m": 8.172979067094345e-09,
-              "reference_peak_absolute_m": 9.518620269848064e-09,
+              "reference_peak_absolute_m": 9.413626122544937e-09,
               "absolute_peak_time_s": 88.0
             },
             "U": {
-              "relative_l2": 0.07290936602598422,
-              "correlation": 0.9972913454516318,
+              "relative_l2": 0.07052088682617703,
+              "correlation": 0.9976044610777186,
               "peak_absolute_m": 1.3862526806476928e-08,
-              "reference_peak_absolute_m": 1.4550723940949578e-08,
+              "reference_peak_absolute_m": 1.4688964615463429e-08,
               "absolute_peak_time_s": 120.0
             }
           }
         },
         "qseis2025": {
-          "relative_l2": 0.1268393762564497,
-          "correlation": 0.9978012347506638,
+          "relative_l2": 0.1274095051616407,
+          "correlation": 0.9979871053405536,
           "peak_absolute_m": 1.3862526806476928e-08,
-          "reference_peak_absolute_m": 1.4550723940949578e-08,
+          "reference_peak_absolute_m": 1.4688964615463429e-08,
           "absolute_peak_time_s": 120.0,
           "components": {
             "E": {
-              "relative_l2": 0.21142254076778422,
-              "correlation": 0.9954862113979258,
+              "relative_l2": 0.21415812731783365,
+              "correlation": 0.9959376175677032,
               "peak_absolute_m": 4.718671664468096e-09,
-              "reference_peak_absolute_m": 5.495577975110608e-09,
+              "reference_peak_absolute_m": 5.434959575901812e-09,
               "absolute_peak_time_s": 88.0
             },
             "N": {
-              "relative_l2": 0.2114225407677834,
-              "correlation": 0.9954862113979263,
+              "relative_l2": 0.214158127317834,
+              "correlation": 0.9959376175677029,
               "peak_absolute_m": 8.172979067094345e-09,
-              "reference_peak_absolute_m": 9.518620269848064e-09,
+              "reference_peak_absolute_m": 9.413626122544937e-09,
               "absolute_peak_time_s": 88.0
             },
             "U": {
-              "relative_l2": 0.07290936602598422,
-              "correlation": 0.9972913454516318,
+              "relative_l2": 0.07052088682617703,
+              "correlation": 0.9976044610777186,
               "peak_absolute_m": 1.3862526806476928e-08,
-              "reference_peak_absolute_m": 1.4550723940949578e-08,
+              "reference_peak_absolute_m": 1.4688964615463429e-08,
               "absolute_peak_time_s": 120.0
             }
           }
         },
         "spgrn2012": {
-          "relative_l2": 0.04077854551158646,
-          "correlation": 0.9998167245155266,
-          "peak_absolute_m": 1.5146271724570058e-08,
-          "reference_peak_absolute_m": 1.4550723940949578e-08,
-          "absolute_peak_time_s": 118.0,
+          "relative_l2": 0.0122658911411666,
+          "correlation": 0.9999248440098853,
+          "peak_absolute_m": 1.4704159041575959e-08,
+          "reference_peak_absolute_m": 1.4688964615463429e-08,
+          "absolute_peak_time_s": 122.0,
           "components": {
             "E": {
-              "relative_l2": 0.046874273400568336,
-              "correlation": 0.9995318198496341,
-              "peak_absolute_m": 5.715480041921498e-09,
-              "reference_peak_absolute_m": 5.495577975110608e-09,
+              "relative_l2": 0.014946511362036187,
+              "correlation": 0.9998208476515593,
+              "peak_absolute_m": 5.4933087004542875e-09,
+              "reference_peak_absolute_m": 5.434959575901812e-09,
               "absolute_peak_time_s": 90.0
             },
             "N": {
-              "relative_l2": 0.04687427340056908,
-              "correlation": 0.9995318198496342,
-              "peak_absolute_m": 9.899501822253934e-09,
-              "reference_peak_absolute_m": 9.518620269848064e-09,
+              "relative_l2": 0.014946511361975017,
+              "correlation": 0.9998208476515591,
+              "peak_absolute_m": 9.514689770847765e-09,
+              "reference_peak_absolute_m": 9.413626122544937e-09,
               "absolute_peak_time_s": 90.0
             },
             "U": {
-              "relative_l2": 0.038232409076538854,
-              "correlation": 0.9997277121845646,
-              "peak_absolute_m": 1.5146271724570058e-08,
-              "reference_peak_absolute_m": 1.4550723940949578e-08,
-              "absolute_peak_time_s": 118.0
+              "relative_l2": 0.011078429724675834,
+              "correlation": 0.9998821293038469,
+              "peak_absolute_m": 1.4704159041575959e-08,
+              "reference_peak_absolute_m": 1.4688964615463429e-08,
+              "absolute_peak_time_s": 122.0
             }
           }
         },
         "spgrn2020": {
           "relative_l2": 0.0,
           "correlation": 1.0,
-          "peak_absolute_m": 1.4550723940949578e-08,
-          "reference_peak_absolute_m": 1.4550723940949578e-08,
-          "absolute_peak_time_s": 119.0,
+          "peak_absolute_m": 1.4688964615463429e-08,
+          "reference_peak_absolute_m": 1.4688964615463429e-08,
+          "absolute_peak_time_s": 123.0,
           "components": {
             "E": {
               "relative_l2": 0.0,
               "correlation": 1.0,
-              "peak_absolute_m": 5.495577975110608e-09,
-              "reference_peak_absolute_m": 5.495577975110608e-09,
+              "peak_absolute_m": 5.434959575901812e-09,
+              "reference_peak_absolute_m": 5.434959575901812e-09,
               "absolute_peak_time_s": 91.0
             },
             "N": {
               "relative_l2": 0.0,
               "correlation": 1.0,
-              "peak_absolute_m": 9.518620269848064e-09,
-              "reference_peak_absolute_m": 9.518620269848064e-09,
+              "peak_absolute_m": 9.413626122544937e-09,
+              "reference_peak_absolute_m": 9.413626122544937e-09,
               "absolute_peak_time_s": 91.0
             },
             "U": {
               "relative_l2": 0.0,
               "correlation": 1.0,
-              "peak_absolute_m": 1.4550723940949578e-08,
-              "reference_peak_absolute_m": 1.4550723940949578e-08,
-              "absolute_peak_time_s": 119.0
+              "peak_absolute_m": 1.4688964615463429e-08,
+              "reference_peak_absolute_m": 1.4688964615463429e-08,
+              "absolute_peak_time_s": 123.0
             }
           }
         },
         "qssp2020": {
-          "relative_l2": 0.008892090245270245,
-          "correlation": 0.9999623038742104,
-          "peak_absolute_m": 1.4524259876250708e-08,
-          "reference_peak_absolute_m": 1.4550723940949578e-08,
-          "absolute_peak_time_s": 120.0,
+          "relative_l2": 0.012772480237692776,
+          "correlation": 0.9999203139546053,
+          "peak_absolute_m": 1.4577784680315633e-08,
+          "reference_peak_absolute_m": 1.4688964615463429e-08,
+          "absolute_peak_time_s": 124.0,
           "components": {
             "E": {
-              "relative_l2": 0.012391228095774287,
-              "correlation": 0.9998894963800711,
-              "peak_absolute_m": 5.484154019687877e-09,
-              "reference_peak_absolute_m": 5.495577975110608e-09,
-              "absolute_peak_time_s": 92.0
+              "relative_l2": 0.016141881660193137,
+              "correlation": 0.9998050616889279,
+              "peak_absolute_m": 5.452043431299336e-09,
+              "reference_peak_absolute_m": 5.434959575901812e-09,
+              "absolute_peak_time_s": 88.0
             },
             "N": {
-              "relative_l2": 0.012391267120908246,
-              "correlation": 0.999889496380071,
-              "peak_absolute_m": 9.498831331255596e-09,
-              "reference_peak_absolute_m": 9.518620269848064e-09,
-              "absolute_peak_time_s": 92.0
+              "relative_l2": 0.016141913905811666,
+              "correlation": 0.9998050616889275,
+              "peak_absolute_m": 9.443214172810483e-09,
+              "reference_peak_absolute_m": 9.413626122544937e-09,
+              "absolute_peak_time_s": 88.0
             },
             "U": {
-              "relative_l2": 0.007143458684612871,
-              "correlation": 0.9999514771119223,
-              "peak_absolute_m": 1.4524259876250708e-08,
-              "reference_peak_absolute_m": 1.4550723940949578e-08,
-              "absolute_peak_time_s": 120.0
+              "relative_l2": 0.011230027729599593,
+              "correlation": 0.9998792575609086,
+              "peak_absolute_m": 1.4577784680315633e-08,
+              "reference_peak_absolute_m": 1.4688964615463429e-08,
+              "absolute_peak_time_s": 124.0
             }
           }
         }
@@ -908,151 +1342,151 @@
       "distance_km": 600.0,
       "backends": {
         "qseis06": {
-          "relative_l2": 0.1974797064672438,
-          "correlation": 0.9934737165638886,
+          "relative_l2": 0.19574036485360327,
+          "correlation": 0.9940299811004639,
           "peak_absolute_m": 6.3218135045597715e-09,
-          "reference_peak_absolute_m": 6.93153850366e-09,
+          "reference_peak_absolute_m": 7.07739372400206e-09,
           "absolute_peak_time_s": 200.0,
           "components": {
             "E": {
-              "relative_l2": 0.21246720228848262,
-              "correlation": 0.9943367813808205,
+              "relative_l2": 0.21235656473020278,
+              "correlation": 0.9946687013001035,
               "peak_absolute_m": 3.34960463084013e-09,
-              "reference_peak_absolute_m": 4.001925620986357e-09,
+              "reference_peak_absolute_m": 3.991280505766944e-09,
               "absolute_peak_time_s": 144.0
             },
             "N": {
-              "relative_l2": 0.2124672022884821,
-              "correlation": 0.9943367813808203,
+              "relative_l2": 0.21235656473020245,
+              "correlation": 0.9946687013001035,
               "peak_absolute_m": 5.801685405883101e-09,
-              "reference_peak_absolute_m": 6.93153850366e-09,
+              "reference_peak_absolute_m": 6.913100623247554e-09,
               "absolute_peak_time_s": 144.0
             },
             "U": {
-              "relative_l2": 0.17183505439741018,
-              "correlation": 0.9912994011564045,
+              "relative_l2": 0.16694813451961082,
+              "correlation": 0.992331936916556,
               "peak_absolute_m": 6.3218135045597715e-09,
-              "reference_peak_absolute_m": 6.662565862069205e-09,
+              "reference_peak_absolute_m": 7.07739372400206e-09,
               "absolute_peak_time_s": 200.0
             }
           }
         },
         "qseis2025": {
-          "relative_l2": 0.1974797064672438,
-          "correlation": 0.9934737165638886,
+          "relative_l2": 0.19574036485360327,
+          "correlation": 0.9940299811004639,
           "peak_absolute_m": 6.3218135045597715e-09,
-          "reference_peak_absolute_m": 6.93153850366e-09,
+          "reference_peak_absolute_m": 7.07739372400206e-09,
           "absolute_peak_time_s": 200.0,
           "components": {
             "E": {
-              "relative_l2": 0.21246720228848262,
-              "correlation": 0.9943367813808205,
+              "relative_l2": 0.21235656473020278,
+              "correlation": 0.9946687013001035,
               "peak_absolute_m": 3.34960463084013e-09,
-              "reference_peak_absolute_m": 4.001925620986357e-09,
+              "reference_peak_absolute_m": 3.991280505766944e-09,
               "absolute_peak_time_s": 144.0
             },
             "N": {
-              "relative_l2": 0.2124672022884821,
-              "correlation": 0.9943367813808203,
+              "relative_l2": 0.21235656473020245,
+              "correlation": 0.9946687013001035,
               "peak_absolute_m": 5.801685405883101e-09,
-              "reference_peak_absolute_m": 6.93153850366e-09,
+              "reference_peak_absolute_m": 6.913100623247554e-09,
               "absolute_peak_time_s": 144.0
             },
             "U": {
-              "relative_l2": 0.17183505439741018,
-              "correlation": 0.9912994011564045,
+              "relative_l2": 0.16694813451961082,
+              "correlation": 0.992331936916556,
               "peak_absolute_m": 6.3218135045597715e-09,
-              "reference_peak_absolute_m": 6.662565862069205e-09,
+              "reference_peak_absolute_m": 7.07739372400206e-09,
               "absolute_peak_time_s": 200.0
             }
           }
         },
         "spgrn2012": {
-          "relative_l2": 0.044033959204149625,
-          "correlation": 0.9997214724717407,
-          "peak_absolute_m": 7.1943740780285575e-09,
-          "reference_peak_absolute_m": 6.93153850366e-09,
-          "absolute_peak_time_s": 148.0,
+          "relative_l2": 0.0007390005390581736,
+          "correlation": 0.999999961670556,
+          "peak_absolute_m": 7.0789704468793236e-09,
+          "reference_peak_absolute_m": 7.07739372400206e-09,
+          "absolute_peak_time_s": 200.0,
           "components": {
             "E": {
-              "relative_l2": 0.04184493373354468,
-              "correlation": 0.9997794410704498,
-              "peak_absolute_m": 4.153673810600653e-09,
-              "reference_peak_absolute_m": 4.001925620986357e-09,
+              "relative_l2": 0.0006265965404650414,
+              "correlation": 0.9999999737035792,
+              "peak_absolute_m": 3.9908124883533985e-09,
+              "reference_peak_absolute_m": 3.991280505766944e-09,
               "absolute_peak_time_s": 148.0
             },
             "N": {
-              "relative_l2": 0.0418449337335447,
-              "correlation": 0.9997794410704494,
-              "peak_absolute_m": 7.1943740780285575e-09,
-              "reference_peak_absolute_m": 6.93153850366e-09,
+              "relative_l2": 0.0006265965404811412,
+              "correlation": 0.9999999737035793,
+              "peak_absolute_m": 6.9122899933084355e-09,
+              "reference_peak_absolute_m": 6.913100623247554e-09,
               "absolute_peak_time_s": 148.0
             },
             "U": {
-              "relative_l2": 0.04720988582957243,
-              "correlation": 0.999565270338363,
-              "peak_absolute_m": 6.871542484705506e-09,
-              "reference_peak_absolute_m": 6.662565862069205e-09,
+              "relative_l2": 0.0008845936757076502,
+              "correlation": 0.9999999985629169,
+              "peak_absolute_m": 7.0789704468793236e-09,
+              "reference_peak_absolute_m": 7.07739372400206e-09,
               "absolute_peak_time_s": 200.0
             }
           }
         },
         "spgrn2020": {
           "relative_l2": 0.0,
-          "correlation": 1.0,
-          "peak_absolute_m": 6.93153850366e-09,
-          "reference_peak_absolute_m": 6.93153850366e-09,
-          "absolute_peak_time_s": 148.0,
+          "correlation": 0.9999999999999998,
+          "peak_absolute_m": 7.07739372400206e-09,
+          "reference_peak_absolute_m": 7.07739372400206e-09,
+          "absolute_peak_time_s": 200.0,
           "components": {
             "E": {
               "relative_l2": 0.0,
-              "correlation": 1.0,
-              "peak_absolute_m": 4.001925620986357e-09,
-              "reference_peak_absolute_m": 4.001925620986357e-09,
+              "correlation": 0.9999999999999998,
+              "peak_absolute_m": 3.991280505766944e-09,
+              "reference_peak_absolute_m": 3.991280505766944e-09,
               "absolute_peak_time_s": 148.0
             },
             "N": {
               "relative_l2": 0.0,
-              "correlation": 0.9999999999999999,
-              "peak_absolute_m": 6.93153850366e-09,
-              "reference_peak_absolute_m": 6.93153850366e-09,
+              "correlation": 1.0,
+              "peak_absolute_m": 6.913100623247554e-09,
+              "reference_peak_absolute_m": 6.913100623247554e-09,
               "absolute_peak_time_s": 148.0
             },
             "U": {
               "relative_l2": 0.0,
               "correlation": 1.0,
-              "peak_absolute_m": 6.662565862069205e-09,
-              "reference_peak_absolute_m": 6.662565862069205e-09,
+              "peak_absolute_m": 7.07739372400206e-09,
+              "reference_peak_absolute_m": 7.07739372400206e-09,
               "absolute_peak_time_s": 200.0
             }
           }
         },
         "qssp2020": {
-          "relative_l2": 0.0037799442529229473,
-          "correlation": 0.9999930832610049,
-          "peak_absolute_m": 6.937699181944314e-09,
-          "reference_peak_absolute_m": 6.93153850366e-09,
-          "absolute_peak_time_s": 148.0,
+          "relative_l2": 0.004084794489382595,
+          "correlation": 0.999992290407899,
+          "peak_absolute_m": 7.065765991344448e-09,
+          "reference_peak_absolute_m": 7.07739372400206e-09,
+          "absolute_peak_time_s": 200.0,
           "components": {
             "E": {
-              "relative_l2": 0.0033555234622926785,
-              "correlation": 0.9999931321167354,
-              "peak_absolute_m": 4.0054819917809e-09,
-              "reference_peak_absolute_m": 4.001925620986357e-09,
+              "relative_l2": 0.003844166604424268,
+              "correlation": 0.9999931339547155,
+              "peak_absolute_m": 3.992130695970552e-09,
+              "reference_peak_absolute_m": 3.991280505766944e-09,
               "absolute_peak_time_s": 148.0
             },
             "N": {
-              "relative_l2": 0.003354772704310088,
-              "correlation": 0.9999931351645194,
-              "peak_absolute_m": 6.937699181944314e-09,
-              "reference_peak_absolute_m": 6.93153850366e-09,
+              "relative_l2": 0.0038437423256230743,
+              "correlation": 0.9999931370015325,
+              "peak_absolute_m": 6.914574110533488e-09,
+              "reference_peak_absolute_m": 6.913100623247554e-09,
               "absolute_peak_time_s": 148.0
             },
             "U": {
-              "relative_l2": 0.004354546117630538,
-              "correlation": 0.9999922685345858,
-              "peak_absolute_m": 6.650376490558351e-09,
-              "reference_peak_absolute_m": 6.662565862069205e-09,
+              "relative_l2": 0.004430291091308402,
+              "correlation": 0.9999922722328612,
+              "peak_absolute_m": 7.065765991344448e-09,
+              "reference_peak_absolute_m": 7.07739372400206e-09,
               "absolute_peak_time_s": 200.0
             }
           }
@@ -1063,91 +1497,91 @@
       "distance_km": 900.0,
       "backends": {
         "qseis06": {
-          "relative_l2": 0.22951382655472283,
-          "correlation": 0.9897023617946057,
+          "relative_l2": 0.22797851066132827,
+          "correlation": 0.9902144875389441,
           "peak_absolute_m": 4.032786470521637e-09,
-          "reference_peak_absolute_m": 4.718896012314888e-09,
+          "reference_peak_absolute_m": 4.703076361827965e-09,
           "absolute_peak_time_s": 276.0,
           "components": {
             "E": {
-              "relative_l2": 0.23325738523935233,
-              "correlation": 0.9912922196061632,
+              "relative_l2": 0.2327027065792047,
+              "correlation": 0.9915767608500791,
               "peak_absolute_m": 1.8688967424193267e-09,
-              "reference_peak_absolute_m": 1.982428249685609e-09,
+              "reference_peak_absolute_m": 1.983236345500928e-09,
               "absolute_peak_time_s": 256.0
             },
             "N": {
-              "relative_l2": 0.23325738523935324,
-              "correlation": 0.9912922196061632,
+              "relative_l2": 0.23270270657920475,
+              "correlation": 0.9915767608500792,
               "peak_absolute_m": 3.23702411197024e-09,
-              "reference_peak_absolute_m": 3.433666450815314e-09,
+              "reference_peak_absolute_m": 3.4350661138248336e-09,
               "absolute_peak_time_s": 256.0
             },
             "U": {
-              "relative_l2": 0.2233134153054795,
-              "correlation": 0.9871619471661072,
+              "relative_l2": 0.2201198358375583,
+              "correlation": 0.9880993423248939,
               "peak_absolute_m": 4.032786470521637e-09,
-              "reference_peak_absolute_m": 4.718896012314888e-09,
+              "reference_peak_absolute_m": 4.703076361827965e-09,
               "absolute_peak_time_s": 276.0
             }
           }
         },
         "qseis2025": {
-          "relative_l2": 0.22951382655472283,
-          "correlation": 0.9897023617946057,
+          "relative_l2": 0.22797851066132827,
+          "correlation": 0.9902144875389441,
           "peak_absolute_m": 4.032786470521637e-09,
-          "reference_peak_absolute_m": 4.718896012314888e-09,
+          "reference_peak_absolute_m": 4.703076361827965e-09,
           "absolute_peak_time_s": 276.0,
           "components": {
             "E": {
-              "relative_l2": 0.23325738523935233,
-              "correlation": 0.9912922196061632,
+              "relative_l2": 0.2327027065792047,
+              "correlation": 0.9915767608500791,
               "peak_absolute_m": 1.8688967424193267e-09,
-              "reference_peak_absolute_m": 1.982428249685609e-09,
+              "reference_peak_absolute_m": 1.983236345500928e-09,
               "absolute_peak_time_s": 256.0
             },
             "N": {
-              "relative_l2": 0.23325738523935324,
-              "correlation": 0.9912922196061632,
+              "relative_l2": 0.23270270657920475,
+              "correlation": 0.9915767608500792,
               "peak_absolute_m": 3.23702411197024e-09,
-              "reference_peak_absolute_m": 3.433666450815314e-09,
+              "reference_peak_absolute_m": 3.4350661138248336e-09,
               "absolute_peak_time_s": 256.0
             },
             "U": {
-              "relative_l2": 0.2233134153054795,
-              "correlation": 0.9871619471661072,
+              "relative_l2": 0.2201198358375583,
+              "correlation": 0.9880993423248939,
               "peak_absolute_m": 4.032786470521637e-09,
-              "reference_peak_absolute_m": 4.718896012314888e-09,
+              "reference_peak_absolute_m": 4.703076361827965e-09,
               "absolute_peak_time_s": 276.0
             }
           }
         },
         "spgrn2012": {
-          "relative_l2": 0.042577007797639316,
-          "correlation": 0.9997632002002402,
-          "peak_absolute_m": 4.905164303361373e-09,
-          "reference_peak_absolute_m": 4.718896012314888e-09,
+          "relative_l2": 0.0005343373124017077,
+          "correlation": 0.9999999885477906,
+          "peak_absolute_m": 4.703826857874187e-09,
+          "reference_peak_absolute_m": 4.703076361827965e-09,
           "absolute_peak_time_s": 278.0,
           "components": {
             "E": {
-              "relative_l2": 0.04063015839734303,
-              "correlation": 0.9998317382325957,
-              "peak_absolute_m": 2.0603192713472928e-09,
-              "reference_peak_absolute_m": 1.982428249685609e-09,
+              "relative_l2": 0.00047168824768522015,
+              "correlation": 0.9999999986630647,
+              "peak_absolute_m": 1.983601153034612e-09,
+              "reference_peak_absolute_m": 1.983236345500928e-09,
               "absolute_peak_time_s": 258.0
             },
             "N": {
-              "relative_l2": 0.04063015839734268,
-              "correlation": 0.9998317382325961,
-              "peak_absolute_m": 3.5685776577867993e-09,
-              "reference_peak_absolute_m": 3.433666450815314e-09,
+              "relative_l2": 0.00047168824773983223,
+              "correlation": 0.9999999986630645,
+              "peak_absolute_m": 3.4356979790082776e-09,
+              "reference_peak_absolute_m": 3.4350661138248336e-09,
               "absolute_peak_time_s": 258.0
             },
             "U": {
-              "relative_l2": 0.04555591501977681,
-              "correlation": 0.99963459504824,
-              "peak_absolute_m": 4.905164303361373e-09,
-              "reference_peak_absolute_m": 4.718896012314888e-09,
+              "relative_l2": 0.0006224925971224008,
+              "correlation": 0.9999999996740784,
+              "peak_absolute_m": 4.703826857874187e-09,
+              "reference_peak_absolute_m": 4.703076361827965e-09,
               "absolute_peak_time_s": 278.0
             }
           }
@@ -1155,59 +1589,59 @@
         "spgrn2020": {
           "relative_l2": 0.0,
           "correlation": 1.0,
-          "peak_absolute_m": 4.718896012314888e-09,
-          "reference_peak_absolute_m": 4.718896012314888e-09,
+          "peak_absolute_m": 4.703076361827965e-09,
+          "reference_peak_absolute_m": 4.703076361827965e-09,
           "absolute_peak_time_s": 278.0,
           "components": {
             "E": {
               "relative_l2": 0.0,
-              "correlation": 0.9999999999999998,
-              "peak_absolute_m": 1.982428249685609e-09,
-              "reference_peak_absolute_m": 1.982428249685609e-09,
+              "correlation": 1.0,
+              "peak_absolute_m": 1.983236345500928e-09,
+              "reference_peak_absolute_m": 1.983236345500928e-09,
               "absolute_peak_time_s": 258.0
             },
             "N": {
               "relative_l2": 0.0,
               "correlation": 1.0,
-              "peak_absolute_m": 3.433666450815314e-09,
-              "reference_peak_absolute_m": 3.433666450815314e-09,
+              "peak_absolute_m": 3.4350661138248336e-09,
+              "reference_peak_absolute_m": 3.4350661138248336e-09,
               "absolute_peak_time_s": 258.0
             },
             "U": {
               "relative_l2": 0.0,
               "correlation": 1.0,
-              "peak_absolute_m": 4.718896012314888e-09,
-              "reference_peak_absolute_m": 4.718896012314888e-09,
+              "peak_absolute_m": 4.703076361827965e-09,
+              "reference_peak_absolute_m": 4.703076361827965e-09,
               "absolute_peak_time_s": 278.0
             }
           }
         },
         "qssp2020": {
-          "relative_l2": 0.014227506419163599,
-          "correlation": 0.9998970732883025,
-          "peak_absolute_m": 4.678830861541937e-09,
-          "reference_peak_absolute_m": 4.718896012314888e-09,
+          "relative_l2": 0.02302240999288494,
+          "correlation": 0.9997296328387002,
+          "peak_absolute_m": 4.710483313718251e-09,
+          "reference_peak_absolute_m": 4.703076361827965e-09,
           "absolute_peak_time_s": 276.0,
           "components": {
             "E": {
-              "relative_l2": 0.012327191548072639,
-              "correlation": 0.9999172555832277,
-              "peak_absolute_m": 1.9919005083462667e-09,
-              "reference_peak_absolute_m": 1.982428249685609e-09,
+              "relative_l2": 0.01783435967991834,
+              "correlation": 0.9998258646338762,
+              "peak_absolute_m": 2.0023288550828355e-09,
+              "reference_peak_absolute_m": 1.983236345500928e-09,
               "absolute_peak_time_s": 256.0
             },
             "N": {
-              "relative_l2": 0.012327191548080155,
-              "correlation": 0.9999172555832281,
-              "peak_absolute_m": 3.450072884077899e-09,
-              "reference_peak_absolute_m": 3.433666450815314e-09,
+              "relative_l2": 0.017834359679923348,
+              "correlation": 0.9998258646338761,
+              "peak_absolute_m": 3.4681353104645814e-09,
+              "reference_peak_absolute_m": 3.4350661138248336e-09,
               "absolute_peak_time_s": 256.0
             },
             "U": {
-              "relative_l2": 0.01685841216426284,
-              "correlation": 0.9998569590908136,
-              "peak_absolute_m": 4.678830861541937e-09,
-              "reference_peak_absolute_m": 4.718896012314888e-09,
+              "relative_l2": 0.029546681000247366,
+              "correlation": 0.9995609352042928,
+              "peak_absolute_m": 4.710483313718251e-09,
+              "reference_peak_absolute_m": 4.703076361827965e-09,
               "absolute_peak_time_s": 276.0
             }
           }
@@ -1215,6 +1649,300 @@
       }
     }
   ],
+  "source_radius_control": {
+    "backend": "QSEIS2025",
+    "source_radius_ratio": 0.0,
+    "default_source_radius_ratio": 0.05,
+    "threshold_applied": false,
+    "method": "Same physical STF, frequency band, origin-time grids and unscaled metrics",
+    "provenance": {
+      "npz_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\build\\equal-band-audit\\qseis2025-point-source\\disp.npz",
+      "npz_sha256": "8e35587a73ebef9369499f1c224f131a884e4d0b3fe9c31f6bfac9a7dacd5444",
+      "summary_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\build\\equal-band-audit\\qseis2025-point-source\\summary-reuse.json",
+      "summary": {
+        "backend": "QSEIS2025",
+        "started_utc": "2026-09-14T12:45:34Z",
+        "platform": "Windows-11-10.0.26200-SP0",
+        "python": "3.12.13",
+        "dependencies": {
+          "numpy": "2.3.5",
+          "scipy": "1.18.0",
+          "pandas": "3.0.0",
+          "matplotlib": "3.11.0",
+          "obspy": "1.5.0"
+        },
+        "source_depth_km": 10.0,
+        "receiver_depth_km": 0.0,
+        "moment_nm": 1000000000000000.0,
+        "strike_dip_rake_deg": [
+          30.0,
+          45.0,
+          90.0
+        ],
+        "azimuth_deg": 30.0,
+        "reuse": true,
+        "model": "Bundled AK135 elastic properties; illustrative constant Qp=600, Qs=300",
+        "outputs": {
+          "disp": {
+            "shape": [
+              3,
+              3,
+              256
+            ],
+            "components": [
+              "E",
+              "N",
+              "U"
+            ],
+            "unit": "m",
+            "finite": true,
+            "peak_absolute": 1.416866183701976e-08
+          }
+        },
+        "sampling_interval_s": 4.0,
+        "max_frequency_hz": 0.125,
+        "time_window_s": 4092.0,
+        "output_time_range_s": [
+          0.0,
+          1020.0
+        ],
+        "distances_km": [
+          300.0,
+          600.0,
+          900.0
+        ],
+        "native_samples": 1024,
+        "earth_model_numeric_rows": 24,
+        "wavelet_type": 0,
+        "wavelet_duration_samples": 16,
+        "wavelet_duration_s": 64.0,
+        "flat_earth_transform": true,
+        "regional": true,
+        "source_radius_ratio": 0.0,
+        "point_source": true,
+        "source_time_function": {
+          "scheme_id": "normalized_sin_squared_64s_damping_compensated_v1",
+          "duration_s": 64.0,
+          "samples": 1024,
+          "sample_spacing_s": 0.06256109481915934,
+          "wavelet_type": 0,
+          "wavelet_duration_samples": 16,
+          "sampling_interval_s": 4.0,
+          "native_time_window_s": 4092.0,
+          "anti_alias": 0.01,
+          "fi_hz": -0.00017911427147591097,
+          "rate_unit": "1/s",
+          "time_unit": "s",
+          "physical_definition": "r(t) = 2/64 * sin(pi*t/64)^2 for 0 <= t <= 64 s; zero otherwise",
+          "input_definition": "piecewise-linear samples of r(t) * exp(2*pi*fi*t); no input-area renormalization",
+          "effective_definition": "piecewise-linear input(t) * exp(-2*pi*fi*t)",
+          "target_rate_integral": 1.0,
+          "input_rate_integral": 0.9647094485300882,
+          "effective_rate_integral": 1.0000000004130927,
+          "target_centroid_s": 32.0,
+          "effective_centroid_s": 32.00000073412074,
+          "effective_rate_relative_l2": 1.9884466105608343e-06,
+          "spectral_relative_l2_0_to_0_125_hz": 1.7827637217585575e-06,
+          "validated_max_frequency_hz": 0.125,
+          "spectral_max_absolute_error_0_to_0_0625_hz": 1.5646882209943217e-06,
+          "physical_validation_limits": {
+            "area_absolute_error": 1e-08,
+            "centroid_absolute_error_s": 1e-05,
+            "rate_relative_l2": 1e-05,
+            "spectral_relative_l2": 1e-05
+          },
+          "reader_instruction": "Read velo/strain_rate/stress_rate; integrate once with cumsum(rate)*4 s in the example",
+          "input_relative_path": "10.00/0.00/0_0/grn.inp",
+          "input_original_sha256": "66ded0e4209be985253c5c6409c3025fedd556a6e76e2d173ea0c5f1ee03c8b0",
+          "input_prepared_sha256": "2c3859e0e472ac6cfafbc40225a069a3ef6511ec34b737e2034a63529ec57369",
+          "samples_relative_path": "../source_time_function.npz",
+          "description_relative_path": "../source_time_function.json",
+          "samples_sha256": "338b4f06ebd8d08487d654680d42ec451effbace3de55d48a38a3a3d4a38c7c3"
+        },
+        "physical_source_time_function": {
+          "shape": "normalized_sin_squared_moment_rate",
+          "duration_s": 64.0,
+          "physical_integral": 1.0,
+          "centroid_s": 32.0
+        },
+        "spectral_settings": {
+          "requested_max_frequency_hz": 0.125,
+          "nyquist_frequency_hz": 0.125,
+          "highest_computed_frequency_hz": 0.124755859375,
+          "nyquist_bin_zeroed": true,
+          "nyquist_bin_zeroed_source": "Fortran inverse FFT sets bin nf + 1 to zero",
+          "sampling_interval_s": 4.0,
+          "fft_samples": 1024,
+          "frequency_spacing_hz": 0.000244140625,
+          "computed_frequency_samples": 512,
+          "spec_time_window_s": 4092.0,
+          "fft_period_s": 4096.0,
+          "anti_alias": 0.01,
+          "fi_hz": -0.00017911427147591097,
+          "fi_window_s": 4092.0,
+          "fi_source": "Validated library anti_alias and the solver window formula",
+          "ldegup": null,
+          "native_header": {
+            "nt": 1024,
+            "ntcut": 1024,
+            "dt": 4.0,
+            "nf": 512,
+            "nfcut": 512,
+            "df": 0.000244140625,
+            "ldegup": null
+          },
+          "native_header_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\build\\equal-band-audit\\qseis2025-point-source\\library\\10.00\\0.00\\0_0\\ss.tz",
+          "validation_source": "Native input, all native T_sec output rows, and library metadata; nf, nfcut and df derived from qsgetinp.f (not stored in the text header)",
+          "native_input_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\build\\equal-band-audit\\qseis2025-point-source\\library\\10.00\\0.00\\0_0\\grn.inp",
+          "native_output_columns": [
+            "T_sec",
+            "Uz0001",
+            "Uz0002",
+            "Uz0003"
+          ]
+        },
+        "elapsed_seconds": 0.246,
+        "file_count": 27,
+        "output_bytes": 1005149
+      },
+      "native_time_ranges_s": [
+        [
+          0.0,
+          1020.0
+        ],
+        [
+          0.0,
+          1020.0
+        ],
+        [
+          0.0,
+          1020.0
+        ]
+      ],
+      "library_metadata_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\build\\equal-band-audit\\qseis2025-point-source\\library\\green_lib_info.json",
+      "library_metadata": {
+        "processes_num": 1,
+        "event_depth_list": [
+          10.0
+        ],
+        "receiver_depth_list": [
+          0.0
+        ],
+        "grn_dist_range": [
+          300.0,
+          900.0
+        ],
+        "grn_delta_dist": 300.0,
+        "N_dist": 3,
+        "N_dist_group": 1,
+        "N_each_group": 3,
+        "time_window": 4092.0,
+        "sampling_interval": 4.0,
+        "sampling_num": 1024,
+        "slowness_int_algorithm": 0,
+        "slowness_window": null,
+        "time_reduction_velo": 0,
+        "wavenumber_sampling_rate": 12,
+        "anti_alias": 0.01,
+        "free_surface": 0,
+        "wavelet_duration": 16,
+        "wavelet_type": 0,
+        "flat_earth_transform": true,
+        "path_nd": "C:\\Users\\zjc\\python_works\\pygrnwang\\build\\equal-band-audit\\qseis2025-point-source\\ak135_tutorial.nd",
+        "path_nd_without_Q": "C:\\Users\\zjc\\python_works\\pygrnwang\\build\\equal-band-audit\\qseis2025-point-source\\library\\noQ.nd",
+        "earth_model_layer_num": 24
+      },
+      "verified_spectral_settings": {
+        "requested_max_frequency_hz": 0.125,
+        "nyquist_frequency_hz": 0.125,
+        "highest_computed_frequency_hz": 0.124755859375,
+        "nyquist_bin_zeroed": true,
+        "nyquist_bin_zeroed_source": "Fortran inverse FFT sets bin nf + 1 to zero",
+        "sampling_interval_s": 4.0,
+        "fft_samples": 1024,
+        "frequency_spacing_hz": 0.000244140625,
+        "computed_frequency_samples": 512,
+        "spec_time_window_s": 4092.0,
+        "fft_period_s": 4096.0,
+        "anti_alias": 0.01,
+        "fi_hz": -0.00017911427147591097,
+        "fi_window_s": 4092.0,
+        "fi_source": "Validated library anti_alias and the solver window formula",
+        "ldegup": null,
+        "native_header": {
+          "nt": 1024,
+          "ntcut": 1024,
+          "dt": 4.0,
+          "nf": 512,
+          "nfcut": 512,
+          "df": 0.000244140625,
+          "ldegup": null
+        },
+        "native_header_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\build\\equal-band-audit\\qseis2025-point-source\\library\\10.00\\0.00\\0_0\\ss.tz",
+        "validation_source": "Native input, all native T_sec output rows, and library metadata; nf, nfcut and df derived from qsgetinp.f (not stored in the text header)",
+        "native_input_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\build\\equal-band-audit\\qseis2025-point-source\\library\\10.00\\0.00\\0_0\\grn.inp",
+        "native_output_columns": [
+          "T_sec",
+          "Uz0001",
+          "Uz0002",
+          "Uz0003"
+        ]
+      }
+    },
+    "distances": [
+      {
+        "distance_km": 300.0,
+        "vs_spgrn2020": {
+          "relative_l2": 0.11492642864326601,
+          "correlation": 0.9977246434867887,
+          "peak_absolute_m": 1.416866183701976e-08,
+          "reference_peak_absolute_m": 1.4688964615463429e-08,
+          "absolute_peak_time_s": 120.0
+        },
+        "vs_qseis2025_default": {
+          "relative_l2": 0.027622239429158455,
+          "correlation": 0.9998062456843537,
+          "peak_absolute_m": 1.416866183701976e-08,
+          "reference_peak_absolute_m": 1.3862526806476928e-08,
+          "absolute_peak_time_s": 120.0
+        }
+      },
+      {
+        "distance_km": 600.0,
+        "vs_spgrn2020": {
+          "relative_l2": 0.1707580754334501,
+          "correlation": 0.99354252109399,
+          "peak_absolute_m": 6.730055920543166e-09,
+          "reference_peak_absolute_m": 7.07739372400206e-09,
+          "absolute_peak_time_s": 200.0
+        },
+        "vs_qseis2025_default": {
+          "relative_l2": 0.06236793608576459,
+          "correlation": 0.9995230122505029,
+          "peak_absolute_m": 6.730055920543166e-09,
+          "reference_peak_absolute_m": 6.3218135045597715e-09,
+          "absolute_peak_time_s": 200.0
+        }
+      },
+      {
+        "distance_km": 900.0,
+        "vs_spgrn2020": {
+          "relative_l2": 0.19717563613400751,
+          "correlation": 0.990003204043623,
+          "peak_absolute_m": 4.323458235953306e-09,
+          "reference_peak_absolute_m": 4.703076361827965e-09,
+          "absolute_peak_time_s": 276.0
+        },
+        "vs_qseis2025_default": {
+          "relative_l2": 0.07397004525228486,
+          "correlation": 0.9995904684848258,
+          "peak_absolute_m": 4.323458235953306e-09,
+          "reference_peak_absolute_m": 4.032786470521637e-09,
+          "absolute_peak_time_s": 276.0
+        }
+      }
+    ]
+  },
   "checks": {
     "qseis06_vs_qseis2025": {
       "passed": true,
@@ -1228,9 +1956,9 @@
       "passed": true,
       "relative_l2_limit": 0.05,
       "relative_l2_by_distance": [
-        0.008892090245270245,
-        0.0037799442529229473,
-        0.014227506419163599
+        0.012772480237692776,
+        0.004084794489382595,
+        0.02302240999288494
       ]
     }
   },
@@ -1238,6 +1966,7 @@
   "figures": [
     "all-backends.png",
     "spherical-comparison.png",
-    "qseis-comparison.png"
+    "qseis-comparison.png",
+    "source-radius-comparison.png"
   ]
 }

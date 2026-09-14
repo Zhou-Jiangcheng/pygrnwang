@@ -83,7 +83,16 @@ def pre_process_qseis2025(
     eps_estimate_wavenumber : float, optional
         Full-wavefield wavenumber truncation tolerance; smaller values increase accuracy and computation. Default: 1e-06.
     source_radius_ratio : float, optional
-        Source disk radius divided by the minimum distance; larger values converge faster but smooth the point source. Default: 0.05.
+        Dimensionless Gaussian spatial-smoothing ratio. At each frequency and
+        receiver, the native radius is ``source_radius_ratio *
+        min(sqrt(r**2 + (zs-zr)**2), Vp_source/(f+df))``, using epicentral
+        distance r, source/receiver depths zs/zr, source-layer P-wave speed,
+        frequency f and FFT increment df in consistent units. Coordinates and
+        speed include any selected Earth flattening. The kernel is multiplied
+        by ``exp(-(k*radius)**2/2)`` at wavenumber k; this is not a fixed-radius
+        source disk. Zero disables smoothing. Larger values generally reduce
+        the automatically estimated wavenumber cutoff and computation time.
+        Default: 0.05.
     slowness_window : list of float or None, optional
         Four ordered slowness taper corners in s/km; None writes zeros for backend automatic limits. Default: None.
     time_reduction_velo : float, optional

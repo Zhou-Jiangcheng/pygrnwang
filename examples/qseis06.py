@@ -7,12 +7,13 @@ from pathlib import Path
 
 import numpy as np
 
-from common import (MECHANISM, MOMENT_NM, finish, parser_for, prepare,
+from common import (MECHANISM, MOMENT_NM, REGIONAL_SAMPLING_INTERVAL_S, REGIONAL_STF, finish, parser_for, prepare,
                     require_library_settings, save_waveforms)
 from pygrnwang.create_qseis06_bulk import (
     pre_process_qseis06, create_grnlib_qseis06_sequential)
 from pygrnwang.read_qseis06 import seek_qseis06
 from source_time_function import prepare_qseis_stf, validate_qseis_stf
+from spectral_settings import qseis_spectral_settings
 
 
 def main():
@@ -25,7 +26,7 @@ def main():
         directory = "qseis06-regional" if args.regional else "qseis06"
         args.output_dir = Path(__file__).resolve().parent / "output" / directory
     output, library, model, report, started = prepare(args, "QSEIS06")
-    dt, window = (4.0, 4092.0) if args.regional else (0.5, 127.5)
+    dt, window = (REGIONAL_SAMPLING_INTERVAL_S, 4092.0) if args.regional else (0.5, 127.5)
     distances = [300.0, 600.0, 900.0] if args.regional else [30.0, 60.0, 90.0]
     wavelet_duration = 16 if args.regional else 4
     wavelet_type = 0 if args.regional else 2
@@ -70,14 +71,16 @@ def main():
     save_waveforms(output, report, "disp", arrays, distances, dt, ["E", "N", "U"], "m",
                    expected_samples=output_samples,
                    time_limits=(0.0, output_end) if args.regional else None)
-    report.update(sampling_interval_s=dt, time_window_s=window, distances_km=distances,
+    report.update(sampling_interval_s=dt, max_frequency_hz=0.5 / dt, time_window_s=window, distances_km=distances,
                   output_time_range_s=[0.0, output_end], native_samples=native_samples,
                   earth_model_numeric_rows=24, wavelet_type=wavelet_type,
                   wavelet_duration_samples=wavelet_duration,
                   wavelet_duration_s=wavelet_duration * dt,
-                  flat_earth_transform=args.regional, regional=args.regional)
+                  flat_earth_transform=args.regional, regional=args.regional, source_radius_ratio=0.05)
     if args.regional:
         report["source_time_function"] = source_time_function
+        report["physical_source_time_function"] = dict(REGIONAL_STF)
+        report["spectral_settings"] = qseis_spectral_settings(library)
     finish(output, report, started)
 
 

@@ -2,6 +2,15 @@
 
 ## Unreleased documentation
 
+- Unified all five regional examples at a 0.125 Hz Nyquist limit, with verified
+  native frequency grids, the same mechanism, moment and physical 64 s source.
+  SPGRN2012 now uses its native impulse branch and an analytic forward source
+  convolution over the complete FFT period before integration and cropping.
+- Added a QSEIS2025 `--regional --point-source` control to quantify its default
+  frequency-dependent Gaussian spatial smoothing. Matched frequency limits and
+  temporal sources alone did not remove the regional QSEIS/spherical residuals;
+  the new comparison records both the remaining error and the spatial-source test.
+
 - Recalculated SPGRN2020 with its complete-wavefield option and QSSP2020 with
   harmonic settings 2000/8000 after identifying insufficient low-frequency
   cutoffs in the initial examples. Added convergence evidence, corrected

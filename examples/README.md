@@ -42,8 +42,8 @@ saved tensor outputs have shape `(3, 6, 201)`. Figures use Matplotlib's
 noninteractive Agg backend.
 
 `--regional` selects 300, 600 and 900 km for QSEIS06/QSEIS2025, with 4 s
-sampling, a 4092 s native window, a 64 s wavelet and the flat-Earth transformation
-enabled. It saves 0–1020 s inclusive: displacement `(3, 3, 256)` and QSEIS2025
+sampling, the 0.125 Hz Nyquist band, a 4092 s native window, a 64 s
+effective moment-rate pulse and the flat-Earth transformation enabled. It saves 0–1020 s inclusive: displacement `(3, 3, 256)` and QSEIS2025
 tensors `(3, 6, 256)`. These distances need a longer window because their main
 arrivals extend beyond 100 s. The default output directories are
 `examples/output/qseis06-regional` and `examples/output/qseis2025-regional`.
@@ -51,12 +51,39 @@ arrivals extend beyond 100 s. The default output directories are
 Regional QSEIS uses a custom, normalized 64 s sin-squared moment-rate function
 (`wavelet_type=0`). `source_time_function.py` writes 1024 input nodes with the
 numerical damping precompensated, so the effective physical pulse matches
-SPGRN2020/QSSP rather than merely sharing their duration. The input samples
+SPGRN2020/QSSP and the source-matched SPGRN2012 example. The input samples
 must not be normalized again: their area is about 0.964709, while the effective
 physical pulse has unit area and a 32 s centroid. The scripts read rate
 kernels and integrate them once before exporting displacement, strain or stress.
 The helper archives the source samples and numerical checks in
 `source_time_function.npz/json`; reuse verifies these and the generated input.
+
+SPGRN2012 uses a native zero-duration impulse, reads the complete 4092 s
+velocity record (1024 samples), and forward-convolves it with the analytic
+64 s physical source at the native complex frequencies. It integrates once
+before cropping to 256 samples. `spherical_source_time_function.py` saves
+`velocity-impulse.npz`, `velocity-matched.npz` and `source_time_function.npz/json`.
+Native input records and spectrum headers, the analytic transform and pulse
+samples, and input/output hashes are checked. Thus the current example no
+longer retains the approximately 3.67% source-area bias of SPGRN2012's
+positive-duration native wavelet implementation; the public API is unchanged.
+
+The standard regional QSEIS pair uses Gaussian spatial smoothing with
+`source_radius_ratio=0.05`, while the spherical examples use point sources.
+To isolate this difference, optionally run QSEIS2025 with ratio zero and
+include that separate directory in the comparison:
+
+```sh
+python examples/qseis2025.py --regional --point-source --output-dir examples/output/qseis2025-regional-point-source
+python examples/compare_backends.py --qseis2025-point-source examples/output/qseis2025-regional-point-source
+```
+
+`--point-source` requires `--regional`; its default directory is already
+`examples/output/qseis2025-regional-point-source`. The extra comparison
+produces `source-radius-comparison.png` and a `source_radius_control` entry
+in `comparison.json`. The point-source control reduces part of the residual;
+it does not establish equality with the spherical solutions. The standard
+QSEIS06/QSEIS2025 consistency check still compares their common ratio of 0.05.
 
 After the five dynamic workflows above, `compare_backends.py` reads their NPZ
 files, aligns source-origin time and plots 0–500 s in
@@ -67,7 +94,9 @@ Its path options accept independently calculated libraries. See the
 
 Use `--reuse` only with the same script and observables as a successful earlier
 run. It reads and plots the existing library without rebuilding it and saves
-its verification report as `summary-reuse.json`. Run a different parameter set
+its verification report as `summary-reuse.json`. Old 0.0625 Hz libraries and
+SPGRN2012 libraries with a native 64 s source or cropped velocity are rejected.
+Run a different parameter set
 in a fresh output directory; a fresh run rejects an existing library because binary components could belong
 to earlier solver settings.
 
@@ -84,16 +113,27 @@ The default QSEIS introductions use 0.5 s sampling and a native 127.5 s window
 (256 samples). QSEIS2025 then crops its introductory outputs to 0–100 s
 (201 samples); QSEIS06 retains all 256 samples. The regional options instead
 use the longer native and exported windows described above.
-The spherical tutorials use 4 s sampling, a 4092 s spectral window and a
-1020 s output window, with a
-64 s source duration and 0.0625 Hz cutoff. The longer spectral window reduces
-periodic contamination in the shorter output window. SPGRN2020 uses
-`max_slowness=0` to select its complete-wavefield branch. QSSP uses
-`min_harmonic=2000, max_harmonic=8000`; raising the former to 4000 changed
-these example waveforms by less than 0.008%. Both settings affect the
-low-frequency content and spatial summation, so they need renewed convergence
-checks for other source depths, distances or bands. SPGRN2020 plots the actual
-native origin-time starts, including their integer-second rounding.
+All five regional dynamic tutorials use 4 s sampling and a requested
+0.125 Hz maximum frequency, with a common effective 64 s normalized
+sin-squared moment-rate pulse. The source duration and temporal shape are
+separate from the numerical cutoff: `1/64` Hz is a characteristic pulse frequency,
+not a hard spectral limit. The native 1024-point transforms span a 4096 s
+FFT period and zero their Nyquist bin, so the highest computed frequency
+is `511/4096 = 0.124755859375` Hz. Native headers or QSEIS input/output
+records verify those settings; summaries preserve the results.
+
+The spherical spectral window is 4092 s and the saved displacement spans
+1020 s on each trace's native origin-time axis. SPGRN2012 additionally
+retains the entire native velocity period for source convolution before
+cropping. The longer spectral window reduces periodic contamination in the
+shorter export. SPGRN2012 and SPGRN2020 both use `max_slowness=0` to select
+their complete-wavefield branches. QSSP uses
+`min_harmonic=2000, max_harmonic=8000`; those settings affect low-frequency
+content and spatial summation and require renewed convergence checks for
+other source depths, distances or bands. SPGRN2020 plots the actual native
+origin-time starts, including their integer-second rounding. See the
+[comparison guide](../docs/guides/backend-comparison.md) for current
+cross-backend and harmonic-cutoff measurements.
 
 EDGRN requires at least two source depths, so the static library uses 10 and
 11 km while the plotted query uses 10 km. Its distance grid spans 0–120 km,

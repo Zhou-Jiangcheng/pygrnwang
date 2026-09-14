@@ -20,8 +20,7 @@
   "target_centroid_s": 32.0,
   "effective_centroid_s": 32.00000073412074,
   "effective_rate_relative_l2": 1.9884466105608343e-06,
-  "spectral_relative_l2_0_to_0_125_hz": 1.7827637217585575e-06,
-  "validated_max_frequency_hz": 0.125,
+  "spectral_relative_l2_0_to_0_0625_hz": 1.7577432851302247e-06,
   "spectral_max_absolute_error_0_to_0_0625_hz": 1.5646882209943217e-06,
   "physical_validation_limits": {
     "area_absolute_error": 1e-08,

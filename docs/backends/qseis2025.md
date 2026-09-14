@@ -107,7 +107,13 @@ rows. The interval is 4 s and the native window is 4092 s, giving
 1024 library samples. The saved waveforms and plots cover 0–1020 s
 inclusive, or 256 samples; their time zero is source origin.
 Results default to `examples/output/qseis2025-regional/`, where
-`disp.npz` has shape `(3, 3, 256)`.
+`disp.npz` has shape `(3, 3, 256)`. The regional QSEIS, SPGRN and QSSP
+examples share the 4 s interval and 0.125 Hz Nyquist limit. QSEIS derives
+its frequency range from sampling rather than a separate `max_frequency`
+argument. The 1024-point FFT computes through
+`511/4096 = 0.124755859375 Hz`; the Nyquist bin is zero.
+All regional examples use strike/dip/rake 30°/45°/90°, moment `10^15 N m`
+and azimuth 30°.
 
 The source uses `wavelet_type=0, wavelet_duration=16` and 1024
 custom moment-rate samples over 0–64 s. Its physical target is the same
@@ -160,15 +166,92 @@ Dimensionless regional strain over 0–1020 s. Shear entries are tensor strains.
 Regional stress in Pa over 0–1020 s for the same source and model.
 ```
 
-The effective source pulse is matched to SPGRN2020/QSSP2020 within the
-documented numerical tolerance. The 24-row half-space model and its
-flat-Earth transformation still do not reproduce all of the complete
-spherical model's structure, and the QSEIS numerical frequency range
-extends above the spherical examples' 0.0625 Hz cutoff.
+The effective 64 s source pulse and frequency band are shared with the
+spherical examples. The default QSEIS2025 regional calculation retains
+`source_radius_ratio=0.05`, matching QSEIS06's native constant. This applies
+frequency- and distance-dependent spatial smoothing; the spherical
+examples use point sources. The 24-row half-space model and its
+flat-Earth transformation also differ from the complete spherical model.
 See [regional comparison limits](../guides/backend-comparison.md#qseis-at-the-same-regional-distances).
 Reuse requires `--regional` and a library built with the current custom
 source and the same selected observables and parameters. Rebuild libraries
 created by the earlier type-2 regional example.
+
+## Point-source control
+
+Run a separate regional calculation to disable the Gaussian spatial
+smoothing:
+
+```console
+python examples/qseis2025.py --regional --point-source
+```
+
+`--point-source` requires `--regional` and sets `source_radius_ratio=0`.
+The default destination becomes
+`examples/output/qseis2025-regional-point-source/`; the standard regional
+library retains its 0.05 ratio. The time sampling, effective 64 s STF,
+mechanism, moment, model and Earth flattening remain the same. Displacement
+is saved as `disp.npz` with shape `(3, 3, 256)` and `disp.png`, together
+with `summary.json` and the source-function records.
+
+For a positive ratio, the native solver uses
+
+```text
+radius(f, r) = source_radius_ratio * min(sqrt(r**2 + (zs-zr)**2), Vp_source/(f+df))
+multiplier(k) = exp(-(k*radius)**2/2)
+```
+
+Here `r` is epicentral distance, `zs-zr` is the source–receiver depth
+separation in the backend coordinates, `Vp_source` is the source-layer
+P-wave speed, `f` is frequency, `df` is the FFT frequency increment and
+`k` is wavenumber. Use consistent length units. The backend applies any
+selected Earth flattening before evaluating these quantities. The radius
+changes with both receiver distance and frequency; it is not a fixed-radius
+physical source disk. Setting the ratio to zero removes the Gaussian
+multiplier and also changes the automatically estimated wavenumber cutoff.
+This can substantially increase computation time.
+
+```{figure} ../_static/examples/qseis2025-point-source.png
+:alt: QSEIS2025 displacement with spatial Gaussian smoothing disabled.
+
+Point-source control at 300, 600 and 900 km, with the same effective 64 s
+STF, mechanism and 0–1020 s output window as the standard regional example.
+```
+
+The verified control changed only the spatial-source ratio among the
+numerical parameters; it requested displacement only. Relative L2 differences
+against the SPGRN2020 point-source calculation at 0.125 Hz were:
+
+| Distance | QSEIS2025 ratio 0.05 | QSEIS2025 ratio 0 |
+| --- | ---: | ---: |
+| 300 km | 12.741% | 11.493% |
+| 600 km | 19.574% | 17.076% |
+| 900 km | 22.798% | 19.718% |
+
+The comparison uses native origin-time coordinates, linearly interpolated
+to a common 1 s grid from each SPGRN2020 start time (3, 40 or 78 s) through
+500 s. Each value is the joint ENU norm of the difference divided by the
+SPGRN2020 norm. No fitted amplitude scale or fitted time shift is applied.
+
+```{figure} ../_static/examples/source-radius-comparison.png
+:alt: Default and point-source QSEIS2025 waveforms compared with SPGRN2020.
+
+Changing the spatial-source ratio reduces part of the discrepancy. A
+substantial residual remains, so the control does not establish spatial
+smoothing as the sole cause or demonstrate convergence of all settings.
+```
+
+The [recorded point-source run](../_static/examples/qseis2025-point-source.json)
+took 647.470 s on the recorded Windows environment, versus approximately
+247 s for the earlier default-ratio run. Its arrays were finite and the
+native output contained no warnings or errors; runtimes depend on hardware
+and concurrent work. See [validation](../validation.md) for run records.
+
+Use `--regional --point-source --reuse` to reread a matching point-source
+library. The example checks the native input's radius ratio and wavenumber
+truncation tolerance as well as its other settings, and rejects a library
+with incompatible spatial-source controls. QSEIS06 fixes the ratio at 0.05
+in its native solver; its existing Python API has no equivalent flag.
 
 ## Parameters that control the calculation
 
