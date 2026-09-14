@@ -4,7 +4,8 @@ All six backend workflows were executed locally on 14 September 2026 using the
 scripts included in this repository. This record describes the actual Windows
 runs used to produce the tutorial figures. A separate GitHub Actions run also
 built and executed all six workflows on Linux, Windows and macOS, as recorded
-below.
+below. The current spherical examples were recalculated after the harmonic
+cutoff audit, and additional QSEIS regional workflows were run at 300/600/900 km.
 
 ## Environment and results
 
@@ -20,12 +21,14 @@ They are measurements for these small examples, not performance guarantees.
 
 | Workflow | Command argument | Validated output shape | Time | Output size | Machine-readable record |
 |---|---|---|---:|---:|---|
-| QSEIS2025 | `--observables all` | displacement `(3, 3, 201)`; strain/stress `(3, 6, 201)` | 13.3 s | 1.21 MiB | [JSON](_static/examples/qseis2025.json) |
-| QSEIS06 | default | `(3, 3, 256)` | 13.0 s | 0.38 MiB | [JSON](_static/examples/qseis06.json) |
+| QSEIS2025 introduction | `--observables all` | displacement `(3, 3, 201)`; strain/stress `(3, 6, 201)` | 13.3 s | 1.21 MiB | [JSON](_static/examples/qseis2025.json) |
+| QSEIS06 introduction | default | `(3, 3, 256)` | 13.0 s | 0.38 MiB | [JSON](_static/examples/qseis06.json) |
 | SPGRN2012 | default | `(3, 3, 256)` | 9.4 s | 12.54 MiB | [JSON](_static/examples/spgrn2012.json) |
-| SPGRN2020 | default | `(3, 3, 256)` | 9.7 s | 17.10 MiB | [JSON](_static/examples/spgrn2020.json) |
-| QSSP2020 | default, including spectra | `(3, 3, 256)` | 14.6 s | 63.74 MiB | [JSON](_static/examples/qssp2020.json) |
+| SPGRN2020 | default, complete wavefield | `(3, 3, 256)` | 17.1 s | 116.02 MiB | [JSON](_static/examples/spgrn2020.json) |
+| QSSP2020 | default, harmonics 2000/8000 | `(3, 3, 256)` | 38.2 s | 330.63 MiB | [JSON](_static/examples/qssp2020.json) |
 | EDGRN2 → EDCMP2 | default, including both solvers | `(3, 3)` | 3.1 s | 0.17 MiB | [JSON](_static/examples/edgrn_edcmp.json) |
+| QSEIS2025 regional | `--regional --observables all` | displacement `(3, 3, 256)`; strain/stress `(3, 6, 256)` | 248.4 s | 3.66 MiB | [JSON](_static/examples/qseis2025-regional.json) |
+| QSEIS06 regional | `--regional` | `(3, 3, 256)` | 242.4 s | 1.18 MiB | [JSON](_static/examples/qseis06-regional.json) |
 
 The dynamic array axes are distance, component and sample. The static axes are
 distance and component. The default displacement-only QSEIS2025 command was also
@@ -38,6 +41,57 @@ full waveform. Its native library still contains 256 samples over 127.5 s.
 The JSON records the exported interval in `output_time_range_s` separately
 from the native `time_window_s`. The refreshed displacement-only run took
 11.4 s.
+
+## Harmonic correction and regional comparison
+
+The revised SPGRN2020 example uses `max_slowness=0`; QSSP2020 uses
+`min_harmonic=2000, max_harmonic=8000`. Both current scripts were executed in
+fresh directories to update their figures and JSON records. The
+[controlled harmonic audit](guides/backend-comparison.md) includes nine
+additional parameter-variation calculations: increasing QSSP's minimum from
+2000 to 4000 at fixed maximum 8000 changed the complete saved waveform by
+less than 0.008%. The original parameter sets had produced finite files but
+had not established waveform convergence.
+
+The QSEIS regional runs use 300/600/900 km, 4 s sampling, the 24-row model
+and the flat-Earth transformation. Native arrays contain 1024 samples over
+4092 s, with 256 samples over 0–1020 s exported. The first regional runs used
+the native real-frequency wavelet and differed from SPGRN2020 by 10.82%,
+17.52% and 20.74%; those measurements are retained in the
+[before-STF record](_static/examples/backend-comparison-before-stf.json).
+
+The current regional examples instead supply 1024 custom moment-rate nodes
+with damping precompensated to match SPGRN2020's physical 64 s source.
+The effective pulse has unit integral, a 32 s centroid, and time-domain and
+spectral relative L2 errors below 1e-5 against the analytic target. These are
+checked independently of the resulting seismogram amplitude; the example
+never fits a waveform scale factor to improve agreement. It reads velocity,
+strain rate and stress rate explicitly and integrates each once. See the
+[STF record](_static/examples/source-time-function.json) and the updated
+[backend comparison](guides/backend-comparison.md) for the final waveforms.
+
+Both custom-source QSEIS runs completed normally. Displacement arrays again
+matched sample for sample; the additional strain/stress outputs were finite.
+Relative L2 differences from SPGRN2020 were 12.68%, 19.75% and 22.95%, so
+matching the source did not explain or remove the earlier regional discrepancy.
+The source-area excess in the old run had partly offset other differences.
+These results are preserved without fitting a waveform scale or time shift.
+
+The default near-distance QSEIS results were reread and compared with their
+previous arrays: displacement and the QSEIS2025 tensor outputs were unchanged.
+Trying to reuse a near-distance library in regional mode was rejected, as was
+requesting missing tensors from a displacement-only library. A new tutorial
+run also rejects an existing library directory to prevent old completion
+markers from being mistaken for freshly calculated data.
+
+`examples/compare_backends.py` saves three overlay figures and a
+[comparison record](_static/examples/backend-comparison.json), using each
+distance's common physical interval through 500 s. It checks the paired QSEIS
+outputs and requires the revised QSSP/SPGRN2020 relative L2 difference to
+remain below 5% for this example. Model, source-spectrum and integration
+limitations are explained in the [comparison guide](guides/backend-comparison.md).
+The example workflow now runs both regional QSEIS commands and this comparison
+on each supported CI platform; the archived run below predates these additions.
 
 ## Initial cross-platform installation and execution
 
@@ -94,16 +148,17 @@ generated HTML and calculation libraries.
 ## What was checked
 
 - Every dynamic example returned three-component displacement at three distances,
-  with finite values and a nonzero waveform. QSEIS2025 exports 201 samples over
-  0–100 s; the other dynamic examples retain 256 samples. QSEIS2025 strain and
-  stress have six components on the same exported distance/time grid.
+  with finite values and a nonzero waveform. The QSEIS2025 introduction exports
+  201 samples over 0–100 s; its regional variant and other dynamic examples
+  export 256 samples. QSEIS2025 strain and stress have six components on the
+  same exported distance/time grid as displacement in each mode.
 - EDGRN generated the layered kernels; EDCMP used those kernels for all five
   mechanism bases at both source depths. ASCII-to-binary conversion produced
   the bulk shape `(2, 1, 5, 5, 3)`, and the three queried displacements were finite.
 - Component labels and time axes were checked against the readers. Vector figures
   use east, north, up; QSEIS2025 tensors use EE, EN, EU, NN, NU, UU. SPGRN2012
-  uses its distance-dependent native start time, and SPGRN2020 plots time relative
-  to its library P arrival.
+  uses its distance-dependent native start time, and the revised SPGRN2020
+  example uses the origin-time starts stored in its native binary headers.
 - The static material lookup uses four-column `noQ.nd`, avoiding an invalid
   six-column material reshape. Its result is explicitly multiplied by seismic
   moment after EDCMP's unit-moment normalization.
@@ -118,7 +173,7 @@ its own `summary.json`, with the environment, elapsed time, array dimensions,
 maximum absolute value and output size. `--reuse` repeats the reader/plot checks
 without native recomputation and writes `summary-reuse.json`.
 
-These are installation and workflow checks. The tutorial model uses the bundled
+The base runs check installation and workflow; the additional comparison records specific numerical checks. The tutorial model uses the bundled
 AK135 elastic structure with explicit constant Qp = 600 and Qs = 300. Regional
 examples truncate it at 809.5 km; spherical examples retain the full structure.
 The figures are not a claim that these different discretizations, source time

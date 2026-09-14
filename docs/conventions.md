@@ -140,7 +140,7 @@ QSEIS2025 tensor workflow for the introductory tensor example.
 | --- | --- | --- |
 | QSEIS06/2025 | `wavelet_duration`, **number of samples** | Integer duration; multiply by `sampling_interval` to interpret in seconds |
 | SPGRN2012/2020 | `source_duration`, seconds | Squared half-sinusoid duration |
-| QSSP2020 | `source_duration`, seconds | Moment-rate rise-time parameter |
+| QSSP2020 | `source_duration`, seconds | Squared half-sinusoid moment-rate duration |
 | EDGRN/EDCMP | None | Static response |
 
 QSEIS `wavelet_type=1` selects a normalized squared half-sinusoid approximating
@@ -154,12 +154,41 @@ formats duration as an integer.
 
 SPGRN stores velocity kernels and its reader integrates displacement or
 differentiates acceleration. QSSP writes each selected observable directly.
-A comparison needs matching physical source-time functions, not merely the
-same numeric duration parameter.
+For the spherical examples, a duration `T=64` s describes a normalized
+squared half-sinusoid on 0 to `T`, with its centroid at 32 s. The examples
+do not apply a separate centroid shift.
 
-Custom QSEIS wavelets (`wavelet_type=0`) require suitable low-level input:
-high-level preprocessors do not accept a custom sample array, and readers
-do not infer a custom wavelet's physical normalization.
+There is an implementation difference despite the shared physical source
+definition: SPGRN2012's old wavelet routine omits the imaginary frequency
+used in numerical damping, whereas SPGRN2020 and QSSP2020 include it.
+For the examples' 4096 s FFT period and 0.01 anti-aliasing factor, the
+effective SPGRN2012 source-pulse area after damping correction is about
+3.67% larger. This value depends on the duration and damping settings;
+it is not a universal amplitude conversion. See the
+[backend comparison](guides/backend-comparison.md) before interpreting
+small inter-backend amplitude differences.
+
+The QSEIS regional examples use `wavelet_type=0` with 1024 custom
+moment-rate nodes spanning 64 s. For target rate
+`r(t) = (2/64) * sin(pi*t/64)**2` on 0–64 s, the written samples are
+`r(t) * exp(2*pi*fi*t)`, where
+`fi = log(0.01) / (2*pi*4092)`. This compensates for the solver's
+real-frequency wavelet transform and subsequent damping correction.
+The input samples have area about 0.9647094 and must not be renormalized:
+the effective physical pulse has unit area and centroid 32 s.
+The verified time-domain and spectral relative L2 errors are below
+`1e-5` against the target. See the
+[STF construction and checks](guides/backend-comparison.md#matching-the-effective-source-time-function).
+
+Custom QSEIS wavelets require a sample block in the low-level input;
+the high-level preprocessor has no custom-array parameter. The regional
+example helper installs this block after preprocessing. The ordinary
+readers do not infer the normalization or rate/non-rate meaning of type 0.
+For this moment-rate pulse, the examples explicitly read `velo`,
+`strain_rate` or `stress_rate` and integrate once with `cumsum * dt`.
+Calling the generic reader with `output_type="disp"` on this type-0
+library does not automatically integrate velocity. The default
+near-distance tutorials retain their built-in type-2 pulse.
 
 ## Time origin, reduction and arrivals
 
@@ -169,10 +198,13 @@ At the native sampling interval `dt`, unadjusted sample `i` represents
 | Backend | Native `t_start` relative to source origin |
 | --- | --- |
 | QSEIS06/2025 | `grn_dist / time_reduction_velo`, or zero for zero reduction velocity |
-| SPGRN2012 | `t0 + distance / v0` |
-| SPGRN2020 | Direct-P onset minus `green_before_p` |
+| SPGRN2012 | Nearest integer second to `t0 + distance / v0` |
+| SPGRN2020 | Nearest integer second to direct-P onset minus `green_before_p` |
 | QSSP2020 | `time_reduction`, in seconds |
 
+SPGRN native binary record headers contain the stored start time.
+Use those values for a strict source-origin comparison: metadata formulas
+or fractional P onsets alone can miss integer-second rounding.
 SPGRN2012 reader alignment uses requested distance and `v0`; use exact grid
 points for simple timing comparisons. Negative QSSP reduction means before
 source origin, not before P. QSEIS reduction velocity is in km/s.
@@ -209,3 +241,13 @@ sampling, source duration and model discretization. A small tutorial
 demonstrates the workflow; it does not establish numerical accuracy for
 another source, distance or frequency band. Save the exact model, generated
 inputs, package version, grid and processing settings with published results.
+
+For spherical backends, equal positive slowness limits do not guarantee
+equal low-frequency harmonic content. In SPGRN2020, `max_slowness=0`
+selects a separate full-wavefield branch with automatic slowness selection.
+In QSSP2020, `min_harmonic` controls the low-frequency baseline of an
+upper cutoff, while `max_harmonic` also affects spatial differential
+transformation. Neither parameter describes a band that drops all lower
+degrees. The [controlled example comparison](guides/backend-comparison.md)
+shows why file, shape and finite-value checks alone cannot establish
+waveform accuracy.

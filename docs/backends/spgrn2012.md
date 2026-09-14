@@ -61,9 +61,11 @@ when the model and spectral parameters are unchanged.
 equal values request a uniform grid. Use the actual `dist_list` in
 `green_lib_info.json` for reading.
 
-The native start time is `t0 + distance / v0`. Here `t0=-40` s and
-`v0=10` km/s, so the three nominal start times are -10, 20 and 50 s.
-This is not the P-relative convention of SPGRN2020.
+Fortran rounds `t0 + distance / v0` to the nearest integer second for
+the native start time. Here `t0=-40` s and `v0=10` km/s, giving starts
+of -10, 20 and 50 s. SPGRN2020 uses a different rule based on P onset.
+Both example figures nevertheless express their time axes relative to
+source origin, allowing comparisons over their common time interval.
 
 ## Travel-time tables are part of the workflow
 
@@ -84,8 +86,17 @@ it; `"acce"` differentiates it. The example scales a unit mechanism by
 `10^15 N m` and returns E/N/up displacement. Nearest and trilinear
 waveform interpolation are available.
 
-The 64 s source and coarse distance grid demonstrate a long-period workflow.
-They do not establish convergence for high-frequency regional phases or
-near-field static response. Compare unshifted grid-point traces first,
-then validate interpolation or arrival-based waveform adjustments for
-your application.
+The [controlled spherical-backend comparison](../guides/backend-comparison.md)
+found approximately 4% displacement differences from SPGRN2020's
+full-wavefield result over the shared interval ending at 500 s.
+SPGRN2012's older wavelet implementation evaluates the source spectrum
+at real frequency, while SPGRN2020 and QSSP2020 include the imaginary
+frequency used for numerical damping. With this example's parameters,
+the older implementation produces an effective source-pulse area about
+3.67% larger after damping correction. This is consistent with much of
+the amplitude difference; it does not explain every residual difference.
+
+The 64 s source and coarse distance grid do not establish convergence for
+high-frequency regional phases or other source/receiver geometries.
+Compare unshifted grid-point traces first, then validate interpolation
+or arrival-based waveform adjustments for your application.

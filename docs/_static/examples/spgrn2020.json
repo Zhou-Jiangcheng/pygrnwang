@@ -1,6 +1,6 @@
 {
   "backend": "SPGRN2020",
-  "started_utc": "2026-09-14T02:29:04Z",
+  "started_utc": "2026-09-14T08:17:58Z",
   "platform": "Windows-11-10.0.26200-SP0",
   "python": "3.12.13",
   "dependencies": {
@@ -35,7 +35,7 @@
       ],
       "unit": "m",
       "finite": true,
-      "peak_absolute": 1.3986820979115417e-08
+      "peak_absolute": 1.4550723940949578e-08
     }
   },
   "sampling_interval_s": 4.0,
@@ -49,7 +49,14 @@
   "max_frequency_hz": 0.0625,
   "green_before_p_s": 40.0,
   "source_duration_s": 64.0,
-  "elapsed_seconds": 9.659,
+  "max_slowness_s_km": 0.0,
+  "full_wavefield": true,
+  "trace_start_times_s": [
+    3.0,
+    40.0,
+    78.0
+  ],
+  "elapsed_seconds": 17.141,
   "file_count": 15,
-  "output_bytes": 17930963
+  "output_bytes": 121654111
 }

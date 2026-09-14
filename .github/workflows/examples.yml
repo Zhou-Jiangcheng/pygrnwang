@@ -49,6 +49,10 @@ jobs:
         run: python examples/qseis2025.py --observables all
       - name: QSEIS06
         run: python examples/qseis06.py
+      - name: QSEIS2025 regional displacement and tensors
+        run: python examples/qseis2025.py --regional --observables all
+      - name: QSEIS06 regional displacement
+        run: python examples/qseis06.py --regional
       - name: SPGRN2012
         run: python examples/spgrn2012.py
       - name: SPGRN2020
@@ -57,6 +61,8 @@ jobs:
         run: python examples/qssp2020.py
       - name: EDGRN followed by EDCMP
         run: python examples/edgrn_edcmp.py
+      - name: Compare regional and spherical waveforms
+        run: python examples/compare_backends.py
       - name: Upload calculation evidence
         if: always()
         uses: actions/upload-artifact@v7
@@ -64,6 +70,9 @@ jobs:
           name: tutorial-results-${{ matrix.os }}
           path: |
             examples/output/**/summary.json
+            examples/output/**/comparison.json
+            examples/output/**/source_time_function.json
+            examples/output/**/stf.json
             examples/output/**/*.png
             examples/output/**/*.npz
             examples/output/**/*.inp

@@ -63,6 +63,16 @@ distances, read displacement (and optionally strain/stress), and save NPZ files,
 figures and a JSON run summary. Constant attenuation and small numerical grids
 are explicit tutorial choices, not convergence recommendations for research.
 
+For a separate 300/600/900 km calculation with a longer output window:
+
+```bash
+python examples/qseis2025.py --regional --observables all
+python examples/qseis06.py --regional
+```
+
+See the [backend comparison](https://zhou-jiangcheng.github.io/pygrnwang/guides/backend-comparison.html)
+for spherical-harmonic convergence and the limits of comparing layered and spherical models.
+
 Other complete workflows are listed in [the example scripts](https://github.com/Zhou-Jiangcheng/pygrnwang/tree/main/examples).
 Read the [scientific conventions](https://zhou-jiangcheng.github.io/pygrnwang/conventions.html) before interpreting
 amplitudes, component order or time origins. The [validation record](https://zhou-jiangcheng.github.io/pygrnwang/validation.html)

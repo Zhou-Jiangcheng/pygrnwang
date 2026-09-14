@@ -33,6 +33,9 @@ def prepare(args, backend, extra=None):
     """Resolve paths before solvers change cwd, and write a six-column ND model."""
     output = args.output_dir.expanduser().resolve()
     output.mkdir(parents=True, exist_ok=True)
+    if not args.reuse and (output / "library" / "green_lib_info.json").exists():
+        raise FileExistsError("This tutorial directory already contains a library. "
+                              "Use --reuse for matching settings, or a fresh --output-dir.")
     model = output / "ak135_tutorial.nd"
     # AK135 elastic velocities/density are bundled; constant Q is an explicit
     # tutorial choice, not the frequency-dependent AK135-F attenuation model.
@@ -56,6 +59,16 @@ def prepare(args, backend, extra=None):
               "outputs": {}}
     report.update(extra or {})
     return output, str(library), str(model), report, time.perf_counter()
+
+
+def require_library_settings(library, **expected):
+    """Reject an older library when a tutorial's numerical settings change."""
+    info = json.loads((Path(library) / "green_lib_info.json").read_text(encoding="utf-8"))
+    mismatches = [name for name, value in expected.items() if info.get(name) != value]
+    if mismatches:
+        raise ValueError("Existing library settings differ: %s. Recalculate in a fresh "
+                         "--output-dir without --reuse." % ", ".join(mismatches))
+    return info
 
 
 def save_waveforms(output, report, name, arrays, distances, dt, labels,

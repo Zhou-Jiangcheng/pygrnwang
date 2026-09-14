@@ -1,0 +1,1166 @@
+{
+  "created_utc": "2026-09-14T08:25:01.681088+00:00",
+  "reference": "SPGRN2020 full wavefield (max_slowness=0)",
+  "method": "Linear interpolation to 1 s on all five backends' common valid origin-time interval at each distance through 500 s",
+  "fitted_time_shifts": false,
+  "fitted_amplitude_factors": false,
+  "relative_l2_definition": "norm(values-reference)/norm(reference), over ENU and time for each distance",
+  "correlation_definition": "Pearson correlation; null when either demeaned trace has zero norm",
+  "components": [
+    "E",
+    "N",
+    "U"
+  ],
+  "unit": "m",
+  "comparison_time_ranges_s": [
+    [
+      3.0,
+      500.0
+    ],
+    [
+      40.0,
+      500.0
+    ],
+    [
+      78.0,
+      500.0
+    ]
+  ],
+  "provenance": {
+    "qseis06": {
+      "npz_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qseis06-regional-validated\\disp.npz",
+      "npz_sha256": "a49ffc18d233736a5e14c545391b63ce2da12ee2da110a3451f8321b38583b94",
+      "summary_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qseis06-regional-validated\\summary.json",
+      "summary": {
+        "backend": "QSEIS06",
+        "started_utc": "2026-09-14T08:20:34Z",
+        "platform": "Windows-11-10.0.26200-SP0",
+        "python": "3.12.13",
+        "dependencies": {
+          "numpy": "2.3.5",
+          "scipy": "1.18.0",
+          "pandas": "3.0.0",
+          "matplotlib": "3.11.0",
+          "obspy": "1.5.0"
+        },
+        "source_depth_km": 10.0,
+        "receiver_depth_km": 0.0,
+        "moment_nm": 1000000000000000.0,
+        "strike_dip_rake_deg": [
+          30.0,
+          45.0,
+          90.0
+        ],
+        "azimuth_deg": 30.0,
+        "reuse": false,
+        "model": "Bundled AK135 elastic properties; illustrative constant Qp=600, Qs=300",
+        "outputs": {
+          "disp": {
+            "shape": [
+              3,
+              3,
+              256
+            ],
+            "components": [
+              "E",
+              "N",
+              "U"
+            ],
+            "unit": "m",
+            "finite": true,
+            "peak_absolute": 1.4384499953470644e-08
+          }
+        },
+        "sampling_interval_s": 4.0,
+        "time_window_s": 4092.0,
+        "distances_km": [
+          300.0,
+          600.0,
+          900.0
+        ],
+        "output_time_range_s": [
+          0.0,
+          1020.0
+        ],
+        "native_samples": 1024,
+        "earth_model_numeric_rows": 24,
+        "wavelet_type": 2,
+        "wavelet_duration_samples": 16,
+        "wavelet_duration_s": 64.0,
+        "flat_earth_transform": true,
+        "regional": true,
+        "elapsed_seconds": 195.707,
+        "file_count": 28,
+        "output_bytes": 1068009
+      },
+      "native_time_ranges_s": [
+        [
+          0.0,
+          1020.0
+        ],
+        [
+          0.0,
+          1020.0
+        ],
+        [
+          0.0,
+          1020.0
+        ]
+      ],
+      "library_metadata_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qseis06-regional-validated\\library\\green_lib_info.json",
+      "library_metadata": {
+        "processes_num": 1,
+        "event_depth_list": [
+          10.0
+        ],
+        "receiver_depth_list": [
+          0.0
+        ],
+        "grn_dist_range": [
+          300.0,
+          900.0
+        ],
+        "grn_delta_dist": 300.0,
+        "N_dist": 3,
+        "N_dist_group": 1,
+        "N_each_group": 3,
+        "time_window": 4092.0,
+        "sampling_interval": 4.0,
+        "sampling_num": 1024,
+        "slowness_int_algorithm": 0,
+        "slowness_window": null,
+        "time_reduction_velo": 0,
+        "wavenumber_sampling_rate": 12,
+        "anti_alias": 0.01,
+        "free_surface": true,
+        "wavelet_duration": 16,
+        "wavelet_type": 2,
+        "flat_earth_transform": true,
+        "path_nd": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qseis06-regional-validated\\ak135_tutorial.nd",
+        "path_nd_without_Q": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qseis06-regional-validated\\library\\noQ.nd",
+        "earth_model_layer_num": 24
+      }
+    },
+    "qseis2025": {
+      "npz_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qseis2025-regional-validated\\disp.npz",
+      "npz_sha256": "a49ffc18d233736a5e14c545391b63ce2da12ee2da110a3451f8321b38583b94",
+      "summary_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qseis2025-regional-validated\\summary.json",
+      "summary": {
+        "backend": "QSEIS2025",
+        "started_utc": "2026-09-14T08:20:45Z",
+        "platform": "Windows-11-10.0.26200-SP0",
+        "python": "3.12.13",
+        "dependencies": {
+          "numpy": "2.3.5",
+          "scipy": "1.18.0",
+          "pandas": "3.0.0",
+          "matplotlib": "3.11.0",
+          "obspy": "1.5.0"
+        },
+        "source_depth_km": 10.0,
+        "receiver_depth_km": 0.0,
+        "moment_nm": 1000000000000000.0,
+        "strike_dip_rake_deg": [
+          30.0,
+          45.0,
+          90.0
+        ],
+        "azimuth_deg": 30.0,
+        "reuse": false,
+        "model": "Bundled AK135 elastic properties; illustrative constant Qp=600, Qs=300",
+        "outputs": {
+          "disp": {
+            "shape": [
+              3,
+              3,
+              256
+            ],
+            "components": [
+              "E",
+              "N",
+              "U"
+            ],
+            "unit": "m",
+            "finite": true,
+            "peak_absolute": 1.4384499953470644e-08
+          },
+          "strain": {
+            "shape": [
+              3,
+              6,
+              256
+            ],
+            "components": [
+              "EE",
+              "EN",
+              "EU",
+              "NN",
+              "NU",
+              "UU"
+            ],
+            "unit": "1",
+            "finite": true,
+            "peak_absolute": 2.1096811724242048e-13
+          },
+          "stress": {
+            "shape": [
+              3,
+              6,
+              256
+            ],
+            "components": [
+              "EE",
+              "EN",
+              "EU",
+              "NN",
+              "NU",
+              "UU"
+            ],
+            "unit": "Pa",
+            "finite": true,
+            "peak_absolute": 0.013140636832229208
+          }
+        },
+        "sampling_interval_s": 4.0,
+        "time_window_s": 4092.0,
+        "output_time_range_s": [
+          0.0,
+          1020.0
+        ],
+        "distances_km": [
+          300.0,
+          600.0,
+          900.0
+        ],
+        "native_samples": 1024,
+        "earth_model_numeric_rows": 24,
+        "wavelet_type": 2,
+        "wavelet_duration_samples": 16,
+        "wavelet_duration_s": 64.0,
+        "flat_earth_transform": true,
+        "regional": true,
+        "elapsed_seconds": 194.921,
+        "file_count": 80,
+        "output_bytes": 3662694
+      },
+      "native_time_ranges_s": [
+        [
+          0.0,
+          1020.0
+        ],
+        [
+          0.0,
+          1020.0
+        ],
+        [
+          0.0,
+          1020.0
+        ]
+      ],
+      "library_metadata_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qseis2025-regional-validated\\library\\green_lib_info.json",
+      "library_metadata": {
+        "processes_num": 1,
+        "event_depth_list": [
+          10.0
+        ],
+        "receiver_depth_list": [
+          0.0
+        ],
+        "grn_dist_range": [
+          300.0,
+          900.0
+        ],
+        "grn_delta_dist": 300.0,
+        "N_dist": 3,
+        "N_dist_group": 1,
+        "N_each_group": 3,
+        "time_window": 4092.0,
+        "sampling_interval": 4.0,
+        "sampling_num": 1024,
+        "slowness_int_algorithm": 0,
+        "slowness_window": null,
+        "time_reduction_velo": 0,
+        "wavenumber_sampling_rate": 12,
+        "anti_alias": 0.01,
+        "free_surface": 0,
+        "wavelet_duration": 16,
+        "wavelet_type": 2,
+        "flat_earth_transform": true,
+        "path_nd": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qseis2025-regional-validated\\ak135_tutorial.nd",
+        "path_nd_without_Q": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qseis2025-regional-validated\\library\\noQ.nd",
+        "earth_model_layer_num": 24
+      }
+    },
+    "spgrn2012": {
+      "npz_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\spgrn2012\\disp.npz",
+      "npz_sha256": "a8f8cfe6c893a3dfa66bf3a98fb19ff9286eff799a529096e55b469d37ba4fc7",
+      "summary_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\spgrn2012\\summary-reuse.json",
+      "summary": {
+        "backend": "SPGRN2012",
+        "started_utc": "2026-09-14T02:37:36Z",
+        "platform": "Windows-11-10.0.26200-SP0",
+        "python": "3.12.13",
+        "dependencies": {
+          "numpy": "2.3.5",
+          "scipy": "1.18.0",
+          "pandas": "3.0.0",
+          "matplotlib": "3.11.0",
+          "obspy": "1.5.0"
+        },
+        "source_depth_km": 10.0,
+        "receiver_depth_km": 0.0,
+        "moment_nm": 1000000000000000.0,
+        "strike_dip_rake_deg": [
+          30.0,
+          45.0,
+          90.0
+        ],
+        "azimuth_deg": 30.0,
+        "reuse": true,
+        "model": "Bundled AK135 elastic properties; illustrative constant Qp=600, Qs=300",
+        "outputs": {
+          "disp": {
+            "shape": [
+              3,
+              3,
+              256
+            ],
+            "components": [
+              "E",
+              "N",
+              "U"
+            ],
+            "unit": "m",
+            "finite": true,
+            "peak_absolute": 1.5146271724570058e-08
+          }
+        },
+        "sampling_interval_s": 4.0,
+        "time_window_s": 1020.0,
+        "distances_km": [
+          300.0,
+          600.0,
+          900.0
+        ],
+        "spec_time_window_s": 4092.0,
+        "max_frequency_hz": 0.0625,
+        "t0_s": -40.0,
+        "v0_km_s": 10.0,
+        "source_duration_s": 64.0,
+        "elapsed_seconds": 0.115,
+        "file_count": 15,
+        "output_bytes": 13154039
+      },
+      "native_time_ranges_s": [
+        [
+          -10.0,
+          1010.0
+        ],
+        [
+          20.0,
+          1040.0
+        ],
+        [
+          50.0,
+          1070.0
+        ]
+      ],
+      "library_metadata_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\spgrn2012\\library\\green_lib_info.json",
+      "library_metadata": {
+        "processes_num": 1,
+        "path_green": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\spgrn2012\\library",
+        "event_depth_list": [
+          10.0
+        ],
+        "receiver_depth_list": [
+          0.0
+        ],
+        "spec_time_window": 4092.0,
+        "sampling_interval": 4.0,
+        "max_frequency": 0.0625,
+        "max_slowness": 0.3,
+        "anti_alias": 0.01,
+        "gravity_fc": 0.0,
+        "gravity_harmonic": 0,
+        "cal_sph": 1,
+        "cal_tor": 1,
+        "source_radius": 0.0,
+        "cal_gf": 1,
+        "time_window": 1020.0,
+        "t0": -40.0,
+        "v0": 10.0,
+        "source_duration": 64.0,
+        "dist_range": [
+          300.0,
+          900.0
+        ],
+        "delta_dist_range": [
+          300.0,
+          300.0
+        ],
+        "path_nd": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\spgrn2012\\ak135_tutorial.nd",
+        "earth_model_layer_num": null,
+        "physical_dispersion": 0,
+        "path_nd_without_Q": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\spgrn2012\\library\\noQ.nd",
+        "dist_list": [
+          300.0,
+          600.0,
+          900.0
+        ],
+        "samples_num": 256
+      }
+    },
+    "spgrn2020": {
+      "npz_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\spgrn2020-converged\\disp.npz",
+      "npz_sha256": "a47b399ab45892abdcba5ec0237c0ba3a6bea035a8eb5c3f7c21884ac8a77401",
+      "summary_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\spgrn2020-converged\\summary.json",
+      "summary": {
+        "backend": "SPGRN2020",
+        "started_utc": "2026-09-14T08:17:58Z",
+        "platform": "Windows-11-10.0.26200-SP0",
+        "python": "3.12.13",
+        "dependencies": {
+          "numpy": "2.3.5",
+          "scipy": "1.18.0",
+          "pandas": "3.0.0",
+          "matplotlib": "3.11.0",
+          "obspy": "1.5.0"
+        },
+        "source_depth_km": 10.0,
+        "receiver_depth_km": 0.0,
+        "moment_nm": 1000000000000000.0,
+        "strike_dip_rake_deg": [
+          30.0,
+          45.0,
+          90.0
+        ],
+        "azimuth_deg": 30.0,
+        "reuse": false,
+        "model": "Bundled AK135 elastic properties; illustrative constant Qp=600, Qs=300",
+        "outputs": {
+          "disp": {
+            "shape": [
+              3,
+              3,
+              256
+            ],
+            "components": [
+              "E",
+              "N",
+              "U"
+            ],
+            "unit": "m",
+            "finite": true,
+            "peak_absolute": 1.4550723940949578e-08
+          }
+        },
+        "sampling_interval_s": 4.0,
+        "time_window_s": 1020.0,
+        "distances_km": [
+          300.0,
+          600.0,
+          900.0
+        ],
+        "spec_time_window_s": 4092.0,
+        "max_frequency_hz": 0.0625,
+        "green_before_p_s": 40.0,
+        "source_duration_s": 64.0,
+        "max_slowness_s_km": 0.0,
+        "full_wavefield": true,
+        "trace_start_times_s": [
+          3.0,
+          40.0,
+          78.0
+        ],
+        "elapsed_seconds": 17.141,
+        "file_count": 15,
+        "output_bytes": 121654111
+      },
+      "native_time_ranges_s": [
+        [
+          3.0,
+          1023.0
+        ],
+        [
+          40.0,
+          1060.0
+        ],
+        [
+          78.0,
+          1098.0
+        ]
+      ],
+      "library_metadata_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\spgrn2020-converged\\library\\green_lib_info.json",
+      "library_metadata": {
+        "processes_num": 1,
+        "path_green": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\spgrn2020-converged\\library",
+        "event_depth_list": [
+          10.0
+        ],
+        "receiver_depth_list": [
+          0.0
+        ],
+        "spec_time_window": 4092.0,
+        "sampling_interval": 4.0,
+        "max_frequency": 0.0625,
+        "max_slowness": 0.0,
+        "anti_alias": 0.01,
+        "gravity_fc": 0.0,
+        "gravity_harmonic": 0,
+        "cal_sph": 1,
+        "cal_tor": 1,
+        "source_radius": 0.0,
+        "cal_gf": 1,
+        "time_window": 1020.0,
+        "green_before_p": 40.0,
+        "source_duration": 64.0,
+        "dist_range": [
+          300.0,
+          900.0
+        ],
+        "delta_dist_range": [
+          300.0,
+          300.0
+        ],
+        "path_nd": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\spgrn2020-converged\\ak135_tutorial.nd",
+        "earth_model_layer_num": null,
+        "physical_dispersion": 0,
+        "path_nd_without_Q": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\spgrn2020-converged\\library\\noQ.nd",
+        "dist_list": [
+          300.0,
+          600.0,
+          900.0
+        ],
+        "samples_num": 256
+      }
+    },
+    "qssp2020": {
+      "npz_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qssp2020-converged\\disp.npz",
+      "npz_sha256": "13d692c5c1d8b4026b5532e134b07c3fa390699e7c65974e0c97f74a08301640",
+      "summary_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qssp2020-converged\\summary.json",
+      "summary": {
+        "backend": "QSSP2020",
+        "started_utc": "2026-09-14T08:18:19Z",
+        "platform": "Windows-11-10.0.26200-SP0",
+        "python": "3.12.13",
+        "dependencies": {
+          "numpy": "2.3.5",
+          "scipy": "1.18.0",
+          "pandas": "3.0.0",
+          "matplotlib": "3.11.0",
+          "obspy": "1.5.0"
+        },
+        "source_depth_km": 10.0,
+        "receiver_depth_km": 0.0,
+        "moment_nm": 1000000000000000.0,
+        "strike_dip_rake_deg": [
+          30.0,
+          45.0,
+          90.0
+        ],
+        "azimuth_deg": 30.0,
+        "reuse": false,
+        "model": "Bundled AK135 elastic properties; illustrative constant Qp=600, Qs=300",
+        "outputs": {
+          "disp": {
+            "shape": [
+              3,
+              3,
+              256
+            ],
+            "components": [
+              "E",
+              "N",
+              "U"
+            ],
+            "unit": "m",
+            "finite": true,
+            "peak_absolute": 1.4524259876250708e-08
+          }
+        },
+        "sampling_interval_s": 4.0,
+        "time_window_s": 1020.0,
+        "distances_km": [
+          300.0,
+          600.0,
+          900.0
+        ],
+        "spec_time_window_s": 4092.0,
+        "max_frequency_hz": 0.0625,
+        "harmonic_bounds": [
+          2000,
+          8000
+        ],
+        "source_duration_s": 64.0,
+        "elapsed_seconds": 38.182,
+        "file_count": 67,
+        "output_bytes": 346693604
+      },
+      "native_time_ranges_s": [
+        [
+          0.0,
+          1020.0
+        ],
+        [
+          0.0,
+          1020.0
+        ],
+        [
+          0.0,
+          1020.0
+        ]
+      ],
+      "library_metadata_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qssp2020-converged\\library\\green_lib_info.json",
+      "library_metadata": {
+        "processes_num": 1,
+        "event_depth_list": [
+          10.0
+        ],
+        "receiver_depth_list": [
+          0.0
+        ],
+        "spec_time_window": 4092.0,
+        "sampling_interval": 4.0,
+        "max_frequency": 0.0625,
+        "max_slowness": 0.3,
+        "anti_alias": 0.01,
+        "turning_point_filter": 0,
+        "turning_point_d1": 0.0,
+        "turning_point_d2": 6371.0,
+        "free_surface_filter": 1,
+        "gravity_fc": 0.0,
+        "gravity_harmonic": 0,
+        "cal_sph": 1,
+        "cal_tor": 1,
+        "min_harmonic": 2000,
+        "max_harmonic": 8000,
+        "source_radius": 0.0,
+        "source_duration": 64.0,
+        "output_observables": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "time_window": 1020.0,
+        "sampling_num": 256,
+        "time_reduction": 0.0,
+        "grn_dist_range": [
+          300.0,
+          900.0
+        ],
+        "grn_delta_dist": 300.0,
+        "path_nd": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qssp2020-converged\\ak135_tutorial.nd",
+        "path_nd_without_Q": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qssp2020-converged\\library\\noQ.nd",
+        "earth_model_layer_num": null,
+        "physical_dispersion": 0
+      }
+    }
+  },
+  "limitations": [
+    "QSEIS uses a transformed finite-depth model over a half-space; spherical examples use the complete Earth model.",
+    "The nominal 64 s source rate is the same sin-squared shape, but real/complex-frequency wavelets and numerical integration differ.",
+    "QSEIS Nyquist frequency is 0.125 Hz; spherical examples use a 0.0625 Hz spectral cutoff.",
+    "Displacement integration baselines and native time windows differ between backends.",
+    "Thresholds check these tutorial settings; they do not establish general backend equivalence."
+  ],
+  "distances": [
+    {
+      "distance_km": 300.0,
+      "backends": {
+        "qseis06": {
+          "relative_l2": 0.10819051763190636,
+          "correlation": 0.9980370290431833,
+          "peak_absolute_m": 1.4384499953470644e-08,
+          "reference_peak_absolute_m": 1.4550723940949578e-08,
+          "absolute_peak_time_s": 120.0,
+          "components": {
+            "E": {
+              "relative_l2": 0.18831958424110767,
+              "correlation": 0.995943193157892,
+              "peak_absolute_m": 4.864999865806606e-09,
+              "reference_peak_absolute_m": 5.495577975110608e-09,
+              "absolute_peak_time_s": 88.0
+            },
+            "N": {
+              "relative_l2": 0.18831958424110687,
+              "correlation": 0.9959431931578917,
+              "peak_absolute_m": 8.426426946392814e-09,
+              "reference_peak_absolute_m": 9.518620269848064e-09,
+              "absolute_peak_time_s": 88.0
+            },
+            "U": {
+              "relative_l2": 0.052532247695239113,
+              "correlation": 0.9977053174322635,
+              "peak_absolute_m": 1.4384499953470644e-08,
+              "reference_peak_absolute_m": 1.4550723940949578e-08,
+              "absolute_peak_time_s": 120.0
+            }
+          }
+        },
+        "qseis2025": {
+          "relative_l2": 0.10819051763190636,
+          "correlation": 0.9980370290431833,
+          "peak_absolute_m": 1.4384499953470644e-08,
+          "reference_peak_absolute_m": 1.4550723940949578e-08,
+          "absolute_peak_time_s": 120.0,
+          "components": {
+            "E": {
+              "relative_l2": 0.18831958424110767,
+              "correlation": 0.995943193157892,
+              "peak_absolute_m": 4.864999865806606e-09,
+              "reference_peak_absolute_m": 5.495577975110608e-09,
+              "absolute_peak_time_s": 88.0
+            },
+            "N": {
+              "relative_l2": 0.18831958424110687,
+              "correlation": 0.9959431931578917,
+              "peak_absolute_m": 8.426426946392814e-09,
+              "reference_peak_absolute_m": 9.518620269848064e-09,
+              "absolute_peak_time_s": 88.0
+            },
+            "U": {
+              "relative_l2": 0.052532247695239113,
+              "correlation": 0.9977053174322635,
+              "peak_absolute_m": 1.4384499953470644e-08,
+              "reference_peak_absolute_m": 1.4550723940949578e-08,
+              "absolute_peak_time_s": 120.0
+            }
+          }
+        },
+        "spgrn2012": {
+          "relative_l2": 0.04077854551158646,
+          "correlation": 0.9998167245155266,
+          "peak_absolute_m": 1.5146271724570058e-08,
+          "reference_peak_absolute_m": 1.4550723940949578e-08,
+          "absolute_peak_time_s": 118.0,
+          "components": {
+            "E": {
+              "relative_l2": 0.046874273400568336,
+              "correlation": 0.9995318198496341,
+              "peak_absolute_m": 5.715480041921498e-09,
+              "reference_peak_absolute_m": 5.495577975110608e-09,
+              "absolute_peak_time_s": 90.0
+            },
+            "N": {
+              "relative_l2": 0.04687427340056908,
+              "correlation": 0.9995318198496342,
+              "peak_absolute_m": 9.899501822253934e-09,
+              "reference_peak_absolute_m": 9.518620269848064e-09,
+              "absolute_peak_time_s": 90.0
+            },
+            "U": {
+              "relative_l2": 0.038232409076538854,
+              "correlation": 0.9997277121845646,
+              "peak_absolute_m": 1.5146271724570058e-08,
+              "reference_peak_absolute_m": 1.4550723940949578e-08,
+              "absolute_peak_time_s": 118.0
+            }
+          }
+        },
+        "spgrn2020": {
+          "relative_l2": 0.0,
+          "correlation": 1.0,
+          "peak_absolute_m": 1.4550723940949578e-08,
+          "reference_peak_absolute_m": 1.4550723940949578e-08,
+          "absolute_peak_time_s": 119.0,
+          "components": {
+            "E": {
+              "relative_l2": 0.0,
+              "correlation": 1.0,
+              "peak_absolute_m": 5.495577975110608e-09,
+              "reference_peak_absolute_m": 5.495577975110608e-09,
+              "absolute_peak_time_s": 91.0
+            },
+            "N": {
+              "relative_l2": 0.0,
+              "correlation": 1.0,
+              "peak_absolute_m": 9.518620269848064e-09,
+              "reference_peak_absolute_m": 9.518620269848064e-09,
+              "absolute_peak_time_s": 91.0
+            },
+            "U": {
+              "relative_l2": 0.0,
+              "correlation": 1.0,
+              "peak_absolute_m": 1.4550723940949578e-08,
+              "reference_peak_absolute_m": 1.4550723940949578e-08,
+              "absolute_peak_time_s": 119.0
+            }
+          }
+        },
+        "qssp2020": {
+          "relative_l2": 0.008892090245270245,
+          "correlation": 0.9999623038742104,
+          "peak_absolute_m": 1.4524259876250708e-08,
+          "reference_peak_absolute_m": 1.4550723940949578e-08,
+          "absolute_peak_time_s": 120.0,
+          "components": {
+            "E": {
+              "relative_l2": 0.012391228095774287,
+              "correlation": 0.9998894963800711,
+              "peak_absolute_m": 5.484154019687877e-09,
+              "reference_peak_absolute_m": 5.495577975110608e-09,
+              "absolute_peak_time_s": 92.0
+            },
+            "N": {
+              "relative_l2": 0.012391267120908246,
+              "correlation": 0.999889496380071,
+              "peak_absolute_m": 9.498831331255596e-09,
+              "reference_peak_absolute_m": 9.518620269848064e-09,
+              "absolute_peak_time_s": 92.0
+            },
+            "U": {
+              "relative_l2": 0.007143458684612871,
+              "correlation": 0.9999514771119223,
+              "peak_absolute_m": 1.4524259876250708e-08,
+              "reference_peak_absolute_m": 1.4550723940949578e-08,
+              "absolute_peak_time_s": 120.0
+            }
+          }
+        }
+      }
+    },
+    {
+      "distance_km": 600.0,
+      "backends": {
+        "qseis06": {
+          "relative_l2": 0.17515776655392967,
+          "correlation": 0.9941891006389156,
+          "peak_absolute_m": 6.535000258358669e-09,
+          "reference_peak_absolute_m": 6.93153850366e-09,
+          "absolute_peak_time_s": 200.0,
+          "components": {
+            "E": {
+              "relative_l2": 0.1878403524095315,
+              "correlation": 0.9951968906626907,
+              "peak_absolute_m": 3.474999932321179e-09,
+              "reference_peak_absolute_m": 4.001925620986357e-09,
+              "absolute_peak_time_s": 144.0
+            },
+            "N": {
+              "relative_l2": 0.1878403524095313,
+              "correlation": 0.9951968906626906,
+              "peak_absolute_m": 6.018876439078693e-09,
+              "reference_peak_absolute_m": 6.93153850366e-09,
+              "absolute_peak_time_s": 144.0
+            },
+            "U": {
+              "relative_l2": 0.15356974092324907,
+              "correlation": 0.9920240876411295,
+              "peak_absolute_m": 6.535000258358669e-09,
+              "reference_peak_absolute_m": 6.662565862069205e-09,
+              "absolute_peak_time_s": 200.0
+            }
+          }
+        },
+        "qseis2025": {
+          "relative_l2": 0.17515776655392967,
+          "correlation": 0.9941891006389156,
+          "peak_absolute_m": 6.535000258358669e-09,
+          "reference_peak_absolute_m": 6.93153850366e-09,
+          "absolute_peak_time_s": 200.0,
+          "components": {
+            "E": {
+              "relative_l2": 0.1878403524095315,
+              "correlation": 0.9951968906626907,
+              "peak_absolute_m": 3.474999932321179e-09,
+              "reference_peak_absolute_m": 4.001925620986357e-09,
+              "absolute_peak_time_s": 144.0
+            },
+            "N": {
+              "relative_l2": 0.1878403524095313,
+              "correlation": 0.9951968906626906,
+              "peak_absolute_m": 6.018876439078693e-09,
+              "reference_peak_absolute_m": 6.93153850366e-09,
+              "absolute_peak_time_s": 144.0
+            },
+            "U": {
+              "relative_l2": 0.15356974092324907,
+              "correlation": 0.9920240876411295,
+              "peak_absolute_m": 6.535000258358669e-09,
+              "reference_peak_absolute_m": 6.662565862069205e-09,
+              "absolute_peak_time_s": 200.0
+            }
+          }
+        },
+        "spgrn2012": {
+          "relative_l2": 0.044033959204149625,
+          "correlation": 0.9997214724717407,
+          "peak_absolute_m": 7.1943740780285575e-09,
+          "reference_peak_absolute_m": 6.93153850366e-09,
+          "absolute_peak_time_s": 148.0,
+          "components": {
+            "E": {
+              "relative_l2": 0.04184493373354468,
+              "correlation": 0.9997794410704498,
+              "peak_absolute_m": 4.153673810600653e-09,
+              "reference_peak_absolute_m": 4.001925620986357e-09,
+              "absolute_peak_time_s": 148.0
+            },
+            "N": {
+              "relative_l2": 0.0418449337335447,
+              "correlation": 0.9997794410704494,
+              "peak_absolute_m": 7.1943740780285575e-09,
+              "reference_peak_absolute_m": 6.93153850366e-09,
+              "absolute_peak_time_s": 148.0
+            },
+            "U": {
+              "relative_l2": 0.04720988582957243,
+              "correlation": 0.999565270338363,
+              "peak_absolute_m": 6.871542484705506e-09,
+              "reference_peak_absolute_m": 6.662565862069205e-09,
+              "absolute_peak_time_s": 200.0
+            }
+          }
+        },
+        "spgrn2020": {
+          "relative_l2": 0.0,
+          "correlation": 1.0,
+          "peak_absolute_m": 6.93153850366e-09,
+          "reference_peak_absolute_m": 6.93153850366e-09,
+          "absolute_peak_time_s": 148.0,
+          "components": {
+            "E": {
+              "relative_l2": 0.0,
+              "correlation": 1.0,
+              "peak_absolute_m": 4.001925620986357e-09,
+              "reference_peak_absolute_m": 4.001925620986357e-09,
+              "absolute_peak_time_s": 148.0
+            },
+            "N": {
+              "relative_l2": 0.0,
+              "correlation": 0.9999999999999999,
+              "peak_absolute_m": 6.93153850366e-09,
+              "reference_peak_absolute_m": 6.93153850366e-09,
+              "absolute_peak_time_s": 148.0
+            },
+            "U": {
+              "relative_l2": 0.0,
+              "correlation": 1.0,
+              "peak_absolute_m": 6.662565862069205e-09,
+              "reference_peak_absolute_m": 6.662565862069205e-09,
+              "absolute_peak_time_s": 200.0
+            }
+          }
+        },
+        "qssp2020": {
+          "relative_l2": 0.0037799442529229473,
+          "correlation": 0.9999930832610049,
+          "peak_absolute_m": 6.937699181944314e-09,
+          "reference_peak_absolute_m": 6.93153850366e-09,
+          "absolute_peak_time_s": 148.0,
+          "components": {
+            "E": {
+              "relative_l2": 0.0033555234622926785,
+              "correlation": 0.9999931321167354,
+              "peak_absolute_m": 4.0054819917809e-09,
+              "reference_peak_absolute_m": 4.001925620986357e-09,
+              "absolute_peak_time_s": 148.0
+            },
+            "N": {
+              "relative_l2": 0.003354772704310088,
+              "correlation": 0.9999931351645194,
+              "peak_absolute_m": 6.937699181944314e-09,
+              "reference_peak_absolute_m": 6.93153850366e-09,
+              "absolute_peak_time_s": 148.0
+            },
+            "U": {
+              "relative_l2": 0.004354546117630538,
+              "correlation": 0.9999922685345858,
+              "peak_absolute_m": 6.650376490558351e-09,
+              "reference_peak_absolute_m": 6.662565862069205e-09,
+              "absolute_peak_time_s": 200.0
+            }
+          }
+        }
+      }
+    },
+    {
+      "distance_km": 900.0,
+      "backends": {
+        "qseis06": {
+          "relative_l2": 0.20738515985065623,
+          "correlation": 0.9906241240026391,
+          "peak_absolute_m": 4.1850001877842836e-09,
+          "reference_peak_absolute_m": 4.718896012314888e-09,
+          "absolute_peak_time_s": 276.0,
+          "components": {
+            "E": {
+              "relative_l2": 0.2102740899928303,
+              "correlation": 0.992266903165099,
+              "peak_absolute_m": 1.9399998702775315e-09,
+              "reference_peak_absolute_m": 1.982428249685609e-09,
+              "absolute_peak_time_s": 256.0
+            },
+            "N": {
+              "relative_l2": 0.21027408999283065,
+              "correlation": 0.9922669031650994,
+              "peak_absolute_m": 3.360178341997716e-09,
+              "reference_peak_absolute_m": 3.433666450815314e-09,
+              "absolute_peak_time_s": 256.0
+            },
+            "U": {
+              "relative_l2": 0.20261561954221247,
+              "correlation": 0.9881024374507957,
+              "peak_absolute_m": 4.1850001877842836e-09,
+              "reference_peak_absolute_m": 4.718896012314888e-09,
+              "absolute_peak_time_s": 276.0
+            }
+          }
+        },
+        "qseis2025": {
+          "relative_l2": 0.20738515985065623,
+          "correlation": 0.9906241240026391,
+          "peak_absolute_m": 4.1850001877842836e-09,
+          "reference_peak_absolute_m": 4.718896012314888e-09,
+          "absolute_peak_time_s": 276.0,
+          "components": {
+            "E": {
+              "relative_l2": 0.2102740899928303,
+              "correlation": 0.992266903165099,
+              "peak_absolute_m": 1.9399998702775315e-09,
+              "reference_peak_absolute_m": 1.982428249685609e-09,
+              "absolute_peak_time_s": 256.0
+            },
+            "N": {
+              "relative_l2": 0.21027408999283065,
+              "correlation": 0.9922669031650994,
+              "peak_absolute_m": 3.360178341997716e-09,
+              "reference_peak_absolute_m": 3.433666450815314e-09,
+              "absolute_peak_time_s": 256.0
+            },
+            "U": {
+              "relative_l2": 0.20261561954221247,
+              "correlation": 0.9881024374507957,
+              "peak_absolute_m": 4.1850001877842836e-09,
+              "reference_peak_absolute_m": 4.718896012314888e-09,
+              "absolute_peak_time_s": 276.0
+            }
+          }
+        },
+        "spgrn2012": {
+          "relative_l2": 0.042577007797639316,
+          "correlation": 0.9997632002002402,
+          "peak_absolute_m": 4.905164303361373e-09,
+          "reference_peak_absolute_m": 4.718896012314888e-09,
+          "absolute_peak_time_s": 278.0,
+          "components": {
+            "E": {
+              "relative_l2": 0.04063015839734303,
+              "correlation": 0.9998317382325957,
+              "peak_absolute_m": 2.0603192713472928e-09,
+              "reference_peak_absolute_m": 1.982428249685609e-09,
+              "absolute_peak_time_s": 258.0
+            },
+            "N": {
+              "relative_l2": 0.04063015839734268,
+              "correlation": 0.9998317382325961,
+              "peak_absolute_m": 3.5685776577867993e-09,
+              "reference_peak_absolute_m": 3.433666450815314e-09,
+              "absolute_peak_time_s": 258.0
+            },
+            "U": {
+              "relative_l2": 0.04555591501977681,
+              "correlation": 0.99963459504824,
+              "peak_absolute_m": 4.905164303361373e-09,
+              "reference_peak_absolute_m": 4.718896012314888e-09,
+              "absolute_peak_time_s": 278.0
+            }
+          }
+        },
+        "spgrn2020": {
+          "relative_l2": 0.0,
+          "correlation": 1.0,
+          "peak_absolute_m": 4.718896012314888e-09,
+          "reference_peak_absolute_m": 4.718896012314888e-09,
+          "absolute_peak_time_s": 278.0,
+          "components": {
+            "E": {
+              "relative_l2": 0.0,
+              "correlation": 0.9999999999999998,
+              "peak_absolute_m": 1.982428249685609e-09,
+              "reference_peak_absolute_m": 1.982428249685609e-09,
+              "absolute_peak_time_s": 258.0
+            },
+            "N": {
+              "relative_l2": 0.0,
+              "correlation": 1.0,
+              "peak_absolute_m": 3.433666450815314e-09,
+              "reference_peak_absolute_m": 3.433666450815314e-09,
+              "absolute_peak_time_s": 258.0
+            },
+            "U": {
+              "relative_l2": 0.0,
+              "correlation": 1.0,
+              "peak_absolute_m": 4.718896012314888e-09,
+              "reference_peak_absolute_m": 4.718896012314888e-09,
+              "absolute_peak_time_s": 278.0
+            }
+          }
+        },
+        "qssp2020": {
+          "relative_l2": 0.014227506419163599,
+          "correlation": 0.9998970732883025,
+          "peak_absolute_m": 4.678830861541937e-09,
+          "reference_peak_absolute_m": 4.718896012314888e-09,
+          "absolute_peak_time_s": 276.0,
+          "components": {
+            "E": {
+              "relative_l2": 0.012327191548072639,
+              "correlation": 0.9999172555832277,
+              "peak_absolute_m": 1.9919005083462667e-09,
+              "reference_peak_absolute_m": 1.982428249685609e-09,
+              "absolute_peak_time_s": 256.0
+            },
+            "N": {
+              "relative_l2": 0.012327191548080155,
+              "correlation": 0.9999172555832281,
+              "peak_absolute_m": 3.450072884077899e-09,
+              "reference_peak_absolute_m": 3.433666450815314e-09,
+              "absolute_peak_time_s": 256.0
+            },
+            "U": {
+              "relative_l2": 0.01685841216426284,
+              "correlation": 0.9998569590908136,
+              "peak_absolute_m": 4.678830861541937e-09,
+              "reference_peak_absolute_m": 4.718896012314888e-09,
+              "absolute_peak_time_s": 276.0
+            }
+          }
+        }
+      }
+    }
+  ],
+  "checks": {
+    "qseis06_vs_qseis2025": {
+      "passed": true,
+      "same_native_time_axes": true,
+      "rtol": 1e-05,
+      "atol_m": 1e-20,
+      "scope": "all saved native displacement samples",
+      "max_absolute_difference_m": 0.0
+    },
+    "qssp2020_vs_spgrn2020": {
+      "passed": true,
+      "relative_l2_limit": 0.05,
+      "relative_l2_by_distance": [
+        0.008892090245270245,
+        0.0037799442529229473,
+        0.014227506419163599
+      ]
+    }
+  },
+  "passed": true,
+  "figures": [
+    "all-backends.png",
+    "spherical-comparison.png",
+    "qseis-comparison.png"
+  ]
+}

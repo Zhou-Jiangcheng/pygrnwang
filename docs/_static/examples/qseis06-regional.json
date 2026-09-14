@@ -1,0 +1,100 @@
+{
+  "backend": "QSEIS06",
+  "started_utc": "2026-09-14T08:39:10Z",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "python": "3.12.13",
+  "dependencies": {
+    "numpy": "2.3.5",
+    "scipy": "1.18.0",
+    "pandas": "3.0.0",
+    "matplotlib": "3.11.0",
+    "obspy": "1.5.0"
+  },
+  "source_depth_km": 10.0,
+  "receiver_depth_km": 0.0,
+  "moment_nm": 1000000000000000.0,
+  "strike_dip_rake_deg": [
+    30.0,
+    45.0,
+    90.0
+  ],
+  "azimuth_deg": 30.0,
+  "reuse": false,
+  "model": "Bundled AK135 elastic properties; illustrative constant Qp=600, Qs=300",
+  "outputs": {
+    "disp": {
+      "shape": [
+        3,
+        3,
+        256
+      ],
+      "components": [
+        "E",
+        "N",
+        "U"
+      ],
+      "unit": "m",
+      "finite": true,
+      "peak_absolute": 1.3862526806476928e-08
+    }
+  },
+  "sampling_interval_s": 4.0,
+  "time_window_s": 4092.0,
+  "distances_km": [
+    300.0,
+    600.0,
+    900.0
+  ],
+  "output_time_range_s": [
+    0.0,
+    1020.0
+  ],
+  "native_samples": 1024,
+  "earth_model_numeric_rows": 24,
+  "wavelet_type": 0,
+  "wavelet_duration_samples": 16,
+  "wavelet_duration_s": 64.0,
+  "flat_earth_transform": true,
+  "regional": true,
+  "source_time_function": {
+    "scheme_id": "normalized_sin_squared_64s_damping_compensated_v1",
+    "duration_s": 64.0,
+    "samples": 1024,
+    "sample_spacing_s": 0.06256109481915934,
+    "wavelet_type": 0,
+    "wavelet_duration_samples": 16,
+    "sampling_interval_s": 4.0,
+    "native_time_window_s": 4092.0,
+    "anti_alias": 0.01,
+    "fi_hz": -0.00017911427147591097,
+    "rate_unit": "1/s",
+    "time_unit": "s",
+    "physical_definition": "r(t) = 2/64 * sin(pi*t/64)^2 for 0 <= t <= 64 s; zero otherwise",
+    "input_definition": "piecewise-linear samples of r(t) * exp(2*pi*fi*t); no input-area renormalization",
+    "effective_definition": "piecewise-linear input(t) * exp(-2*pi*fi*t)",
+    "target_rate_integral": 1.0,
+    "input_rate_integral": 0.9647094485300882,
+    "effective_rate_integral": 1.0000000004130927,
+    "target_centroid_s": 32.0,
+    "effective_centroid_s": 32.00000073412074,
+    "effective_rate_relative_l2": 1.9884466105608343e-06,
+    "spectral_relative_l2_0_to_0_0625_hz": 1.7577432851302247e-06,
+    "spectral_max_absolute_error_0_to_0_0625_hz": 1.5646882209943217e-06,
+    "physical_validation_limits": {
+      "area_absolute_error": 1e-08,
+      "centroid_absolute_error_s": 1e-05,
+      "rate_relative_l2": 1e-05,
+      "spectral_relative_l2": 1e-05
+    },
+    "reader_instruction": "Read velo/strain_rate/stress_rate; integrate once with cumsum(rate)*4 s in the example",
+    "input_relative_path": "10.00/0.00/0_0/grn.inp",
+    "input_original_sha256": "73e1996946b763bb449c2bd2040a1c0210bbbe0d95494d85bc7d2c3ae8c41373",
+    "input_prepared_sha256": "cc84f2af0babb4c819a33036fd76746df67ccccf0561b7020092f50d7d77da0c",
+    "samples_relative_path": "../source_time_function.npz",
+    "description_relative_path": "../source_time_function.json",
+    "samples_sha256": "338b4f06ebd8d08487d654680d42ec451effbace3de55d48a38a3a3d4a38c7c3"
+  },
+  "elapsed_seconds": 242.44,
+  "file_count": 31,
+  "output_bytes": 1240827
+}
