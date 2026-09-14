@@ -1,4 +1,4 @@
-"""Build, read and plot three QSEIS2025 traces; optionally include tensors."""
+"""Build QSEIS2025 traces and save 0-100 s waveforms; optionally include tensors."""
 from common import (MECHANISM, MOMENT_NM, finish, parser_for, prepare,
                     save_waveforms)
 from pygrnwang.create_qseis2025_bulk import (
@@ -12,7 +12,9 @@ def main():
                         help="all also computes strain and stress")
     args = parser.parse_args()
     output, library, model, report, started = prepare(args, "QSEIS2025")
-    dt, window = 0.5, 127.5  # 256 samples; QSEIS durations below are sample counts.
+    dt, window = 0.5, 127.5  # Native library: 256 samples.
+    output_end = 100.0
+    output_samples = int(round(output_end / dt)) + 1  # Include the 100 s sample.
     distances = [30.0, 60.0, 90.0]
     if not args.reuse:
         pre_process_qseis2025(
@@ -33,10 +35,13 @@ def main():
             srate=1 / dt, output_type=observable, rotate=True,
             before_p=None, shift=False, pad_zeros=False,
         ) for distance in distances]
+        arrays = [values[:, :output_samples] for values in arrays]
         labels = ["E", "N", "U"] if observable == "disp" else ["EE", "EN", "EU", "NN", "NU", "UU"]
         unit = {"disp": "m", "strain": "1", "stress": "Pa"}[observable]
-        save_waveforms(output, report, observable, arrays, distances, dt, labels, unit)
-    report.update(sampling_interval_s=dt, time_window_s=window, distances_km=distances,
+        save_waveforms(output, report, observable, arrays, distances, dt, labels, unit,
+                       expected_samples=output_samples, time_limits=(0.0, output_end))
+    report.update(sampling_interval_s=dt, time_window_s=window,
+                  output_time_range_s=[0.0, output_end], distances_km=distances,
                   earth_model_numeric_rows=24, wavelet_type=2, wavelet_duration_samples=4)
     finish(output, report, started)
 

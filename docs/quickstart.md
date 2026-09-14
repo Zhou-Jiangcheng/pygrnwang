@@ -1,6 +1,6 @@
 # Quickstart: QSEIS2025
 
-This example computes a small Green's-function library, synthesizes displacement and writes a figure. It uses the AK135 model content included with pygrnwang, one source depth, one receiver depth and three distances. Computation is serial. The source is 10 km deep, receivers are at the surface and distances are 30, 60 and 90 km. The sampling interval is 0.5 s and the 127.5 s window contains 256 samples. The layered calculation uses the first 24 numeric model rows, down to 809.5 km. Constant Qp=600 and Qs=300 are illustrative tutorial choices, not the full AK135-F attenuation model. The mechanism is strike 30°, dip 45°, rake 90°, scaled to M0 = 10^15 N m.
+This example computes a small Green's-function library, synthesizes displacement and writes a figure. It uses the AK135 model content included with pygrnwang, one source depth, one receiver depth and three distances. Computation is serial. The source is 10 km deep, receivers are at the surface and distances are 30, 60 and 90 km. The native library uses a 0.5 s sampling interval and a 127.5 s window containing 256 samples. After synthesis, the example crops every saved waveform and plot to 0–100 s inclusive, giving 201 samples without changing the underlying library. The layered calculation uses the first 24 numeric model rows, down to 809.5 km. Constant Qp=600 and Qs=300 are illustrative tutorial choices, not the full AK135-F attenuation model. The mechanism is strike 30°, dip 45°, rake 90°, scaled to M0 = 10^15 N m.
 
 ## 1. Prepare the environment
 
@@ -22,13 +22,13 @@ The script prepares a local model, writes solver input, runs QSEIS2025, converts
 
 ## 3. Inspect the result
 
-Look for `disp.png`, `disp.npz` and `summary.json` in the output directory. The summary records the environment, calculation time, array dimensions and output size. The underlying library contains geometry metadata and the solver's converted binary arrays.
+Look for `disp.png`, `disp.npz` and `summary.json` in the output directory. The saved displacement array has shape `(3, 3, 201)`: three distances, three components and samples from 0 to 100 s inclusive. The summary records the environment, calculation time, array dimensions and output size. The underlying library retains its full 256-sample solver output, geometry metadata and converted binary arrays.
 
 ```{figure} _static/examples/qseis2025.png
 :alt: QSEIS2025 example displacement traces from a small AK135 Green's-function library.
 :width: 100%
 
-Output from the validated QSEIS2025 example. Its model, mechanism and numerical choices are shown in the script below.
+Validated QSEIS2025 displacement, cropped to 0–100 s since source origin. Its model, mechanism and numerical choices are shown in the script below.
 ```
 
 The vector reader uses **east, north, up** when `rotate=True`. Displacement is reported in metres for the moment specified by the script. The plotting time axis must be interpreted with the example's reduction and sampling settings; it is not automatically a P-relative axis. See [scientific conventions](conventions.md) before changing these settings.
@@ -41,7 +41,7 @@ Use a separate directory because the output flags change the computed library:
 python examples/qseis2025.py --observables all --output-dir examples/output/qseis2025-all
 ```
 
-The script reads displacement, strain and stress. With geographic rotation enabled, symmetric tensors are stored as `[EE, EN, EU, NN, NU, UU]`; U is the same upward vertical component called Z elsewhere in the code. Strain is dimensionless and stress is in pascals for the chosen source moment. These curves are a small workflow example, not a convergence study.
+The script reads displacement, strain and stress, then crops all three to 0–100 s inclusive before saving arrays and figures. The saved strain/stress arrays have shape `(3, 6, 201)`. With geographic rotation enabled, symmetric tensors are stored as `[EE, EN, EU, NN, NU, UU]`; U is the same upward vertical component called Z elsewhere in the code. Strain is dimensionless and stress is in pascals for the chosen source moment. These curves are a small workflow example, not a convergence study.
 
 ## 5. Reuse a finished example
 

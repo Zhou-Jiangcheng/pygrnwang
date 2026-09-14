@@ -16,17 +16,17 @@ Windows 非交互调用可使用：
 conda run -n pygrnwang python examples/qseis2025.py --output-dir examples/output/qseis2025
 ```
 
-脚本自动写出模型、预处理输入、运行 QSEIS2025、转换结果并读取合成波形。示例使用 10 km 震源深度、地表接收、30/60/90 km 距离，以及 0.5 s 采样间隔。模型的常数 Qp=600、Qs=300 是教程设置，并不代表完整 AK135-F 衰减模型。
+脚本自动写出模型、预处理输入、运行 QSEIS2025、转换结果并读取合成波形。示例使用 10 km 震源深度、地表接收、30/60/90 km 距离，以及 0.5 s 采样间隔。底层格林函数库仍计算 127.5 s、256 个采样点；合成后，将所有示例波形截取为 0–100 s（包含两端，共 201 点），再保存数组和绘图。模型的常数 Qp=600、Qs=300 是教程设置，并不代表完整 AK135-F 衰减模型。
 
 ## 2. 查看结果
 
-输出目录中包含 `disp.npz`、`disp.png`、`summary.json`、模型文件与 `library/`。NPZ 保存波形、时间、距离、分量标签及单位；摘要记录环境、运行时间、输出形状和文件大小。
+输出目录中包含 `disp.npz`、`disp.png`、`summary.json`、模型文件与 `library/`。NPZ 保存 0–100 s 的波形、时间、距离、分量标签及单位，位移数组形状为 `(3, 3, 201)`；摘要记录环境、运行时间、输出形状和文件大小。`library/` 保留完整的 256 点原生计算结果。
 
 ```{figure} ../_static/examples/qseis2025.png
 :alt: QSEIS2025 小算例的三分量位移波形。
 :width: 100%
 
-10 km 深度震源在三个距离处的合成位移；精确参数以共用脚本为准。
+10 km 深度震源在三个距离处的合成位移，截取发震后 0–100 s；精确参数以共用脚本为准。
 ```
 
 此示例的 `rotate=True` 对应 **东、北、上** 三分量。图中位移单位为米，震源矩为脚本中指定的 $10^{15}$ N m。图的横轴使用示例设定的时间零点；改变约化时间或平移选项后，应重新核对横轴含义。
@@ -39,7 +39,7 @@ conda run -n pygrnwang python examples/qseis2025.py --output-dir examples/output
 python examples/qseis2025.py --observables all --output-dir examples/output/qseis2025-all
 ```
 
-新增 `strain` 和 `stress` 的数组与图。启用地理旋转时，对称张量排列为 `[EE, EN, EU, NN, NU, UU]`，U 表示向上，也对应代码中的 Z。应变无量纲，应力单位为 Pa。不同后端未旋转张量的排列并不统一，详见[科学约定](../conventions.md)。
+新增 `strain` 和 `stress` 的数组与图。位移、应变、应力均保存和绘制 0–100 s；应变与应力数组形状为 `(3, 6, 201)`。启用地理旋转时，对称张量排列为 `[EE, EN, EU, NN, NU, UU]`，U 表示向上，也对应代码中的 Z。应变无量纲，应力单位为 Pa。不同后端未旋转张量的排列并不统一，详见[科学约定](../conventions.md)。
 
 ## 4. 复用已完成的计算
 
