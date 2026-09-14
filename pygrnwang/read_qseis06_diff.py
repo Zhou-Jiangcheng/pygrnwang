@@ -66,6 +66,13 @@ def seek_qseis06_strain_rate_diff(
 ):
     """Calculate strain rate by finite differencing a QSEIS06 perturbation library.
 
+    .. warning::
+
+        QSEIS06 is deprecated. Use QSEIS2025 for new calculations.
+        Rebuild the Green library with the replacement backend and revalidate
+        numerical settings, source and time conventions, and results; existing
+        libraries and parameter choices are not guaranteed to be interchangeable.
+
     Parameters
     ----------
     path_green : str
@@ -118,7 +125,7 @@ def seek_qseis06_strain_rate_diff(
     -----
     Requires pre_process_qseis06_strain_rate and all depth/radial perturbation jobs, not a normal QSEIS06 waveform library. The finite-difference metadata uses dist_range/delta_dist and stores k_dr, dz and diff_accu_order. Avoid zero distance and depth perturbations above the surface. The six pre-rotation rows are [e_tt, e_rt, -e_tz, e_rr, -e_rz, e_zz]; the historical reader applies rotate_symmetric_tensor_series with -az_deg, whereas QSEIS2025 uses +az_deg. Verify the azimuth/sign mapping independently before treating these rows as geographic ENU. Strain rate is 1/s and stress rate is Pa/s for moments in N m. See the QSEIS06 tutorial; QSEIS2025 can compute these observables directly.
 
-    This advanced historical workflow currently requires retained ASCII outputs: its binary detector looks for grn_tz.npy, and the binary call omits the required sampling_num argument. Keep convert_pd2bin=False and remove_pd=False when executing perturbation jobs. No deprecation or numerical equivalence with QSEIS2025 is implied.
+    This advanced historical workflow currently requires retained ASCII outputs: its binary detector looks for grn_tz.npy, and the binary call omits the required sampling_num argument. Keep convert_pd2bin=False and remove_pd=False when executing perturbation jobs. Numerical equivalence with QSEIS2025 is not implied.
     """
     if green_info is None:
         with open(os.path.join(path_green, "green_lib_info.json"), "r") as fr:
@@ -405,6 +412,13 @@ def seek_qseis06_stress_rate_diff(
 ):
     """Calculate stress rate by finite differencing a QSEIS06 perturbation library.
 
+    .. warning::
+
+        QSEIS06 is deprecated. Use QSEIS2025 for new calculations.
+        Rebuild the Green library with the replacement backend and revalidate
+        numerical settings, source and time conventions, and results; existing
+        libraries and parameter choices are not guaranteed to be interchangeable.
+
     Parameters
     ----------
     path_green : str
@@ -457,7 +471,7 @@ def seek_qseis06_stress_rate_diff(
     -----
     Requires pre_process_qseis06_strain_rate and all depth/radial perturbation jobs, not a normal QSEIS06 waveform library. The finite-difference metadata uses dist_range/delta_dist and stores k_dr, dz and diff_accu_order. Avoid zero distance and depth perturbations above the surface. The six pre-rotation rows are [e_tt, e_rt, -e_tz, e_rr, -e_rz, e_zz]; the historical reader applies rotate_symmetric_tensor_series with -az_deg, whereas QSEIS2025 uses +az_deg. Verify the azimuth/sign mapping independently before treating these rows as geographic ENU. Strain rate is 1/s and stress rate is Pa/s for moments in N m. See the QSEIS06 tutorial; QSEIS2025 can compute these observables directly.
 
-    This advanced historical workflow currently requires retained ASCII outputs: its binary detector looks for grn_tz.npy, and the binary call omits the required sampling_num argument. Keep convert_pd2bin=False and remove_pd=False when executing perturbation jobs. No deprecation or numerical equivalence with QSEIS2025 is implied.
+    This advanced historical workflow currently requires retained ASCII outputs: its binary detector looks for grn_tz.npy, and the binary call omits the required sampling_num argument. Keep convert_pd2bin=False and remove_pd=False when executing perturbation jobs. Numerical equivalence with QSEIS2025 is not implied.
     """
     if green_info is None:
         with open(os.path.join(path_green, "green_lib_info.json"), "r") as fr:

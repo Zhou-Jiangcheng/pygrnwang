@@ -1,5 +1,10 @@
 # Executable tutorials
 
+**QSEIS06 and SPGRN2012 are deprecated in pygrnwang.** Their examples remain
+available for existing workflows. For new calculations use `qseis2025.py`
+and `spgrn2020.py`, respectively. Rebuild libraries and validate the new
+backend's settings and time origin when migrating.
+
 Install `pygrnwang` into the Python environment first, including its native
 executables. Run these commands from the repository root:
 

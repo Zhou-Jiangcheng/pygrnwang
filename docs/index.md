@@ -41,7 +41,7 @@ The [scientific conventions](conventions.md) are part of the interface. In parti
 
 ## What is included
 
-The package wraps **EDGRN/EDCMP**, **QSEIS06**, **QSEIS2025**, **SPGRN2012**, **SPGRN2020** and **QSSP2020**. Python provides preprocessing, serial and parallel orchestration, library lookup, source synthesis, coordinate transforms and signal processing. TauP travel times run through Java subprocesses or an ObsPy fallback.
+The package wraps **EDGRN/EDCMP**, **QSEIS06 (deprecated)**, **QSEIS2025**, **SPGRN2012 (deprecated)**, **SPGRN2020** and **QSSP2020**. Python provides preprocessing, serial and parallel orchestration, library lookup, source synthesis, coordinate transforms and signal processing. TauP travel times run through Java subprocesses or an ObsPy fallback.
 
 Python **3.9 or newer** is supported. Binary wheels cover the platforms listed in the [installation guide](installation.md). This site follows `main`; the package version appears in the header.
 

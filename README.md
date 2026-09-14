@@ -4,6 +4,12 @@
 
 This Python package serves as the frontend for calculating and building a Green's function library for synthetic seismograms. The backend consists of Wang Rongjiang's program for calculating synthetic seismograms, including EDGRN/EDCMP, [QSEIS_STRESS](https://github.com/Zhou-Jiangcheng/QSEIS_2006_STRESS), SPGRN, and QSSP (Wang, 1999; Wang 2003; Wang and Wang 2007; Wang et al., 2017). The code includes two parallel modes: one using the multiprocessing library (single-node multi-process) and the other using MPI (multi-node).
 
+The **QSEIS06** and **SPGRN2012** backends are **deprecated** in pygrnwang.
+For new calculations, use [QSEIS2025](https://zhou-jiangcheng.github.io/pygrnwang/backends/qseis2025.html)
+and [SPGRN2020](https://zhou-jiangcheng.github.io/pygrnwang/backends/spgrn2020.html), respectively.
+Existing interfaces remain available; migration requires rebuilding libraries
+and validating the replacement backend's settings and output conventions.
+
 # Installation
 
 Python 3.9 or later is supported. Building from source requires gfortran and
