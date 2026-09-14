@@ -251,9 +251,15 @@ def pre_process_qssp2020(
     cal_tor : int
         1 enables toroidal (SH) modes; 0 disables them.
     min_harmonic : int
-        Minimum cutoff spherical harmonic degree used by QSSP.
+        Control for estimating the low-frequency baseline of the
+        frequency-dependent upper harmonic cutoff. This is not the lowest
+        retained degree: the spectral sum still starts at degree zero.
+        Converge it together with max_harmonic for the requested observables.
     max_harmonic : int
-        Maximum cutoff spherical harmonic degree used by QSSP.
+        Upper harmonic cutoff cap. It also influences the spatial
+        differential-transform order through the internal maximum degree,
+        so changing it can affect synthesis even when the stored spectral
+        cutoff is unchanged. Converge it together with min_harmonic.
     source_radius : float
         Source patch radius in km.
     source_duration : float
@@ -289,7 +295,7 @@ def pre_process_qssp2020(
 
     Notes
     -----
-    See the qssp2020 tutorial for a complete prepare, run and read workflow. Preprocessing writes inputs and travel-time/model metadata; run the matching create_grnlib function to calculate Green functions. A first computation must include both spectral and time-domain stages.
+    See the qssp2020 tutorial for a complete prepare, run and read workflow. Preprocessing writes inputs and travel-time/model metadata; run the matching create_grnlib function to calculate Green functions. A first computation must include both spectral and time-domain stages. See the :doc:`QSSP2020 tutorial </backends/qssp2020>` for harmonic-cutoff convergence and comparison settings.
     """
     print("Preprocessing")
     pre_process_spec(

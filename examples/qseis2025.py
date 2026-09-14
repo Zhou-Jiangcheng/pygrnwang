@@ -1,40 +1,86 @@
-"""Build QSEIS2025 traces and save 0-100 s waveforms; optionally include tensors."""
+"""Build QSEIS2025 introductory or regional traces; optionally include tensors."""
+from pathlib import Path
+
+import numpy as np
+
 from common import (MECHANISM, MOMENT_NM, finish, parser_for, prepare,
-                    save_waveforms)
+                    require_library_settings, save_waveforms)
 from pygrnwang.create_qseis2025_bulk import (
     pre_process_qseis2025, create_grnlib_qseis2025_sequential)
-from pygrnwang.read_qseis2025 import seek_qseis2025
+from pygrnwang.read_qseis2025 import get_outfile_name_list, seek_qseis2025
+from source_time_function import prepare_qseis_stf, validate_qseis_stf
 
 
 def main():
     parser = parser_for("qseis2025")
+    parser.add_argument("--regional", action="store_true",
+                        help="Use 300/600/900 km, a 64 s wavelet and Earth flattening")
+    parser.set_defaults(output_dir=None)
     parser.add_argument("--observables", choices=("disp", "all"), default="disp",
                         help="all also computes strain and stress")
     args = parser.parse_args()
+    if args.output_dir is None:
+        directory = "qseis2025-regional" if args.regional else "qseis2025"
+        args.output_dir = Path(__file__).resolve().parent / "output" / directory
     output, library, model, report, started = prepare(args, "QSEIS2025")
-    dt, window = 0.5, 127.5  # Native library: 256 samples.
-    output_end = 100.0
-    output_samples = int(round(output_end / dt)) + 1  # Include the 100 s sample.
-    distances = [30.0, 60.0, 90.0]
+    dt, window = (4.0, 4092.0) if args.regional else (0.5, 127.5)
+    output_end = 1020.0 if args.regional else 100.0
+    output_samples = int(round(output_end / dt)) + 1  # Include the final sample.
+    native_samples = int(round(window / dt)) + 1
+    distances = [300.0, 600.0, 900.0] if args.regional else [30.0, 60.0, 90.0]
+    wavelet_duration = 16 if args.regional else 4
+    wavelet_type = 0 if args.regional else 2
+    source_time_function = None
     if not args.reuse:
         pre_process_qseis2025(
             processes_num=1, path_green=library, event_depth_list=[10.0],
-            receiver_depth_list=[0.0], dist_range=[30.0, 90.0], delta_dist=30.0,
+            receiver_depth_list=[0.0], dist_range=[distances[0], distances[-1]],
+            delta_dist=distances[0],
             N_each_group=3, time_window=window, sampling_interval=dt,
             output_observables=([1, 0, 1, 1, 0] if args.observables == "all"
                                 else [1, 0, 0, 0, 0]),
-            wavelet_type=2, wavelet_duration=4, time_reduction_velo=0,
-            flat_earth_transform=False, path_nd=model, earth_model_layer_num=24,
+            wavelet_type=wavelet_type, wavelet_duration=wavelet_duration, time_reduction_velo=0,
+            flat_earth_transform=args.regional, path_nd=model, earth_model_layer_num=24,
         )
+        if args.regional:
+            source_time_function = prepare_qseis_stf(
+                library, duration_s=64.0, samples=1024)
         create_grnlib_qseis2025_sequential(library, remove_pd=False)
+    require_library_settings(
+        library, event_depth_list=[10.0], receiver_depth_list=[0.0],
+        grn_dist_range=[distances[0], distances[-1]], grn_delta_dist=distances[0],
+        sampling_interval=dt, time_window=window, sampling_num=native_samples,
+        wavelet_type=wavelet_type, wavelet_duration=wavelet_duration, time_reduction_velo=0,
+        flat_earth_transform=args.regional, earth_model_layer_num=24,
+        slowness_window=None, wavenumber_sampling_rate=12, anti_alias=0.01,
+        free_surface=0,
+    )
+    if args.regional and args.reuse:
+        source_time_function = validate_qseis_stf(library)
     observables = ("disp", "strain", "stress") if args.observables == "all" else ("disp",)
+    if args.reuse:
+        # Backend metadata does not store observable flags. Check the requested
+        # binary outputs before reading a displacement-only library as tensors.
+        native_dir = Path(library) / "10.00" / "0.00" / "0_0"
+        required = []
+        for observable in observables:
+            psv, sh = get_outfile_name_list(observable)
+            required.extend(native_dir / ("grn_%s.bin" % name) for name in psv + sh)
+        if any(not path.is_file() for path in required):
+            raise ValueError("Requested outputs are absent. Recalculate in a fresh "
+                             "--output-dir without --reuse using --observables all.")
     for observable in observables:
+        read_type = ({"disp": "velo", "strain": "strain_rate", "stress": "stress_rate"}
+                     [observable] if args.regional else observable)
         arrays = [MOMENT_NM * seek_qseis2025(
             path_green=library, event_depth_km=10.0, receiver_depth_km=0.0,
             az_deg=30.0, dist_km=distance, focal_mechanism=MECHANISM,
-            srate=1 / dt, output_type=observable, rotate=True,
+            srate=1 / dt, output_type=read_type, rotate=True,
             before_p=None, shift=False, pad_zeros=False,
         ) for distance in distances]
+        if args.regional:
+            # Integrate every custom-STF rate with the same origin-time rule.
+            arrays = [np.cumsum(values, axis=1) * dt for values in arrays]
         arrays = [values[:, :output_samples] for values in arrays]
         labels = ["E", "N", "U"] if observable == "disp" else ["EE", "EN", "EU", "NN", "NU", "UU"]
         unit = {"disp": "m", "strain": "1", "stress": "Pa"}[observable]
@@ -42,7 +88,12 @@ def main():
                        expected_samples=output_samples, time_limits=(0.0, output_end))
     report.update(sampling_interval_s=dt, time_window_s=window,
                   output_time_range_s=[0.0, output_end], distances_km=distances,
-                  earth_model_numeric_rows=24, wavelet_type=2, wavelet_duration_samples=4)
+                  native_samples=native_samples, earth_model_numeric_rows=24,
+                  wavelet_type=wavelet_type, wavelet_duration_samples=wavelet_duration,
+                  wavelet_duration_s=wavelet_duration * dt,
+                  flat_earth_transform=args.regional, regional=args.regional)
+    if args.regional:
+        report["source_time_function"] = source_time_function
     finish(output, report, started)
 
 

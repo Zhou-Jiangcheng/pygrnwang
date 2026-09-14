@@ -1,9 +1,11 @@
-"""A small long-period SPGRN2020 library with P-relative trace windows."""
-import json
+"""Build full-wavefield SPGRN2020 traces and plot native origin-time windows."""
 from pathlib import Path
 
+import numpy as np
+from scipy.io import FortranFile
+
 from common import (MECHANISM, MOMENT_NM, finish, parser_for, prepare,
-                    save_waveforms)
+                    require_library_settings, save_waveforms)
 from pygrnwang.create_spgrn2020_bulk import (
     pre_process_spgrn2020, create_grnlib_spgrn2020_sequential)
 from pygrnwang.read_spgrn2020 import seek_spgrn2020
@@ -17,7 +19,7 @@ def main():
         pre_process_spgrn2020(
             processes_num=1, path_green=library, event_depth_list=[10.0],
             receiver_depth_list=[0.0], spec_time_window=4092.0,
-            sampling_interval=dt, max_frequency=0.0625, max_slowness=0.3,
+            sampling_interval=dt, max_frequency=0.0625, max_slowness=0.0,
             anti_alias=0.01, gravity_fc=0.0, gravity_harmonic=0,
             cal_sph=1, cal_tor=1, source_radius=0.0, cal_gf=1,
             time_window=window, green_before_p=before_p, source_duration=64.0,
@@ -25,8 +27,20 @@ def main():
             path_nd=model, earth_model_layer_num=None, physical_dispersion=0,
         )
         create_grnlib_spgrn2020_sequential(library)
-    info = json.loads((Path(library) / "green_lib_info.json").read_text(encoding="utf-8"))
+    info = require_library_settings(library, max_slowness=0.0,
+                                    sampling_interval=dt, time_window=window,
+                                    source_duration=64.0, green_before_p=before_p,
+                                    dist_list=[300.0, 600.0, 900.0])
     distances = info["dist_list"]
+    # The native solver rounds P - before_p to whole seconds. Read its actual
+    # start-time records instead of assigning every trace a P-relative axis.
+    starts = []
+    native_path = Path(library) / "GreenFunc" / "10.00" / "0.00" / "grn_d10.00"
+    with FortranFile(native_path, "r") as native:
+        for distance in distances:
+            starts.append(float(native.read_reals(np.float32)[0]))
+            for _ in range(10):
+                native.read_reals(np.float32)
     arrays = [MOMENT_NM * seek_spgrn2020(
         path_green=library, event_depth_km=10.0, receiver_depth_km=0.0,
         az_deg=30.0, dist_km=distance, focal_mechanism=MECHANISM,
@@ -34,10 +48,10 @@ def main():
         before_p=None, shift=False, pad_zeros=False,
     ) for distance in distances]
     save_waveforms(output, report, "disp", arrays, distances, dt,
-                   ["E", "N", "U"], "m", time_label="Time relative to library P arrival (s)",
-                   start_times=[-before_p] * len(distances))
+                   ["E", "N", "U"], "m", start_times=starts)
     report.update(sampling_interval_s=dt, time_window_s=window, distances_km=distances,
-                  spec_time_window_s=4092.0, max_frequency_hz=0.0625, green_before_p_s=before_p, source_duration_s=64.0)
+                  spec_time_window_s=4092.0, max_frequency_hz=0.0625, green_before_p_s=before_p, source_duration_s=64.0,
+                  max_slowness_s_km=0.0, full_wavefield=True, trace_start_times_s=starts)
     finish(output, report, started)
 
 
