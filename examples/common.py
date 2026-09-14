@@ -59,13 +59,15 @@ def prepare(args, backend, extra=None):
 
 
 def save_waveforms(output, report, name, arrays, distances, dt, labels,
-                   unit, time_label="Time since origin (s)", start_times=None):
+                   unit, time_label="Time since origin (s)", start_times=None,
+                   expected_samples=256, time_limits=None):
     """Check shape/finiteness/nonzero output and save physical-unit arrays/plots."""
     values = np.asarray(arrays)
     if values.ndim != 3 or values.shape[:2] != (len(distances), len(labels)):
         raise AssertionError("Unexpected waveform shape: %s" % (values.shape,))
-    if values.shape[2] != 256 or not np.isfinite(values).all() or not np.all(np.any(values != 0, axis=(1, 2))):
-        raise AssertionError("Each distance must have 256 finite samples and a nonzero waveform")
+    if values.shape[2] != expected_samples or not np.isfinite(values).all() or not np.all(np.any(values != 0, axis=(1, 2))):
+        raise AssertionError("Each distance must have %d finite samples and a nonzero waveform"
+                             % expected_samples)
     starts = np.zeros(len(distances)) if start_times is None else np.asarray(start_times)
     times = starts[:, None] + np.arange(values.shape[2])[None, :] * dt
     np.savez_compressed(output / (name + ".npz"), values=values, time_s=times,
@@ -83,6 +85,8 @@ def save_waveforms(output, report, name, arrays, distances, dt, labels,
     axes[0, 0].legend(ncol=len(distances), fontsize=8)
     axes[0, 0].set_title("%s: %s, M0 = 10^15 N m" % (report["backend"], name))
     axes[-1, 0].set_xlabel(time_label)
+    if time_limits is not None:
+        axes[-1, 0].set_xlim(*time_limits)
     fig.savefig(output / (name + ".png"), dpi=140)
     plt.close(fig)
     report["outputs"][name] = {"shape": list(values.shape), "components": labels,

@@ -20,7 +20,7 @@ They are measurements for these small examples, not performance guarantees.
 
 | Workflow | Command argument | Validated output shape | Time | Output size | Machine-readable record |
 |---|---|---|---:|---:|---|
-| QSEIS2025 | `--observables all` | displacement `(3, 3, 256)`; strain/stress `(3, 6, 256)` | 14.6 s | 1.23 MiB | [JSON](_static/examples/qseis2025.json) |
+| QSEIS2025 | `--observables all` | displacement `(3, 3, 201)`; strain/stress `(3, 6, 201)` | 13.3 s | 1.21 MiB | [JSON](_static/examples/qseis2025.json) |
 | QSEIS06 | default | `(3, 3, 256)` | 13.0 s | 0.38 MiB | [JSON](_static/examples/qseis06.json) |
 | SPGRN2012 | default | `(3, 3, 256)` | 9.4 s | 12.54 MiB | [JSON](_static/examples/spgrn2012.json) |
 | SPGRN2020 | default | `(3, 3, 256)` | 9.7 s | 17.10 MiB | [JSON](_static/examples/spgrn2020.json) |
@@ -31,10 +31,21 @@ The dynamic array axes are distance, component and sample. The static axes are
 distance and component. The default displacement-only QSEIS2025 command was also
 executed independently in a fresh output directory.
 
-## Cross-platform installation and execution
+The QSEIS2025 run and figures were refreshed after cropping every exported
+observable to 0–100 s inclusive. At 0.5 s spacing, the NPZ arrays contain
+201 samples; each was checked against the first 201 samples of the previous
+full waveform. Its native library still contains 256 samples over 127.5 s.
+The JSON records the exported interval in `output_time_range_s` separately
+from the native `time_window_s`. The refreshed displacement-only run took
+11.4 s.
+
+## Initial cross-platform installation and execution
 
 [GitHub Actions run 34801126315](https://github.com/Zhou-Jiangcheng/pygrnwang/actions/runs/34801126315)
-built commit `0d38d44` from source in fresh Conda environments, using Python
+built commit `0d38d44` before the QSEIS2025 100 s crop. These archived records
+therefore retain its original 256-sample exported waveforms; the current
+201-sample exports are verified by the refreshed local run above. The CI run
+installed source in fresh Conda environments, using Python
 3.12.14 on Linux x86-64, Windows x86-64 and macOS arm64. All six workflows
 passed on every platform. The Windows job used
 `gfortran=15.2.0=hf1b5d6d_19`; the installation guide records why that exact
@@ -82,9 +93,10 @@ generated HTML and calculation libraries.
 
 ## What was checked
 
-- Every dynamic reader returned three-component displacement at three distances,
-  with 256 samples, finite values and a nonzero waveform. The QSEIS2025 extension
-  returned six-component strain and stress with the same distance/time grid.
+- Every dynamic example returned three-component displacement at three distances,
+  with finite values and a nonzero waveform. QSEIS2025 exports 201 samples over
+  0–100 s; the other dynamic examples retain 256 samples. QSEIS2025 strain and
+  stress have six components on the same exported distance/time grid.
 - EDGRN generated the layered kernels; EDCMP used those kernels for all five
   mechanism bases at both source depths. ASCII-to-binary conversion produced
   the bulk shape `(2, 1, 5, 5, 3)`, and the three queried displacements were finite.
