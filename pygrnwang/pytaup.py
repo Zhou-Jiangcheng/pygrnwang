@@ -2,6 +2,9 @@ import os
 import sys
 import platform
 import shutil
+import subprocess
+import tempfile
+from functools import lru_cache
 
 import numpy as np
 from concurrent.futures import ProcessPoolExecutor
@@ -10,46 +13,28 @@ from concurrent.futures import ProcessPoolExecutor
 # ============================================================================
 # Backend selection
 # ----------------------------------------------------------------------------
-# If a Java runtime, TauP.jar and jpype are all available, use the (faster)
-# Java TauP backend. Otherwise fall back to obspy.taup, which is slower.
+# Java is invoked in a subprocess only when a travel-time query is requested.
+# Without a JDK (java + javac), use the ObsPy backend.
 # ============================================================================
 def _detect_java_backend():
-    """
-    Return (use_java, jar_path).
-    use_java is True only when `java` is on PATH, TauP.jar exists in the
-    environment's bin/Scripts directory and jpype can be imported.
-    """
-    if shutil.which("java") is None:
+    """Locate the bundled JAR, with the environment's Scripts/bin as fallback."""
+    if shutil.which("java") is None or shutil.which("javac") is None:
         return False, None
-
-    if platform.system() == "Windows":
-        jar_path = os.path.join(sys.exec_prefix, "Scripts", "TauP.jar")
-    else:
-        jar_path = os.path.join(sys.exec_prefix, "bin", "TauP.jar")
-
-    if not os.path.exists(jar_path):
-        return False, None
-
-    try:
-        import jpype  # noqa: F401
-    except ImportError:
-        return False, None
-
-    return True, jar_path
+    candidates = [
+        os.path.join(os.path.dirname(__file__), "exec", "TauP.jar"),
+        os.path.join(
+            sys.exec_prefix,
+            "Scripts" if platform.system() == "Windows" else "bin",
+            "TauP.jar",
+        ),
+    ]
+    for jar_path in candidates:
+        if os.path.isfile(jar_path):
+            return True, os.path.abspath(jar_path)
+    return False, None
 
 
 _USE_JAVA, _JAR_PATH = _detect_java_backend()
-
-if _USE_JAVA:
-    import jpype
-    import jpype.imports  # noqa: F401  use jpype to call java class
-
-    if not jpype.isJVMStarted():
-        jpype.startJVM("--enable-native-access=ALL-UNNAMED", classpath=[_JAR_PATH])
-    from edu.sc.seis.TauP import TauP_Time  # type: ignore
-else:
-    from obspy.taup import TauPyModel
-    from obspy.taup.taup_create import TauPCreate
 
 
 _DEG_PER_KM = 1.0 / 111.19492664455874
@@ -89,6 +74,8 @@ def _get_model(model_name, rebuild_npz=False):
         real_model_path = npz_file
 
     try:
+        from obspy.taup import TauPyModel
+
         model_instance = TauPyModel(model=real_model_path)
         _MODEL_CACHE[model_name] = model_instance
         return model_instance
@@ -99,6 +86,8 @@ def _get_model(model_name, rebuild_npz=False):
 def _taup_create_npz_file_obspy(nd_file):
     npz_file = os.path.splitext(nd_file)[0] + ".npz"
     try:
+        from obspy.taup.taup_create import TauPCreate
+
         taup_creator = TauPCreate(
             input_filename=nd_file,
             output_filename=npz_file,
@@ -181,43 +170,99 @@ def _cal_first_p_s_obspy(
 # ============================================================================
 # Java (TauP) backend
 # ============================================================================
-def taup_time_java(
-    event_depth_km, dist_km, phases_list, receiver_depth_km=0, model_name="ak135"
-):
-    """
-    Full travel-time query using the Java TauP backend.
-    Only available when the Java backend has been selected.
-    """
-    if not _USE_JAVA:
-        raise RuntimeError(
-            "taup_time_java requires a Java runtime with TauP.jar and jpype."
+@lru_cache(maxsize=4)
+def _compile_java_bridge(jar_path):
+    """Compile once per process into a private directory, removed on exit."""
+    source = os.path.join(os.path.dirname(__file__), "java", "PygrnwangTauPBatch.java")
+    build = tempfile.TemporaryDirectory(prefix="pygrnwang-taup-")
+    try:
+        completed = subprocess.run(
+            ["javac", "-encoding", "UTF-8", "-cp", jar_path, "-d", build.name, source],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            check=False,
         )
-    ttobj = TauP_Time(model_name)
-    ttobj.setSourceDepth(event_depth_km)
-    ttobj.setReceiverDepth(receiver_depth_km)
-    ttobj.setPhaseNames(phases_list)
-    ttobj.calculate(dist_km * _DEG_PER_KM)
+        if completed.returncode:
+            raise RuntimeError(f"Could not compile TauP bridge:\n{completed.stderr}")
+    except Exception:
+        build.cleanup()
+        raise
+    return build
 
-    N_arr = ttobj.getNumArrivals()
-    results = {"phase": [], "puristphase": [], "time": [], "rayparameter": []}
-    for i in range(N_arr):
-        arr = ttobj.getArrival(i)
-        results["phase"].append(str(arr.getName()))
-        results["puristphase"].append(str(arr.getPuristName()))
-        results["time"].append(float(arr.getTime()))
-        results["rayparameter"].append(float(arr.getRayParam()))
+
+def _query_java_batch(
+    event_depth_km, distances_km, phase_groups, receiver_depth_km, model_name,
+    first_only=False,
+):
+    """Query all distances and phase groups in one Java subprocess."""
+    if not _USE_JAVA:
+        raise RuntimeError("Java TauP requires java and javac on PATH and TauP.jar.")
+    distances = np.asarray(distances_km, dtype=float).reshape(-1)
+    results = [
+        [dict(phase=[], puristphase=[], time=[], rayparameter=[]) for _ in phase_groups]
+        for _ in distances
+    ]
+    if not len(distances):
+        return results
+    build = _compile_java_bridge(_JAR_PATH)
+    completed = subprocess.run(
+        [
+            "java", "-cp", os.pathsep.join([build.name, _JAR_PATH]),
+            "PygrnwangTauPBatch", os.fspath(model_name),
+            str(float(event_depth_km)), str(float(receiver_depth_km)),
+            "first" if first_only else "all",
+            *[",".join(phases) for phases in phase_groups],
+        ],
+        input="".join(f"{dist * _DEG_PER_KM:.17g}\n" for dist in distances),
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        check=False,
+    )
+    if completed.returncode:
+        raise RuntimeError(f"TauP query failed:\n{completed.stderr}")
+    seen = set()
+    try:
+        for line in completed.stdout.splitlines():
+            index, group, phase, purist, time, rayparam = line.split("\t")
+            index, group = int(index), int(group)
+            if not (0 <= index < len(distances) and 0 <= group < len(phase_groups)):
+                raise ValueError("Unexpected result index")
+            result = results[index][group]
+            seen.add((index, group))
+            if phase:
+                result["phase"].append(phase)
+                result["puristphase"].append(purist)
+                result["time"].append(float(time))
+                result["rayparameter"].append(float(rayparam))
+        if len(seen) != len(distances) * len(phase_groups):
+            raise ValueError("Missing travel-time results")
+    except (ValueError, IndexError) as exc:
+        raise RuntimeError("TauP returned malformed or incomplete results") from exc
     return results
 
 
+def taup_time_java(
+    event_depth_km, dist_km, phases_list, receiver_depth_km=0, model_name="ak135"
+):
+    """Return all Java TauP arrivals; rayparameter remains in seconds/radian.
+
+    Requires a JDK (java and javac on PATH). The bridge is compiled lazily;
+    importing this module does not start Java. Supports built-in models and
+    .nd model paths, and preserves the phase/puristphase/time/rayparameter API.
+    """
+    return _query_java_batch(
+        event_depth_km, [dist_km], [phases_list], receiver_depth_km, model_name
+    )[0][0]
+
+
 def _first_arrival_java(event_depth_km, dist_km, receiver_depth_km, model_name, phases):
-    ttobj = TauP_Time(model_name)
-    ttobj.setSourceDepth(event_depth_km)
-    ttobj.setReceiverDepth(receiver_depth_km)
-    ttobj.setPhaseNames(phases)
-    ttobj.calculate(dist_km * _DEG_PER_KM)
-    if ttobj.getNumArrivals() == 0:
-        return np.nan
-    return float(ttobj.getArrival(0).getTime())
+    result = _query_java_batch(
+        event_depth_km, [dist_km], [phases], receiver_depth_km, model_name,
+        first_only=True,
+    )[0][0]
+    return result["time"][0] if result["time"] else np.nan
 
 
 def _cal_first_p_java(
@@ -240,18 +285,25 @@ def _cal_first_s_java(
     )
 
 
+def _first_p_s_java_batch(event_depth_km, distances_km, receiver_depth_km, model_name):
+    if event_depth_km < receiver_depth_km:
+        event_depth_km, receiver_depth_km = receiver_depth_km, event_depth_km
+    results = _query_java_batch(
+        event_depth_km, distances_km, [_PHASES_P, _PHASES_S], receiver_depth_km,
+        model_name, first_only=True,
+    )
+    first_p = np.array([r[0]["time"][0] if r[0]["time"] else np.nan for r in results])
+    first_s = np.array([r[1]["time"][0] if r[1]["time"] else np.nan for r in results])
+    return first_p, first_s
+
+
 def _cal_first_p_s_java(
     event_depth_km, dist_km, receiver_depth_km=0.0, model_name="ak135"
 ):
-    if event_depth_km < receiver_depth_km:
-        event_depth_km, receiver_depth_km = receiver_depth_km, event_depth_km
-    first_p = _first_arrival_java(
-        event_depth_km, dist_km, receiver_depth_km, model_name, _PHASES_P
+    first_p, first_s = _first_p_s_java_batch(
+        event_depth_km, [dist_km], receiver_depth_km, model_name
     )
-    first_s = _first_arrival_java(
-        event_depth_km, dist_km, receiver_depth_km, model_name, _PHASES_S
-    )
-    return first_p, first_s
+    return float(first_p[0]), float(first_s[0])
 
 
 # ============================================================================
@@ -347,18 +399,12 @@ def create_tpts_table(
         return
 
     if _USE_JAVA:
-        # The JVM does not play well with forked worker processes, so run
-        # serially in the current (JVM-hosting) process.
-        tp_table = np.zeros(len(dist_km_list), dtype=np.float32)
-        ts_table = np.zeros(len(dist_km_list), dtype=np.float32)
-        for i in range(len(dist_km_list)):
-            first_p, first_s = _cal_first_p_s_java(
-                event_depth_km, dist_km_list[i], receiver_depth_km, model_name
-            )
-            tp_table[i] = first_p
-            ts_table[i] = first_s
-        tp_table.tofile(path_tp_table)
-        ts_table.tofile(path_ts_table)
+        # Reuse one Java process and model for the entire distance table.
+        tp_table, ts_table = _first_p_s_java_batch(
+            event_depth_km, dist_km_list, receiver_depth_km, model_name
+        )
+        tp_table.astype(np.float32).tofile(path_tp_table)
+        ts_table.astype(np.float32).tofile(path_ts_table)
         return
 
     # ---- obspy backend (parallel) ----

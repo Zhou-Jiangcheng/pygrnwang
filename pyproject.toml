@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=68", "wheel"]
+requires = ["setuptools>=77", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -7,17 +7,16 @@ name = "pygrnwang"
 version = "3.0.0"
 description = "A Python library for computing Green's function libaray."
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.9"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [{ name = "Zhou Jiangcheng", email = "zhou-jiangcheng@outlook.com" }]
 dependencies = [
     "numpy>=1.26.4",
-    "scipy>=1.17.0",
+    "scipy>=1.13.1",
     "pandas>=2.1.4",
     "obspy>=1.5.0",
-    "tqdm>=4.67.1",
-    "jpype1>=1.6.0"
+    "tqdm>=4.67.1"
 ]
 
 [project.scripts]
@@ -36,6 +35,7 @@ Homepage = "https://github.com/Zhou-Jiangcheng/pygrnwang"
 [tool.setuptools]
 package-dir = { "" = "." }
 include-package-data = true
+script-files = ["pygrnwang/exec/TauP.jar"]
 
 [tool.setuptools.packages.find]
 where = ["."]
@@ -43,4 +43,4 @@ include = ["pygrnwang*"]
 exclude = ["test*"]
 
 [tool.setuptools.package-data]
-pygrnwang = ["exec/"]
+pygrnwang = ["exec/*.jar", "java/*.java"]

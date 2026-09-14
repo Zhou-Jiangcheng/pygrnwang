@@ -6,6 +6,7 @@ import sys
 from setuptools import setup, Distribution
 from setuptools.command.build_py import build_py as _build_py
 from setuptools.command.develop import develop as _develop
+from distutils.command.build_scripts import build_scripts as _build_scripts
 
 # Try to import editable_wheel (for `pip install -e .`)
 try:
@@ -105,8 +106,11 @@ def install_binaries(target_exec_dir, copy_to_system=True):
             except Exception as e:
                 print(f"[Warning] Could not copy binary to {env_bin_dir}: {e}")
 
-    # 2. Copy java
+    # 2. Keep a package-local JAR for both regular and editable installs.
+    source_jar = os.path.join(project_root, "pygrnwang", "exec", "TauP.jar")
     output_binary = os.path.join(target_exec_dir, "TauP.jar")
+    if os.path.abspath(source_jar) != os.path.abspath(output_binary):
+        shutil.copy2(source_jar, output_binary)
     if copy_to_system and os.path.exists(output_binary):
         dest_link = os.path.join(env_bin_dir, "TauP.jar")
         print(f"[pygrnwang] Installing binary to {dest_link}")
@@ -119,6 +123,22 @@ def install_binaries(target_exec_dir, copy_to_system=True):
 
 
 # --- Custom command classes ---
+
+
+class CustomBuildScripts(_build_scripts):
+    """Stage TauP.jar in wheel .data/scripts for installation into Scripts/bin."""
+
+    def copy_scripts(self):
+        # A JAR is binary: the default command tries to decode Python shebangs.
+        self.mkpath(self.build_dir)
+        outfiles = []
+        updated_files = []
+        for script in self.scripts:
+            outfile, copied = self.copy_file(script, self.build_dir)
+            outfiles.append(outfile)
+            if copied:
+                updated_files.append(outfile)
+        return outfiles, updated_files
 
 
 class CustomBuildPy(_build_py):
@@ -144,6 +164,7 @@ class CustomDevelop(_develop):
 # Collect cmdclass
 cmd_classes = {
     "build_py": CustomBuildPy,
+    "build_scripts": CustomBuildScripts,
     "develop": CustomDevelop,
 }
 

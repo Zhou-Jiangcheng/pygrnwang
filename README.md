@@ -4,6 +4,20 @@ This Python package serves as the frontend for calculating and building a Green'
 
 # Installation
 
+Python 3.9 or later is supported. Building from source requires gfortran and
+setuptools >=77; installing a compatible wheel does not require gfortran.
+
+Travel times use TauP 2.6.1 through a Java subprocess when a JDK (`java` and
+`javac` on PATH) is available, and otherwise fall back to ObsPy. JPype is not
+required. The Java bridge is compiled on the first query and cached for the
+current Python process; importing the library does not start Java. Travel-time
+tables send all distances to one Java process. Individual queries start one
+Java process per call, so use `create_tpts_table` for large distance grids.
+
+Wheels include `TauP.jar` inside the package and install a second copy in the
+target environment's `Scripts` (Windows) or `bin` directory. Resource lookup
+prefers the package copy and falls back to the environment copy.
+
 1. For user mode
 
 ```
