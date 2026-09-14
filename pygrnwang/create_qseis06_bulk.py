@@ -65,6 +65,13 @@ def pre_process_qseis06(
 ):
     """Prepare the qseis06 library grid, input files and job groups.
 
+    .. warning::
+
+        QSEIS06 is deprecated. Use QSEIS2025 for new calculations.
+        Rebuild the Green library with the replacement backend and revalidate
+        numerical settings, source and time conventions, and results; existing
+        libraries and parameter choices are not guaranteed to be interchangeable.
+
     Parameters
     ----------
     processes_num : int
@@ -256,6 +263,13 @@ def pre_process_qseis06_strain_rate(
     check_finished_tpts_table=False,
 ):
     """Prepare the qseis06 library grid, input files and job groups.
+
+    .. warning::
+
+        QSEIS06 is deprecated. Use QSEIS2025 for new calculations.
+        Rebuild the Green library with the replacement backend and revalidate
+        numerical settings, source and time conventions, and results; existing
+        libraries and parameter choices are not guaranteed to be interchangeable.
 
     Parameters
     ----------
@@ -491,6 +505,13 @@ def create_grnlib_qseis06_sequential(
 ):
     """Compute the prepared qseis06 library sequentially.
 
+    .. warning::
+
+        QSEIS06 is deprecated. Use QSEIS2025 for new calculations.
+        Rebuild the Green library with the replacement backend and revalidate
+        numerical settings, source and time conventions, and results; existing
+        libraries and parameter choices are not guaranteed to be interchangeable.
+
     Parameters
     ----------
     path_green : str
@@ -531,6 +552,13 @@ def create_grnlib_qseis06_parallel(
     path_green, check_finished=False, convert_pd2bin=True, remove_pd=True
 ):
     """Compute the prepared qseis06 library with local worker processes.
+
+    .. warning::
+
+        QSEIS06 is deprecated. Use QSEIS2025 for new calculations.
+        Rebuild the Green library with the replacement backend and revalidate
+        numerical settings, source and time conventions, and results; existing
+        libraries and parameter choices are not guaranteed to be interchangeable.
 
     Parameters
     ----------
@@ -588,6 +616,13 @@ def create_grnlib_qseis06_parallel(
 def create_grnlib_qseis06_parallel_multi_nodes(path_green, check_finished=False):
     """Compute the prepared qseis06 library with MPI.
 
+    .. warning::
+
+        QSEIS06 is deprecated. Use QSEIS2025 for new calculations.
+        Rebuild the Green library with the replacement backend and revalidate
+        numerical settings, source and time conventions, and results; existing
+        libraries and parameter choices are not guaranteed to be interchangeable.
+
     Parameters
     ----------
     path_green : str
@@ -644,6 +679,13 @@ def create_grnlib_qseis06_parallel_multi_nodes(path_green, check_finished=False)
 
 def convert_pd2bin_qseis06_all(path_green, remove=False):
     """Convert all completed qseis06 outputs to float32 binary libraries.
+
+    .. warning::
+
+        QSEIS06 is deprecated. Use QSEIS2025 for new calculations.
+        Rebuild the Green library with the replacement backend and revalidate
+        numerical settings, source and time conventions, and results; existing
+        libraries and parameter choices are not guaranteed to be interchangeable.
 
     Parameters
     ----------

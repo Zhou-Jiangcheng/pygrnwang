@@ -2,6 +2,8 @@
 
 This reference defines the documented support surface for pygrnwang 3.0. Import objects from their modules; the package root does not re-export the whole API.
 
+**Deprecated backends:** QSEIS06 and SPGRN2012. Use QSEIS2025 and SPGRN2020, respectively, for new calculations. Deprecated entry points remain documented for existing workflows. Migration requires rebuilding Green libraries and revalidating numerical settings, source and time conventions, and results; replacement backends are not guaranteed to accept existing libraries or reproduce results without validation.
+
 ```python
 from pygrnwang.create_qseis2025_bulk import pre_process_qseis2025
 from pygrnwang.read_qseis2025 import seek_qseis2025

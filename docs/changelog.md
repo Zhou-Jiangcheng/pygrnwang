@@ -2,6 +2,8 @@
 
 ## Unreleased documentation
 
+- Marked QSEIS06 and SPGRN2012 as deprecated in pygrnwang. New calculations should use QSEIS2025 and SPGRN2020 respectively; existing interfaces and tutorials remain available. Migration requires rebuilding libraries and validating the replacement backend's settings and output conventions.
+
 - Added an English user guide and API reference, with Chinese installation and QSEIS2025 quickstart pages.
 - Added small executable tutorials for QSEIS2025, QSEIS06, SPGRN2012, SPGRN2020, QSSP2020 and EDGRN/EDCMP.
 - Documented coordinate/component order, source normalization, time reduction, waveform units and solver-specific limitations.

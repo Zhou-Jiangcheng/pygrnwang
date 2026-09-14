@@ -18,11 +18,15 @@ With `only_seismograms=False`, the dynamic `seek_*` functions return **seven val
 
 ## read_qseis06
 
+**Deprecated backend: QSEIS06.** Use the QSEIS2025 reader with a newly built QSEIS2025 library for new calculations; revalidate parameter choices and results.
+
 ```{eval-rst}
 .. autofunction:: pygrnwang.read_qseis06.seek_qseis06
 ```
 
 ## read_qseis06_diff
+
+**Deprecated backend: QSEIS06.** Its strain-rate and stress-rate readers are deprecated; use QSEIS2025 direct tensor outputs with a newly built and validated library for new calculations. The generic convert_strain2stress utility below is not deprecated.
 
 This is an advanced historical workflow. It requires a dedicated perturbation
 library with ASCII files retained. The docstrings record current binary-reader
@@ -42,6 +46,8 @@ The QSEIS2025 tutorial demonstrates directly computed strain and stress.
 ```
 
 ## read_spgrn2012
+
+**Deprecated backend: SPGRN2012.** Use the SPGRN2020 reader with a newly built SPGRN2020 library for new calculations; revalidate parameter choices, time alignment and results.
 
 ```{eval-rst}
 .. autofunction:: pygrnwang.read_spgrn2012.seek_spgrn2012

@@ -53,6 +53,13 @@ def pre_process_spgrn2012(
 ):
     """Prepare the spgrn2012 library grid, input files and job groups.
 
+    .. warning::
+
+        SPGRN2012 is deprecated. Use SPGRN2020 for new calculations.
+        Rebuild the Green library with the replacement backend and revalidate
+        numerical settings, source and time conventions, and results; existing
+        libraries and parameter choices are not guaranteed to be interchangeable.
+
     Parameters
     ----------
     processes_num : int
@@ -195,6 +202,13 @@ def pre_process_spgrn2012(
 def create_grnlib_spgrn2012_sequential(path_green, check_finished=False):
     """Compute the prepared spgrn2012 library sequentially.
 
+    .. warning::
+
+        SPGRN2012 is deprecated. Use SPGRN2020 for new calculations.
+        Rebuild the Green library with the replacement backend and revalidate
+        numerical settings, source and time conventions, and results; existing
+        libraries and parameter choices are not guaranteed to be interchangeable.
+
     Parameters
     ----------
     path_green : str
@@ -230,6 +244,13 @@ def create_grnlib_spgrn2012_sequential(path_green, check_finished=False):
 
 def create_grnlib_spgrn2012_parallel(path_green, check_finished=False):
     """Compute the prepared spgrn2012 library with local worker processes.
+
+    .. warning::
+
+        SPGRN2012 is deprecated. Use SPGRN2020 for new calculations.
+        Rebuild the Green library with the replacement backend and revalidate
+        numerical settings, source and time conventions, and results; existing
+        libraries and parameter choices are not guaranteed to be interchangeable.
 
     Parameters
     ----------
@@ -300,6 +321,13 @@ def create_grnlib_spgrn2012_parallel(path_green, check_finished=False):
 
 def create_grnlib_spgrn2012_parallel_multi_nodes(path_green, check_finished=False):
     """Compute the prepared spgrn2012 library with MPI.
+
+    .. warning::
+
+        SPGRN2012 is deprecated. Use SPGRN2020 for new calculations.
+        Rebuild the Green library with the replacement backend and revalidate
+        numerical settings, source and time conventions, and results; existing
+        libraries and parameter choices are not guaranteed to be interchangeable.
 
     Parameters
     ----------

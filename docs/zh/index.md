@@ -4,6 +4,11 @@ pygrnwang 为 Wang 系列 Fortran 程序提供 Python 前端，用于建立格�
 
 本节提供中文安装和快速开始。后端细节、科学约定和 API 以英文维护，示例脚本与英文文档共用。
 
+**QSEIS06 和 SPGRN2012 已标记为 deprecated（不建议用于新计算）。**
+新任务请分别使用 [QSEIS2025](../backends/qseis2025.md) 和
+[SPGRN2020](../backends/spgrn2020.md)。现有接口和教程仍可使用；迁移时需重新建库，
+并核对数值设置、震源时间函数和时间原点。
+
 ```{toctree}
 :maxdepth: 1
 
