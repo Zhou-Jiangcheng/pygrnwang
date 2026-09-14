@@ -1,0 +1,1133 @@
+{
+  "workflow_url": "https://github.com/Zhou-Jiangcheng/pygrnwang/actions/runs/34801126315",
+  "commit": "0d38d44af4076f1d557b0f0ec0728da65e4c4371",
+  "checked_date": "2026-09-14",
+  "arrays_checked": 24,
+  "platforms": {
+    "docs-ci-ubuntu": [
+      {
+        "backend": "EDGRN2 + EDCMP2",
+        "started_utc": "2026-09-14T03:06:16Z",
+        "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+        "python": "3.12.14",
+        "dependencies": {
+          "numpy": "2.5.3",
+          "scipy": "1.18.1",
+          "pandas": "3.0.5",
+          "matplotlib": "3.11.1",
+          "obspy": "1.5.1"
+        },
+        "source_depth_km": 10.0,
+        "receiver_depth_km": 0.0,
+        "moment_nm": 1000000000000000.0,
+        "strike_dip_rake_deg": [
+          30.0,
+          45.0,
+          90.0
+        ],
+        "azimuth_deg": 30.0,
+        "reuse": false,
+        "model": "Bundled AK135 elastic properties; illustrative constant Qp=600, Qs=300",
+        "outputs": {
+          "disp": {
+            "shape": [
+              3,
+              3
+            ],
+            "components": [
+              "E",
+              "N",
+              "U"
+            ],
+            "unit": "m",
+            "finite": true,
+            "peak_absolute": 1.3880321385011832E-06
+          }
+        },
+        "distances_km": [
+          30.0,
+          60.0,
+          90.0
+        ],
+        "earth_model_numeric_rows": 24,
+        "source_grid_km": [
+          10.0,
+          11.0
+        ],
+        "distance_grid_km": [
+          0.0,
+          30.0,
+          60.0,
+          90.0,
+          120.0
+        ],
+        "elapsed_seconds": 0.297,
+        "file_count": 53,
+        "output_bytes": 171189
+      },
+      {
+        "backend": "QSEIS06",
+        "started_utc": "2026-09-14T03:04:54Z",
+        "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+        "python": "3.12.14",
+        "dependencies": {
+          "numpy": "2.5.3",
+          "scipy": "1.18.1",
+          "pandas": "3.0.5",
+          "matplotlib": "3.11.1",
+          "obspy": "1.5.1"
+        },
+        "source_depth_km": 10.0,
+        "receiver_depth_km": 0.0,
+        "moment_nm": 1000000000000000.0,
+        "strike_dip_rake_deg": [
+          30.0,
+          45.0,
+          90.0
+        ],
+        "azimuth_deg": 30.0,
+        "reuse": false,
+        "model": "Bundled AK135 elastic properties; illustrative constant Qp=600, Qs=300",
+        "outputs": {
+          "disp": {
+            "shape": [
+              3,
+              3,
+              256
+            ],
+            "components": [
+              "E",
+              "N",
+              "U"
+            ],
+            "unit": "m",
+            "finite": true,
+            "peak_absolute": 7.1784844945712516E-06
+          }
+        },
+        "sampling_interval_s": 0.5,
+        "time_window_s": 127.5,
+        "distances_km": [
+          30.0,
+          60.0,
+          90.0
+        ],
+        "earth_model_numeric_rows": 24,
+        "wavelet_type": 2,
+        "wavelet_duration_samples": 4,
+        "elapsed_seconds": 14.165,
+        "file_count": 28,
+        "output_bytes": 384159
+      },
+      {
+        "backend": "QSEIS2025",
+        "started_utc": "2026-09-14T03:04:36Z",
+        "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+        "python": "3.12.14",
+        "dependencies": {
+          "numpy": "2.5.3",
+          "scipy": "1.18.1",
+          "pandas": "3.0.5",
+          "matplotlib": "3.11.1",
+          "obspy": "1.5.1"
+        },
+        "source_depth_km": 10.0,
+        "receiver_depth_km": 0.0,
+        "moment_nm": 1000000000000000.0,
+        "strike_dip_rake_deg": [
+          30.0,
+          45.0,
+          90.0
+        ],
+        "azimuth_deg": 30.0,
+        "reuse": false,
+        "model": "Bundled AK135 elastic properties; illustrative constant Qp=600, Qs=300",
+        "outputs": {
+          "disp": {
+            "shape": [
+              3,
+              3,
+              256
+            ],
+            "components": [
+              "E",
+              "N",
+              "U"
+            ],
+            "unit": "m",
+            "finite": true,
+            "peak_absolute": 7.1784844945712516E-06
+          },
+          "strain": {
+            "shape": [
+              3,
+              6,
+              256
+            ],
+            "components": [
+              "EE",
+              "EN",
+              "EU",
+              "NN",
+              "NU",
+              "UU"
+            ],
+            "unit": "1",
+            "finite": true,
+            "peak_absolute": 1.9425999527396527E-09
+          },
+          "stress": {
+            "shape": [
+              3,
+              6,
+              256
+            ],
+            "components": [
+              "EE",
+              "EN",
+              "EU",
+              "NN",
+              "NU",
+              "UU"
+            ],
+            "unit": "Pa",
+            "finite": true,
+            "peak_absolute": 161.42750944157146
+          }
+        },
+        "sampling_interval_s": 0.5,
+        "time_window_s": 127.5,
+        "distances_km": [
+          30.0,
+          60.0,
+          90.0
+        ],
+        "earth_model_numeric_rows": 24,
+        "wavelet_type": 2,
+        "wavelet_duration_samples": 4,
+        "elapsed_seconds": 15.416,
+        "file_count": 80,
+        "output_bytes": 1249108
+      },
+      {
+        "backend": "QSSP2020",
+        "started_utc": "2026-09-14T03:05:49Z",
+        "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+        "python": "3.12.14",
+        "dependencies": {
+          "numpy": "2.5.3",
+          "scipy": "1.18.1",
+          "pandas": "3.0.5",
+          "matplotlib": "3.11.1",
+          "obspy": "1.5.1"
+        },
+        "source_depth_km": 10.0,
+        "receiver_depth_km": 0.0,
+        "moment_nm": 1000000000000000.0,
+        "strike_dip_rake_deg": [
+          30.0,
+          45.0,
+          90.0
+        ],
+        "azimuth_deg": 30.0,
+        "reuse": false,
+        "model": "Bundled AK135 elastic properties; illustrative constant Qp=600, Qs=300",
+        "outputs": {
+          "disp": {
+            "shape": [
+              3,
+              3,
+              256
+            ],
+            "components": [
+              "E",
+              "N",
+              "U"
+            ],
+            "unit": "m",
+            "finite": true,
+            "peak_absolute": 1.594559297046106E-08
+          }
+        },
+        "sampling_interval_s": 4.0,
+        "time_window_s": 1020.0,
+        "distances_km": [
+          300.0,
+          600.0,
+          900.0
+        ],
+        "spec_time_window_s": 4092.0,
+        "max_frequency_hz": 0.0625,
+        "harmonic_bounds": [
+          0,
+          800
+        ],
+        "source_duration_s": 64.0,
+        "elapsed_seconds": 25.359,
+        "file_count": 67,
+        "output_bytes": 66810993
+      },
+      {
+        "backend": "SPGRN2012",
+        "started_utc": "2026-09-14T03:05:10Z",
+        "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+        "python": "3.12.14",
+        "dependencies": {
+          "numpy": "2.5.3",
+          "scipy": "1.18.1",
+          "pandas": "3.0.5",
+          "matplotlib": "3.11.1",
+          "obspy": "1.5.1"
+        },
+        "source_depth_km": 10.0,
+        "receiver_depth_km": 0.0,
+        "moment_nm": 1000000000000000.0,
+        "strike_dip_rake_deg": [
+          30.0,
+          45.0,
+          90.0
+        ],
+        "azimuth_deg": 30.0,
+        "reuse": false,
+        "model": "Bundled AK135 elastic properties; illustrative constant Qp=600, Qs=300",
+        "outputs": {
+          "disp": {
+            "shape": [
+              3,
+              3,
+              256
+            ],
+            "components": [
+              "E",
+              "N",
+              "U"
+            ],
+            "unit": "m",
+            "finite": true,
+            "peak_absolute": 1.5146271725147833E-08
+          }
+        },
+        "sampling_interval_s": 4.0,
+        "time_window_s": 1020.0,
+        "distances_km": [
+          300.0,
+          600.0,
+          900.0
+        ],
+        "spec_time_window_s": 4092.0,
+        "max_frequency_hz": 0.0625,
+        "t0_s": -40.0,
+        "v0_km_s": 10.0,
+        "source_duration_s": 64.0,
+        "elapsed_seconds": 17.276,
+        "file_count": 15,
+        "output_bytes": 13146700
+      },
+      {
+        "backend": "SPGRN2020",
+        "started_utc": "2026-09-14T03:05:29Z",
+        "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+        "python": "3.12.14",
+        "dependencies": {
+          "numpy": "2.5.3",
+          "scipy": "1.18.1",
+          "pandas": "3.0.5",
+          "matplotlib": "3.11.1",
+          "obspy": "1.5.1"
+        },
+        "source_depth_km": 10.0,
+        "receiver_depth_km": 0.0,
+        "moment_nm": 1000000000000000.0,
+        "strike_dip_rake_deg": [
+          30.0,
+          45.0,
+          90.0
+        ],
+        "azimuth_deg": 30.0,
+        "reuse": false,
+        "model": "Bundled AK135 elastic properties; illustrative constant Qp=600, Qs=300",
+        "outputs": {
+          "disp": {
+            "shape": [
+              3,
+              3,
+              256
+            ],
+            "components": [
+              "E",
+              "N",
+              "U"
+            ],
+            "unit": "m",
+            "finite": true,
+            "peak_absolute": 1.3986820979115417E-08
+          }
+        },
+        "sampling_interval_s": 4.0,
+        "time_window_s": 1020.0,
+        "distances_km": [
+          300.0,
+          600.0,
+          900.0
+        ],
+        "spec_time_window_s": 4092.0,
+        "max_frequency_hz": 0.0625,
+        "green_before_p_s": 40.0,
+        "source_duration_s": 64.0,
+        "elapsed_seconds": 17.391,
+        "file_count": 15,
+        "output_bytes": 17923388
+      }
+    ],
+    "docs-ci-windows": [
+      {
+        "backend": "EDGRN2 + EDCMP2",
+        "started_utc": "2026-09-14T03:09:20Z",
+        "platform": "Windows-2025Server-10.0.26100-SP0",
+        "python": "3.12.14",
+        "dependencies": {
+          "numpy": "2.5.3",
+          "scipy": "1.18.1",
+          "pandas": "3.0.5",
+          "matplotlib": "3.11.1",
+          "obspy": "1.5.1"
+        },
+        "source_depth_km": 10.0,
+        "receiver_depth_km": 0.0,
+        "moment_nm": 1000000000000000.0,
+        "strike_dip_rake_deg": [
+          30.0,
+          45.0,
+          90.0
+        ],
+        "azimuth_deg": 30.0,
+        "reuse": false,
+        "model": "Bundled AK135 elastic properties; illustrative constant Qp=600, Qs=300",
+        "outputs": {
+          "disp": {
+            "shape": [
+              3,
+              3
+            ],
+            "components": [
+              "E",
+              "N",
+              "U"
+            ],
+            "unit": "m",
+            "finite": true,
+            "peak_absolute": 1.3880321385011832E-06
+          }
+        },
+        "distances_km": [
+          30.0,
+          60.0,
+          90.0
+        ],
+        "earth_model_numeric_rows": 24,
+        "source_grid_km": [
+          10.0,
+          11.0
+        ],
+        "distance_grid_km": [
+          0.0,
+          30.0,
+          60.0,
+          90.0,
+          120.0
+        ],
+        "elapsed_seconds": 1.555,
+        "file_count": 53,
+        "output_bytes": 173758
+      },
+      {
+        "backend": "QSEIS06",
+        "started_utc": "2026-09-14T03:07:36Z",
+        "platform": "Windows-2025Server-10.0.26100-SP0",
+        "python": "3.12.14",
+        "dependencies": {
+          "numpy": "2.5.3",
+          "scipy": "1.18.1",
+          "pandas": "3.0.5",
+          "matplotlib": "3.11.1",
+          "obspy": "1.5.1"
+        },
+        "source_depth_km": 10.0,
+        "receiver_depth_km": 0.0,
+        "moment_nm": 1000000000000000.0,
+        "strike_dip_rake_deg": [
+          30.0,
+          45.0,
+          90.0
+        ],
+        "azimuth_deg": 30.0,
+        "reuse": false,
+        "model": "Bundled AK135 elastic properties; illustrative constant Qp=600, Qs=300",
+        "outputs": {
+          "disp": {
+            "shape": [
+              3,
+              3,
+              256
+            ],
+            "components": [
+              "E",
+              "N",
+              "U"
+            ],
+            "unit": "m",
+            "finite": true,
+            "peak_absolute": 7.1784844945712516E-06
+          }
+        },
+        "sampling_interval_s": 0.5,
+        "time_window_s": 127.5,
+        "distances_km": [
+          30.0,
+          60.0,
+          90.0
+        ],
+        "earth_model_numeric_rows": 24,
+        "wavelet_type": 2,
+        "wavelet_duration_samples": 4,
+        "elapsed_seconds": 19.886,
+        "file_count": 28,
+        "output_bytes": 389780
+      },
+      {
+        "backend": "QSEIS2025",
+        "started_utc": "2026-09-14T03:07:07Z",
+        "platform": "Windows-2025Server-10.0.26100-SP0",
+        "python": "3.12.14",
+        "dependencies": {
+          "numpy": "2.5.3",
+          "scipy": "1.18.1",
+          "pandas": "3.0.5",
+          "matplotlib": "3.11.1",
+          "obspy": "1.5.1"
+        },
+        "source_depth_km": 10.0,
+        "receiver_depth_km": 0.0,
+        "moment_nm": 1000000000000000.0,
+        "strike_dip_rake_deg": [
+          30.0,
+          45.0,
+          90.0
+        ],
+        "azimuth_deg": 30.0,
+        "reuse": false,
+        "model": "Bundled AK135 elastic properties; illustrative constant Qp=600, Qs=300",
+        "outputs": {
+          "disp": {
+            "shape": [
+              3,
+              3,
+              256
+            ],
+            "components": [
+              "E",
+              "N",
+              "U"
+            ],
+            "unit": "m",
+            "finite": true,
+            "peak_absolute": 7.1784844945712516E-06
+          },
+          "strain": {
+            "shape": [
+              3,
+              6,
+              256
+            ],
+            "components": [
+              "EE",
+              "EN",
+              "EU",
+              "NN",
+              "NU",
+              "UU"
+            ],
+            "unit": "1",
+            "finite": true,
+            "peak_absolute": 1.9425999527396527E-09
+          },
+          "stress": {
+            "shape": [
+              3,
+              6,
+              256
+            ],
+            "components": [
+              "EE",
+              "EN",
+              "EU",
+              "NN",
+              "NU",
+              "UU"
+            ],
+            "unit": "Pa",
+            "finite": true,
+            "peak_absolute": 161.42750944157146
+          }
+        },
+        "sampling_interval_s": 0.5,
+        "time_window_s": 127.5,
+        "distances_km": [
+          30.0,
+          60.0,
+          90.0
+        ],
+        "earth_model_numeric_rows": 24,
+        "wavelet_type": 2,
+        "wavelet_duration_samples": 4,
+        "elapsed_seconds": 23.176,
+        "file_count": 80,
+        "output_bytes": 1264359
+      },
+      {
+        "backend": "QSSP2020",
+        "started_utc": "2026-09-14T03:08:47Z",
+        "platform": "Windows-2025Server-10.0.26100-SP0",
+        "python": "3.12.14",
+        "dependencies": {
+          "numpy": "2.5.3",
+          "scipy": "1.18.1",
+          "pandas": "3.0.5",
+          "matplotlib": "3.11.1",
+          "obspy": "1.5.1"
+        },
+        "source_depth_km": 10.0,
+        "receiver_depth_km": 0.0,
+        "moment_nm": 1000000000000000.0,
+        "strike_dip_rake_deg": [
+          30.0,
+          45.0,
+          90.0
+        ],
+        "azimuth_deg": 30.0,
+        "reuse": false,
+        "model": "Bundled AK135 elastic properties; illustrative constant Qp=600, Qs=300",
+        "outputs": {
+          "disp": {
+            "shape": [
+              3,
+              3,
+              256
+            ],
+            "components": [
+              "E",
+              "N",
+              "U"
+            ],
+            "unit": "m",
+            "finite": true,
+            "peak_absolute": 1.594559297046106E-08
+          }
+        },
+        "sampling_interval_s": 4.0,
+        "time_window_s": 1020.0,
+        "distances_km": [
+          300.0,
+          600.0,
+          900.0
+        ],
+        "spec_time_window_s": 4092.0,
+        "max_frequency_hz": 0.0625,
+        "harmonic_bounds": [
+          0,
+          800
+        ],
+        "source_duration_s": 64.0,
+        "elapsed_seconds": 27.897,
+        "file_count": 67,
+        "output_bytes": 66827049
+      },
+      {
+        "backend": "SPGRN2012",
+        "started_utc": "2026-09-14T03:08:00Z",
+        "platform": "Windows-2025Server-10.0.26100-SP0",
+        "python": "3.12.14",
+        "dependencies": {
+          "numpy": "2.5.3",
+          "scipy": "1.18.1",
+          "pandas": "3.0.5",
+          "matplotlib": "3.11.1",
+          "obspy": "1.5.1"
+        },
+        "source_depth_km": 10.0,
+        "receiver_depth_km": 0.0,
+        "moment_nm": 1000000000000000.0,
+        "strike_dip_rake_deg": [
+          30.0,
+          45.0,
+          90.0
+        ],
+        "azimuth_deg": 30.0,
+        "reuse": false,
+        "model": "Bundled AK135 elastic properties; illustrative constant Qp=600, Qs=300",
+        "outputs": {
+          "disp": {
+            "shape": [
+              3,
+              3,
+              256
+            ],
+            "components": [
+              "E",
+              "N",
+              "U"
+            ],
+            "unit": "m",
+            "finite": true,
+            "peak_absolute": 1.5146271724570058E-08
+          }
+        },
+        "sampling_interval_s": 4.0,
+        "time_window_s": 1020.0,
+        "distances_km": [
+          300.0,
+          600.0,
+          900.0
+        ],
+        "spec_time_window_s": 4092.0,
+        "max_frequency_hz": 0.0625,
+        "t0_s": -40.0,
+        "v0_km_s": 10.0,
+        "source_duration_s": 64.0,
+        "elapsed_seconds": 18.522,
+        "file_count": 15,
+        "output_bytes": 13148920
+      },
+      {
+        "backend": "SPGRN2020",
+        "started_utc": "2026-09-14T03:08:23Z",
+        "platform": "Windows-2025Server-10.0.26100-SP0",
+        "python": "3.12.14",
+        "dependencies": {
+          "numpy": "2.5.3",
+          "scipy": "1.18.1",
+          "pandas": "3.0.5",
+          "matplotlib": "3.11.1",
+          "obspy": "1.5.1"
+        },
+        "source_depth_km": 10.0,
+        "receiver_depth_km": 0.0,
+        "moment_nm": 1000000000000000.0,
+        "strike_dip_rake_deg": [
+          30.0,
+          45.0,
+          90.0
+        ],
+        "azimuth_deg": 30.0,
+        "reuse": false,
+        "model": "Bundled AK135 elastic properties; illustrative constant Qp=600, Qs=300",
+        "outputs": {
+          "disp": {
+            "shape": [
+              3,
+              3,
+              256
+            ],
+            "components": [
+              "E",
+              "N",
+              "U"
+            ],
+            "unit": "m",
+            "finite": true,
+            "peak_absolute": 1.3986820979115417E-08
+          }
+        },
+        "sampling_interval_s": 4.0,
+        "time_window_s": 1020.0,
+        "distances_km": [
+          300.0,
+          600.0,
+          900.0
+        ],
+        "spec_time_window_s": 4092.0,
+        "max_frequency_hz": 0.0625,
+        "green_before_p_s": 40.0,
+        "source_duration_s": 64.0,
+        "elapsed_seconds": 19.216,
+        "file_count": 15,
+        "output_bytes": 17925838
+      }
+    ],
+    "docs-ci-macos": [
+      {
+        "backend": "EDGRN2 + EDCMP2",
+        "started_utc": "2026-09-14T03:05:35Z",
+        "platform": "macOS-26.6.2-arm64-arm-64bit",
+        "python": "3.12.14",
+        "dependencies": {
+          "numpy": "2.5.3",
+          "scipy": "1.18.1",
+          "pandas": "3.0.5",
+          "matplotlib": "3.11.1",
+          "obspy": "1.5.1"
+        },
+        "source_depth_km": 10.0,
+        "receiver_depth_km": 0.0,
+        "moment_nm": 1000000000000000.0,
+        "strike_dip_rake_deg": [
+          30.0,
+          45.0,
+          90.0
+        ],
+        "azimuth_deg": 30.0,
+        "reuse": false,
+        "model": "Bundled AK135 elastic properties; illustrative constant Qp=600, Qs=300",
+        "outputs": {
+          "disp": {
+            "shape": [
+              3,
+              3
+            ],
+            "components": [
+              "E",
+              "N",
+              "U"
+            ],
+            "unit": "m",
+            "finite": true,
+            "peak_absolute": 1.3880321385011832E-06
+          }
+        },
+        "distances_km": [
+          30.0,
+          60.0,
+          90.0
+        ],
+        "earth_model_numeric_rows": 24,
+        "source_grid_km": [
+          10.0,
+          11.0
+        ],
+        "distance_grid_km": [
+          0.0,
+          30.0,
+          60.0,
+          90.0,
+          120.0
+        ],
+        "elapsed_seconds": 0.278,
+        "file_count": 53,
+        "output_bytes": 171222
+      },
+      {
+        "backend": "QSEIS06",
+        "started_utc": "2026-09-14T03:04:39Z",
+        "platform": "macOS-26.6.2-arm64-arm-64bit",
+        "python": "3.12.14",
+        "dependencies": {
+          "numpy": "2.5.3",
+          "scipy": "1.18.1",
+          "pandas": "3.0.5",
+          "matplotlib": "3.11.1",
+          "obspy": "1.5.1"
+        },
+        "source_depth_km": 10.0,
+        "receiver_depth_km": 0.0,
+        "moment_nm": 1000000000000000.0,
+        "strike_dip_rake_deg": [
+          30.0,
+          45.0,
+          90.0
+        ],
+        "azimuth_deg": 30.0,
+        "reuse": false,
+        "model": "Bundled AK135 elastic properties; illustrative constant Qp=600, Qs=300",
+        "outputs": {
+          "disp": {
+            "shape": [
+              3,
+              3,
+              256
+            ],
+            "components": [
+              "E",
+              "N",
+              "U"
+            ],
+            "unit": "m",
+            "finite": true,
+            "peak_absolute": 7.1784844945712516E-06
+          }
+        },
+        "sampling_interval_s": 0.5,
+        "time_window_s": 127.5,
+        "distances_km": [
+          30.0,
+          60.0,
+          90.0
+        ],
+        "earth_model_numeric_rows": 24,
+        "wavelet_type": 2,
+        "wavelet_duration_samples": 4,
+        "elapsed_seconds": 8.353,
+        "file_count": 28,
+        "output_bytes": 384161
+      },
+      {
+        "backend": "QSEIS2025",
+        "started_utc": "2026-09-14T03:04:28Z",
+        "platform": "macOS-26.6.2-arm64-arm-64bit",
+        "python": "3.12.14",
+        "dependencies": {
+          "numpy": "2.5.3",
+          "scipy": "1.18.1",
+          "pandas": "3.0.5",
+          "matplotlib": "3.11.1",
+          "obspy": "1.5.1"
+        },
+        "source_depth_km": 10.0,
+        "receiver_depth_km": 0.0,
+        "moment_nm": 1000000000000000.0,
+        "strike_dip_rake_deg": [
+          30.0,
+          45.0,
+          90.0
+        ],
+        "azimuth_deg": 30.0,
+        "reuse": false,
+        "model": "Bundled AK135 elastic properties; illustrative constant Qp=600, Qs=300",
+        "outputs": {
+          "disp": {
+            "shape": [
+              3,
+              3,
+              256
+            ],
+            "components": [
+              "E",
+              "N",
+              "U"
+            ],
+            "unit": "m",
+            "finite": true,
+            "peak_absolute": 7.1784844945712516E-06
+          },
+          "strain": {
+            "shape": [
+              3,
+              6,
+              256
+            ],
+            "components": [
+              "EE",
+              "EN",
+              "EU",
+              "NN",
+              "NU",
+              "UU"
+            ],
+            "unit": "1",
+            "finite": true,
+            "peak_absolute": 1.9425999527396527E-09
+          },
+          "stress": {
+            "shape": [
+              3,
+              6,
+              256
+            ],
+            "components": [
+              "EE",
+              "EN",
+              "EU",
+              "NN",
+              "NU",
+              "UU"
+            ],
+            "unit": "Pa",
+            "finite": true,
+            "peak_absolute": 161.42750944157146
+          }
+        },
+        "sampling_interval_s": 0.5,
+        "time_window_s": 127.5,
+        "distances_km": [
+          30.0,
+          60.0,
+          90.0
+        ],
+        "earth_model_numeric_rows": 24,
+        "wavelet_type": 2,
+        "wavelet_duration_samples": 4,
+        "elapsed_seconds": 9.131,
+        "file_count": 80,
+        "output_bytes": 1249103
+      },
+      {
+        "backend": "QSSP2020",
+        "started_utc": "2026-09-14T03:05:14Z",
+        "platform": "macOS-26.6.2-arm64-arm-64bit",
+        "python": "3.12.14",
+        "dependencies": {
+          "numpy": "2.5.3",
+          "scipy": "1.18.1",
+          "pandas": "3.0.5",
+          "matplotlib": "3.11.1",
+          "obspy": "1.5.1"
+        },
+        "source_depth_km": 10.0,
+        "receiver_depth_km": 0.0,
+        "moment_nm": 1000000000000000.0,
+        "strike_dip_rake_deg": [
+          30.0,
+          45.0,
+          90.0
+        ],
+        "azimuth_deg": 30.0,
+        "reuse": false,
+        "model": "Bundled AK135 elastic properties; illustrative constant Qp=600, Qs=300",
+        "outputs": {
+          "disp": {
+            "shape": [
+              3,
+              3,
+              256
+            ],
+            "components": [
+              "E",
+              "N",
+              "U"
+            ],
+            "unit": "m",
+            "finite": true,
+            "peak_absolute": 1.594559297046106E-08
+          }
+        },
+        "sampling_interval_s": 4.0,
+        "time_window_s": 1020.0,
+        "distances_km": [
+          300.0,
+          600.0,
+          900.0
+        ],
+        "spec_time_window_s": 4092.0,
+        "max_frequency_hz": 0.0625,
+        "harmonic_bounds": [
+          0,
+          800
+        ],
+        "source_duration_s": 64.0,
+        "elapsed_seconds": 19.108,
+        "file_count": 67,
+        "output_bytes": 66811106
+      },
+      {
+        "backend": "SPGRN2012",
+        "started_utc": "2026-09-14T03:04:50Z",
+        "platform": "macOS-26.6.2-arm64-arm-64bit",
+        "python": "3.12.14",
+        "dependencies": {
+          "numpy": "2.5.3",
+          "scipy": "1.18.1",
+          "pandas": "3.0.5",
+          "matplotlib": "3.11.1",
+          "obspy": "1.5.1"
+        },
+        "source_depth_km": 10.0,
+        "receiver_depth_km": 0.0,
+        "moment_nm": 1000000000000000.0,
+        "strike_dip_rake_deg": [
+          30.0,
+          45.0,
+          90.0
+        ],
+        "azimuth_deg": 30.0,
+        "reuse": false,
+        "model": "Bundled AK135 elastic properties; illustrative constant Qp=600, Qs=300",
+        "outputs": {
+          "disp": {
+            "shape": [
+              3,
+              3,
+              256
+            ],
+            "components": [
+              "E",
+              "N",
+              "U"
+            ],
+            "unit": "m",
+            "finite": true,
+            "peak_absolute": 1.5146271704444092E-08
+          }
+        },
+        "sampling_interval_s": 4.0,
+        "time_window_s": 1020.0,
+        "distances_km": [
+          300.0,
+          600.0,
+          900.0
+        ],
+        "spec_time_window_s": 4092.0,
+        "max_frequency_hz": 0.0625,
+        "t0_s": -40.0,
+        "v0_km_s": 10.0,
+        "source_duration_s": 64.0,
+        "elapsed_seconds": 9.843,
+        "file_count": 15,
+        "output_bytes": 13146690
+      },
+      {
+        "backend": "SPGRN2020",
+        "started_utc": "2026-09-14T03:05:02Z",
+        "platform": "macOS-26.6.2-arm64-arm-64bit",
+        "python": "3.12.14",
+        "dependencies": {
+          "numpy": "2.5.3",
+          "scipy": "1.18.1",
+          "pandas": "3.0.5",
+          "matplotlib": "3.11.1",
+          "obspy": "1.5.1"
+        },
+        "source_depth_km": 10.0,
+        "receiver_depth_km": 0.0,
+        "moment_nm": 1000000000000000.0,
+        "strike_dip_rake_deg": [
+          30.0,
+          45.0,
+          90.0
+        ],
+        "azimuth_deg": 30.0,
+        "reuse": false,
+        "model": "Bundled AK135 elastic properties; illustrative constant Qp=600, Qs=300",
+        "outputs": {
+          "disp": {
+            "shape": [
+              3,
+              3,
+              256
+            ],
+            "components": [
+              "E",
+              "N",
+              "U"
+            ],
+            "unit": "m",
+            "finite": true,
+            "peak_absolute": 1.3986820979115417E-08
+          }
+        },
+        "sampling_interval_s": 4.0,
+        "time_window_s": 1020.0,
+        "distances_km": [
+          300.0,
+          600.0,
+          900.0
+        ],
+        "spec_time_window_s": 4092.0,
+        "max_frequency_hz": 0.0625,
+        "green_before_p_s": 40.0,
+        "source_duration_s": 64.0,
+        "elapsed_seconds": 9.736,
+        "file_count": 15,
+        "output_bytes": 17923409
+      }
+    ]
+  }
+}

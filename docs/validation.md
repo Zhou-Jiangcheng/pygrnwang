@@ -2,9 +2,9 @@
 
 All six backend workflows were executed locally on 14 September 2026 using the
 scripts included in this repository. This record describes the actual Windows
-runs used to produce the tutorial figures. Linux and macOS execution is covered
-by the example workflow when GitHub Actions runs; no local cross-platform result
-is claimed here.
+runs used to produce the tutorial figures. A separate GitHub Actions run also
+built and executed all six workflows on Linux, Windows and macOS, as recorded
+below.
 
 ## Environment and results
 
@@ -30,6 +30,55 @@ They are measurements for these small examples, not performance guarantees.
 The dynamic array axes are distance, component and sample. The static axes are
 distance and component. The default displacement-only QSEIS2025 command was also
 executed independently in a fresh output directory.
+
+## Cross-platform installation and execution
+
+[GitHub Actions run 34801126315](https://github.com/Zhou-Jiangcheng/pygrnwang/actions/runs/34801126315)
+built commit `0d38d44` from source in fresh Conda environments, using Python
+3.12.14 on Linux x86-64, Windows x86-64 and macOS arm64. All six workflows
+passed on every platform. The Windows job used
+`gfortran=15.2.0=hf1b5d6d_19`; the installation guide records why that exact
+compiler build is selected.
+
+Each cell below gives calculation time / retained output size. The timing
+boundary is the same as the local table; compiler installation and compilation
+are excluded. QSEIS2025 includes displacement, strain and stress.
+
+| Workflow | Linux | Windows | macOS |
+|---|---:|---:|---:|
+| QSEIS2025 | 15.4 s / 1.19 MiB | 23.2 s / 1.21 MiB | 9.1 s / 1.19 MiB |
+| QSEIS06 | 14.2 s / 0.37 MiB | 19.9 s / 0.37 MiB | 8.3 s / 0.37 MiB |
+| SPGRN2012 | 17.3 s / 12.54 MiB | 18.5 s / 12.54 MiB | 9.8 s / 12.54 MiB |
+| SPGRN2020 | 17.4 s / 17.09 MiB | 19.2 s / 17.10 MiB | 9.7 s / 17.09 MiB |
+| QSSP2020 | 25.4 s / 63.72 MiB | 27.9 s / 63.73 MiB | 19.1 s / 63.72 MiB |
+| EDGRN2 → EDCMP2 | 0.3 s / 0.16 MiB | 1.6 s / 0.17 MiB | 0.3 s / 0.16 MiB |
+
+The [preserved CI records](_static/examples/ci-validation.json) include all
+18 run summaries, exact platform/Python/dependency versions, dimensions,
+component names, units, amplitudes and output sizes. The 24 uploaded NPZ
+arrays were reopened and checked for finite values, matching shapes,
+component labels and units. The workflow also retains plots and selected
+native inputs as downloadable artifacts for 14 days; the JSON records here
+remain part of the documentation after those artifacts expire.
+
+These checks exercise editable source installation. They do not claim a
+standard-wheel validation, multi-node MPI validation or scientific convergence
+for arbitrary models. They also do not exercise every Python version in the
+package support range.
+
+## Documentation checks
+
+The isolated Python 3.12 documentation environment uses the locked requirements
+in this repository. Sphinx's strict HTML build passed without warnings; the
+explicit API checker covered 92 functions, classes and methods. Internal files
+and anchors, MathJax formulas, figure loading, search, and desktop (1440 px)
+and mobile (390 px) layouts were checked. All 25 modified Python source files
+had identical ASTs after removing docstrings.
+
+The focused TauP suite passed 12 tests, with one installed-wheel-only test
+skipped in the source environment. A source-distribution archive was checked
+to include documentation, figures and executable tutorial sources, excluding
+generated HTML and calculation libraries.
 
 ## What was checked
 
