@@ -37,17 +37,46 @@ def pre_process_edcmp2(
     lam=30516224000,
     mu=33701888000,
 ):
-    """
-    Pre-processes input data for edcmp2, updates Green's function library settings,
-    and prepares input files for each observation depth.
+    """Prepare the edcmp library grid, input files and job groups.
 
-    :param processes_num: Number of parallel processes to be used.
-    :param path_green: Directory path for the Green's function library.
-    :param layered: Boolean flag indicating whether the Green's function library is for a layered model.
-    :param lam: Lamé parameter λ (default: 30516224000).
-    :param mu: Shear modulus μ (default: 33701888000).
-    :return: group_list_edcmp, a grouping of observation depths according to processes_num,
-             which is also saved to a pickle file in path_green.
+    Parameters
+    ----------
+    processes_num : int
+        Positive worker count used to group jobs; MPI rank count must match the prepared group width.
+    path_green : str
+        Absolute library root containing green_lib_info.json and backend subdirectories.
+    grn_source_depth_range : list of float
+        Minimum and maximum source depths in km.
+    grn_source_delta_depth : float
+        Positive source-depth grid increment in km.
+    grn_dist_range : list of float
+        Minimum and maximum epicentral distances in km.
+    grn_delta_dist : float
+        Positive regular epicentral-distance increment in km.
+    obs_depth_list : list of float
+        Nonempty receiver depth list in km, positive down.
+    output_observables : sequence of int, optional
+        Four 0/1 flags in displacement, strain, stress, tilt order. Default: (1, 0, 0, 0).
+    layered : bool, optional
+        True uses the EDGRN layered-medium library; False selects the homogeneous half-space formula. Default: True.
+    lam : float, optional
+        First Lame parameter in Pa for the homogeneous half-space. Default: 30516224000.
+    mu : float, optional
+        Shear modulus in Pa for the homogeneous half-space. Default: 33701888000.
+
+    Returns
+    -------
+    group_list : list
+        Jobs grouped by processes_num; the same groups are saved as a pickle file.
+
+    Raises
+    ------
+    OSError
+        Required files are missing or output paths cannot be read or written.
+
+    Notes
+    -----
+    See the edcmp tutorial for a complete prepare, run and read workflow. Preprocessing writes inputs and travel-time/model metadata; run the matching create_grnlib function to calculate Green functions. Run EDGRN preparation first: this function reads and updates its metadata, even for homogeneous-half-space mode.
     """
     # Load the current Green's function library information.
     with open(os.path.join(path_green, "green_lib_info.json"), "r") as fr:
@@ -119,6 +148,29 @@ def pre_process_edcmp2(
 
 def create_grnlib_edcmp2_sequential(path_green, check_finished=False):
     # s = datetime.datetime.now()
+    """Compute the prepared edcmp library sequentially.
+
+    Parameters
+    ----------
+    path_green : str
+        Absolute library root containing green_lib_info.json and backend subdirectories.
+    check_finished : bool, optional
+        Reuse outputs marked finished. Markers do not verify that inputs are unchanged. Default: False.
+
+    Returns
+    -------
+    None
+        Writes backend inputs, metadata or output files to the library.
+
+    Raises
+    ------
+    OSError
+        Required files are missing or output paths cannot be read or written.
+
+    Notes
+    -----
+    See the edcmp tutorial for a complete prepare, run and read workflow. Prepare jobs first. Backend runners can change the process working directory; use absolute paths and restore the caller directory if needed. Check output files and logs after execution.
+    """
     with open(os.path.join(path_green, "group_list_edcmp.pkl"), "rb") as fr:
         group_list_edcmp = pickle.load(fr)
     for item in tqdm(group_list_edcmp, desc="Computing static stress"):
@@ -133,6 +185,33 @@ def create_grnlib_edcmp2_sequential(path_green, check_finished=False):
 def create_grnlib_edcmp2_parallel(
     path_green, check_finished=False, convert_bulk=True, remove=False
 ):
+    """Compute the prepared edcmp library with local worker processes.
+
+    Parameters
+    ----------
+    path_green : str
+        Absolute library root containing green_lib_info.json and backend subdirectories.
+    check_finished : bool, optional
+        Reuse outputs marked finished. Markers do not verify that inputs are unchanged. Default: False.
+    convert_bulk : bool, optional
+        Generate combined EDCMP float32 libraries after jobs finish. Default: True.
+    remove : bool, optional
+        Delete source ASCII files after converting them; keep False when inspecting backend output. Default: False.
+
+    Returns
+    -------
+    elapsed : datetime.timedelta
+        Wall-clock duration of the computation loop.
+
+    Raises
+    ------
+    OSError
+        Required files are missing or output paths cannot be read or written.
+
+    Notes
+    -----
+    See the edcmp tutorial for a complete prepare, run and read workflow. Prepare jobs first. Backend runners can change the process working directory; use absolute paths and restore the caller directory if needed. Check output files and logs after execution. On Windows call under an if __name__ == "__main__" guard.
+    """
     s = datetime.datetime.now()
     with open(os.path.join(path_green, "group_list_edcmp.pkl"), "rb") as fr:
         group_list_edcmp = pickle.load(fr)
@@ -162,6 +241,33 @@ def create_grnlib_edcmp2_parallel(
 
 
 def create_grnlib_edcmp2_parallel_multi_nodes(path_green, check_finished=False):
+    """Compute the prepared edcmp library with MPI.
+
+    Parameters
+    ----------
+    path_green : str
+        Absolute library root containing green_lib_info.json and backend subdirectories.
+    check_finished : bool, optional
+        Reuse outputs marked finished. Markers do not verify that inputs are unchanged. Default: False.
+
+    Returns
+    -------
+    None
+        Writes backend inputs, metadata or output files to the library.
+
+    Raises
+    ------
+    OSError
+        Required files are missing or output paths cannot be read or written.
+    RuntimeError
+        mpi4py is unavailable.
+    ValueError
+        MPI rank count does not match the prepared group width.
+
+    Notes
+    -----
+    See the edcmp tutorial for a complete prepare, run and read workflow. Prepare jobs first. Backend runners can change the process working directory; use absolute paths and restore the caller directory if needed. Check output files and logs after execution.
+    """
     s = datetime.datetime.now()
     MPI = _get_mpi()
     with open(os.path.join(path_green, "group_list_edcmp.pkl"), "rb") as fr:
@@ -196,6 +302,29 @@ _EDCMP_CHA_NUM = {"disp": 3, "strain": 6, "stress": 6, "tilt": 2}
 
 
 def convert_pd2bin_edcmp2_all(path_green, remove=False):
+    """Convert all completed edcmp outputs to float32 binary libraries.
+
+    Parameters
+    ----------
+    path_green : str
+        Absolute library root containing green_lib_info.json and backend subdirectories.
+    remove : bool, optional
+        Delete source ASCII files after converting them; keep False when inspecting backend output. Default: False.
+
+    Returns
+    -------
+    None
+        Writes backend inputs, metadata or output files to the library.
+
+    Raises
+    ------
+    OSError
+        Required files are missing or output paths cannot be read or written.
+
+    Notes
+    -----
+    See the edcmp tutorial for a complete prepare, run and read workflow. Conversion is a storage operation; it does not resample or change physical units.
+    """
     print("converting ascii files to binary float32 files")
     with open(os.path.join(path_green, "green_lib_info.json"), "r") as fr:
         green_info = json.load(fr)

@@ -36,6 +36,45 @@ def pre_process_edgrn2(
 ):
     # print("preprocessing edgrn2")
 
+    """Prepare the edgrn library grid, input files and job groups.
+
+    Parameters
+    ----------
+    processes_num : int
+        Positive worker count used to group jobs; MPI rank count must match the prepared group width.
+    path_green : str
+        Absolute library root containing green_lib_info.json and backend subdirectories.
+    grn_source_depth_range : list of float
+        Minimum and maximum source depths in km.
+    grn_source_delta_depth : float
+        Positive source-depth grid increment in km.
+    grn_dist_range : list of float
+        Minimum and maximum epicentral distances in km.
+    grn_delta_dist : float
+        Positive regular epicentral-distance increment in km.
+    obs_depth_list : list of float
+        Nonempty receiver depth list in km, positive down.
+    wavenumber_sampling_rate : float, optional
+        Dimensionless spatial Nyquist oversampling factor for wavenumber integration. Default: 12.
+    path_nd : str or None, optional
+        Six-column named-discontinuity model path: depth (km), Vp/Vs (km/s), density (g/cm3), Qp/Qs. Bulk preprocessing requires a real path even though the signature default is None. Default: None.
+    earth_model_layer_num : int or None, optional
+        Number of numeric model rows retained, not the number of discontinuities; None retains all. Default: None.
+
+    Returns
+    -------
+    group_list : list
+        Jobs grouped by processes_num; the same groups are saved as a pickle file.
+
+    Raises
+    ------
+    OSError
+        Required files are missing or output paths cannot be read or written.
+
+    Notes
+    -----
+    See the edgrn tutorial for a complete prepare, run and read workflow. Preprocessing writes inputs and travel-time/model metadata; run the matching create_grnlib function to calculate Green functions.
+    """
     for obs_depth in obs_depth_list:
         sub_sub_dir = str(os.path.join(path_green, "edgrn2", "%.2f" % obs_depth))
         os.makedirs(sub_sub_dir, exist_ok=True)
@@ -79,6 +118,29 @@ def pre_process_edgrn2(
 
 
 def create_grnlib_edgrn2_sequential(path_green, check_finished=False):
+    """Compute the prepared edgrn library sequentially.
+
+    Parameters
+    ----------
+    path_green : str
+        Absolute library root containing green_lib_info.json and backend subdirectories.
+    check_finished : bool, optional
+        Reuse outputs marked finished. Markers do not verify that inputs are unchanged. Default: False.
+
+    Returns
+    -------
+    elapsed : datetime.timedelta
+        Wall-clock duration of the computation loop.
+
+    Raises
+    ------
+    OSError
+        Required files are missing or output paths cannot be read or written.
+
+    Notes
+    -----
+    See the edgrn tutorial for a complete prepare, run and read workflow. Prepare jobs first. Backend runners can change the process working directory; use absolute paths and restore the caller directory if needed. Check output files and logs after execution.
+    """
     s = datetime.datetime.now()
     with open(os.path.join(path_green, "group_list_edgrn.pkl"), "rb") as fr:
         group_list_edgrn = pickle.load(fr)
@@ -92,6 +154,29 @@ def create_grnlib_edgrn2_sequential(path_green, check_finished=False):
 
 
 def create_grnlib_edgrn2_parallel(path_green, check_finished=False):
+    """Compute the prepared edgrn library with local worker processes.
+
+    Parameters
+    ----------
+    path_green : str
+        Absolute library root containing green_lib_info.json and backend subdirectories.
+    check_finished : bool, optional
+        Reuse outputs marked finished. Markers do not verify that inputs are unchanged. Default: False.
+
+    Returns
+    -------
+    elapsed : datetime.timedelta
+        Wall-clock duration of the computation loop.
+
+    Raises
+    ------
+    OSError
+        Required files are missing or output paths cannot be read or written.
+
+    Notes
+    -----
+    See the edgrn tutorial for a complete prepare, run and read workflow. Prepare jobs first. Backend runners can change the process working directory; use absolute paths and restore the caller directory if needed. Check output files and logs after execution. On Windows call under an if __name__ == "__main__" guard.
+    """
     s = datetime.datetime.now()
     with open(os.path.join(path_green, "group_list_edgrn.pkl"), "rb") as fr:
         group_list_edgrn = pickle.load(fr)
@@ -119,6 +204,33 @@ def create_grnlib_edgrn2_parallel(path_green, check_finished=False):
 
 
 def create_grnlib_edgrn2_parallel_multi_nodes(path_green, check_finished=False):
+    """Compute the prepared edgrn library with MPI.
+
+    Parameters
+    ----------
+    path_green : str
+        Absolute library root containing green_lib_info.json and backend subdirectories.
+    check_finished : bool, optional
+        Reuse outputs marked finished. Markers do not verify that inputs are unchanged. Default: False.
+
+    Returns
+    -------
+    elapsed : datetime.timedelta
+        Wall-clock duration of the computation loop.
+
+    Raises
+    ------
+    OSError
+        Required files are missing or output paths cannot be read or written.
+    RuntimeError
+        mpi4py is unavailable.
+    ValueError
+        MPI rank count does not match the prepared group width.
+
+    Notes
+    -----
+    See the edgrn tutorial for a complete prepare, run and read workflow. Prepare jobs first. Backend runners can change the process working directory; use absolute paths and restore the caller directory if needed. Check output files and logs after execution.
+    """
     s = datetime.datetime.now()
     MPI = _get_mpi()
     with open(os.path.join(path_green, "group_list_edgrn.pkl"), "rb") as fr:

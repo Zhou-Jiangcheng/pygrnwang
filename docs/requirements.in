@@ -1,0 +1,10 @@
+# Python 3.12 documentation environment; import pygrnwang directly from source.
+sphinx>=8.2,<9
+myst-parser>=4,<5
+pydata-sphinx-theme>=0.16,<0.22
+sphinx-design>=0.6,<0.8
+numpy>=1.26.4
+scipy>=1.13.1
+pandas>=2.1.4
+obspy>=1.5.0
+tqdm>=4.67.1

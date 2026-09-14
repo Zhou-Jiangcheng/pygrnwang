@@ -1,5 +1,9 @@
 include README.md
 include LICENSE
+recursive-include docs *.md *.py *.json *.in *.txt *.css *.png
+recursive-include examples *.py *.md
+prune docs/_build
+prune examples/output
 recursive-include fortran_src_codes  *.f *.for *.f90 *.F *.F90
 recursive-include fortran_src_codes  *.inc *.INC *.par *.PAR *.dat *.DAT *.txt *.cfg *.in *.h *.H
 recursive-include pygrnwang/exec *.jar

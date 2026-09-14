@@ -1,0 +1,18 @@
+html { --pst-font-size-base: 16px; }
+html[data-theme="light"] {
+  --pst-color-primary: #176b70;
+  --pst-color-link: #176b70;
+}
+html[data-theme="dark"] { --pst-color-primary: #68c8c8; }
+.bd-main .bd-content .bd-article-container { max-width: 58rem; }
+.hero-kicker { color: var(--pst-color-primary); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.hero-copy { font-size: 1.15rem; line-height: 1.7; max-width: 46rem; }
+.sd-card { border-radius: .65rem; box-shadow: none !important; }
+.sd-card-title { font-weight: 650; }
+pre { overflow-x: auto; }
+.table-wrapper { overflow-x: auto; }
+@media (max-width: 575px) {
+  .bd-article-container { padding-left: 1rem !important; padding-right: 1rem !important; }
+  h1 { font-size: 1.9rem; }
+  .hero-copy { font-size: 1rem; }
+}

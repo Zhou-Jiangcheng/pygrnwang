@@ -63,6 +63,67 @@ def pre_process_qseis06(
     earth_model_layer_num=None,
     check_finished_tpts_table=False,
 ):
+    """Prepare the qseis06 library grid, input files and job groups.
+
+    Parameters
+    ----------
+    processes_num : int
+        Positive worker count used to group jobs; MPI rank count must match the prepared group width.
+    path_green : str
+        Absolute library root containing green_lib_info.json and backend subdirectories.
+    event_depth_list : list of float
+        Source depth nodes in km, positive down; supply a nonempty sorted list.
+    receiver_depth_list : list of float
+        Receiver depth nodes in km, positive down; supply a nonempty sorted list.
+    dist_range : list of float
+        Minimum and maximum epicentral distances in km.
+    delta_dist : float
+        Positive regular distance increment in km. The last grid point can exceed the requested maximum by less than one increment.
+    N_each_group : int
+        Positive maximum number of distances in each backend input file.
+    time_window : float
+        Output time-window duration in seconds.
+    sampling_interval : float
+        Time step in seconds; choose it consistently with the highest modeled frequency.
+    slowness_int_algorithm : int, optional
+        QSEIS integration selector: 0 for the full wavefield; 1 or 2 for narrow tapered slowness windows. Default: 0.
+    slowness_window : list of float or None, optional
+        Four ordered slowness taper corners in s/km; None writes zeros for backend automatic limits. Default: None.
+    time_reduction_velo : float, optional
+        Reduction velocity in km/s; nonzero starts each trace at distance/velocity seconds, while zero disables reduction. Default: 0.
+    wavenumber_sampling_rate : float, optional
+        Dimensionless spatial Nyquist oversampling factor for wavenumber integration. Default: 12.
+    anti_alias : float, optional
+        Dimensionless time-domain alias suppression factor; use a small positive value below 1. Default: 0.01.
+    free_surface : bool or int, optional
+        Backend free-surface selection; see Notes for the backend-specific encoding. Default: True.
+    wavelet_duration : int, optional
+        Wavelet duration in native time samples, not seconds. Nonpositive values request the backend default of two samples. Default: 0.
+    wavelet_type : int, optional
+        1 selects the normalized squared half-sinusoid; 2 selects its tapered Heaviside integral. Custom type 0 requires manually supplying wavelet samples. Default: 1.
+    flat_earth_transform : bool, optional
+        Apply the backend flat-Earth transformation and receiver-radius distance correction. Default: True.
+    path_nd : str or None, optional
+        Six-column named-discontinuity model path: depth (km), Vp/Vs (km/s), density (g/cm3), Qp/Qs. Bulk preprocessing requires a real path even though the signature default is None. Default: None.
+    earth_model_layer_num : int or None, optional
+        Number of numeric model rows retained, not the number of discontinuities; None retains all. Default: None.
+    check_finished_tpts_table : bool, optional
+        Reuse existing P/S table files without validating their model or grid provenance. Default: False.
+
+    Returns
+    -------
+    group_list : list
+        Jobs grouped by processes_num; the same groups are saved as a pickle file.
+
+    Raises
+    ------
+    OSError
+        Required files are missing or output paths cannot be read or written.
+
+    Notes
+    -----
+    See the qseis06 tutorial for a complete prepare, run and read workflow. Preprocessing writes inputs and travel-time/model metadata; run the matching create_grnlib function to calculate Green functions. free_surface=True retains the free surface; False filters its effects.
+    """
     print("preprocessing")
     os.makedirs(path_green, exist_ok=True)
 
@@ -194,6 +255,75 @@ def pre_process_qseis06_strain_rate(
     diff_accu_order=4,
     check_finished_tpts_table=False,
 ):
+    """Prepare the qseis06 library grid, input files and job groups.
+
+    Parameters
+    ----------
+    processes_num : int
+        Positive worker count used to group jobs; MPI rank count must match the prepared group width.
+    path_green : str
+        Absolute library root containing green_lib_info.json and backend subdirectories.
+    path_bin : str
+        Legacy executable-path metadata for the finite-difference library; execution is handled by the installed QSEIS wrapper.
+    event_depth_list : list of float
+        Source depth nodes in km, positive down; supply a nonempty sorted list.
+    receiver_depth_list : list of float
+        Receiver depth nodes in km, positive down; supply a nonempty sorted list.
+    dist_range : list of float
+        Minimum and maximum epicentral distances in km.
+    delta_dist : float
+        Positive regular distance increment in km. The last grid point can exceed the requested maximum by less than one increment.
+    N_each_group : int
+        Positive maximum number of distances in each backend input file.
+    time_window : float
+        Output time-window duration in seconds.
+    sampling_interval : float
+        Time step in seconds; choose it consistently with the highest modeled frequency.
+    slowness_int_algorithm : int, optional
+        QSEIS integration selector: 0 for the full wavefield; 1 or 2 for narrow tapered slowness windows. Default: 0.
+    slowness_window : list of float or None, optional
+        Four ordered slowness taper corners in s/km; None writes zeros for backend automatic limits. Default: None.
+    time_reduction_velo : float, optional
+        Reduction velocity in km/s; nonzero starts each trace at distance/velocity seconds, while zero disables reduction. Default: 0.
+    wavenumber_sampling_rate : float, optional
+        Dimensionless spatial Nyquist oversampling factor for wavenumber integration. Default: 12.
+    anti_alias : float, optional
+        Dimensionless time-domain alias suppression factor; use a small positive value below 1. Default: 0.01.
+    free_surface : bool or int, optional
+        Backend free-surface selection; see Notes for the backend-specific encoding. Default: True.
+    wavelet_duration : int, optional
+        Wavelet duration in native time samples, not seconds. Nonpositive values request the backend default of two samples. Default: 0.
+    wavelet_type : int, optional
+        1 selects the normalized squared half-sinusoid; 2 selects its tapered Heaviside integral. Custom type 0 requires manually supplying wavelet samples. Default: 1.
+    flat_earth_transform : bool, optional
+        Apply the backend flat-Earth transformation and receiver-radius distance correction. Default: True.
+    path_nd : str or None, optional
+        Six-column named-discontinuity model path: depth (km), Vp/Vs (km/s), density (g/cm3), Qp/Qs. Bulk preprocessing requires a real path even though the signature default is None. Default: None.
+    earth_model_layer_num : int or None, optional
+        Number of numeric model rows retained, not the number of discontinuities; None retains all. Default: None.
+    k_dr : float, optional
+        Dimensionless relative radial step: dr = distance * k_dr. Avoid zero epicentral distance. Default: 0.001.
+    dz : float, optional
+        Receiver-depth finite-difference increment in km. Default: 0.1.
+    diff_accu_order : int, optional
+        Central-difference accuracy order; one of 2, 4, 6 or 8. Default: 4.
+    check_finished_tpts_table : bool, optional
+        Reuse existing P/S table files without validating their model or grid provenance. Default: False.
+
+    Returns
+    -------
+    group_list : list
+        Jobs grouped by processes_num; the same groups are saved as a pickle file.
+
+    Raises
+    ------
+    OSError
+        Required files are missing or output paths cannot be read or written.
+
+    Notes
+    -----
+    See the qseis06 tutorial for a complete prepare, run and read workflow. Preprocessing writes inputs and travel-time/model metadata; run the matching create_grnlib function to calculate Green functions. free_surface=True retains the free surface; False filters its effects.
+    """
     os.makedirs(path_green, exist_ok=True)
     if diff_accu_order not in [2, 4, 6, 8]:
         raise ValueError("diff_accu_order must be in [2,4,6,8]")
@@ -359,6 +489,33 @@ def pre_process_qseis06_strain_rate(
 def create_grnlib_qseis06_sequential(
     path_green, check_finished=False, convert_pd2bin=True, remove_pd=True
 ):
+    """Compute the prepared qseis06 library sequentially.
+
+    Parameters
+    ----------
+    path_green : str
+        Absolute library root containing green_lib_info.json and backend subdirectories.
+    check_finished : bool, optional
+        Reuse outputs marked finished. Markers do not verify that inputs are unchanged. Default: False.
+    convert_pd2bin : bool, optional
+        Convert completed ASCII waveforms to the compact float32 reader format. Default: True.
+    remove_pd : bool, optional
+        Delete original ASCII output; retain it while validating a new calculation. Default: True.
+
+    Returns
+    -------
+    None
+        Writes backend inputs, metadata or output files to the library.
+
+    Raises
+    ------
+    OSError
+        Required files are missing or output paths cannot be read or written.
+
+    Notes
+    -----
+    See the qseis06 tutorial for a complete prepare, run and read workflow. Prepare jobs first. Backend runners can change the process working directory; use absolute paths and restore the caller directory if needed. Check output files and logs after execution.
+    """
     with open(os.path.join(path_green, "group_list.pkl"), "rb") as fr:
         group_list = pickle.load(fr)
     for item in tqdm(group_list, desc="Computing Green's Func Lib"):
@@ -373,6 +530,33 @@ def create_grnlib_qseis06_sequential(
 def create_grnlib_qseis06_parallel(
     path_green, check_finished=False, convert_pd2bin=True, remove_pd=True
 ):
+    """Compute the prepared qseis06 library with local worker processes.
+
+    Parameters
+    ----------
+    path_green : str
+        Absolute library root containing green_lib_info.json and backend subdirectories.
+    check_finished : bool, optional
+        Reuse outputs marked finished. Markers do not verify that inputs are unchanged. Default: False.
+    convert_pd2bin : bool, optional
+        Convert completed ASCII waveforms to the compact float32 reader format. Default: True.
+    remove_pd : bool, optional
+        Delete original ASCII output; retain it while validating a new calculation. Default: True.
+
+    Returns
+    -------
+    None
+        Writes backend inputs, metadata or output files to the library.
+
+    Raises
+    ------
+    OSError
+        Required files are missing or output paths cannot be read or written.
+
+    Notes
+    -----
+    See the qseis06 tutorial for a complete prepare, run and read workflow. Prepare jobs first. Backend runners can change the process working directory; use absolute paths and restore the caller directory if needed. Check output files and logs after execution. On Windows call under an if __name__ == "__main__" guard.
+    """
     with open(os.path.join(path_green, "group_list.pkl"), "rb") as fr:
         group_list = pickle.load(fr)
     # 展平任务
@@ -402,6 +586,33 @@ def create_grnlib_qseis06_parallel(
 
 
 def create_grnlib_qseis06_parallel_multi_nodes(path_green, check_finished=False):
+    """Compute the prepared qseis06 library with MPI.
+
+    Parameters
+    ----------
+    path_green : str
+        Absolute library root containing green_lib_info.json and backend subdirectories.
+    check_finished : bool, optional
+        Reuse outputs marked finished. Markers do not verify that inputs are unchanged. Default: False.
+
+    Returns
+    -------
+    None
+        Writes backend inputs, metadata or output files to the library.
+
+    Raises
+    ------
+    OSError
+        Required files are missing or output paths cannot be read or written.
+    RuntimeError
+        mpi4py is unavailable.
+    ValueError
+        MPI rank count does not match the prepared group width.
+
+    Notes
+    -----
+    See the qseis06 tutorial for a complete prepare, run and read workflow. Prepare jobs first. Backend runners can change the process working directory; use absolute paths and restore the caller directory if needed. Check output files and logs after execution.
+    """
     s = datetime.datetime.now()
     MPI = _get_mpi()
     with open(os.path.join(path_green, "group_list.pkl"), "rb") as fr:
@@ -432,6 +643,29 @@ def create_grnlib_qseis06_parallel_multi_nodes(path_green, check_finished=False)
 
 
 def convert_pd2bin_qseis06_all(path_green, remove=False):
+    """Convert all completed qseis06 outputs to float32 binary libraries.
+
+    Parameters
+    ----------
+    path_green : str
+        Absolute library root containing green_lib_info.json and backend subdirectories.
+    remove : bool, optional
+        Delete source ASCII files after converting them; keep False when inspecting backend output. Default: False.
+
+    Returns
+    -------
+    None
+        Writes backend inputs, metadata or output files to the library.
+
+    Raises
+    ------
+    OSError
+        Required files are missing or output paths cannot be read or written.
+
+    Notes
+    -----
+    See the qseis06 tutorial for a complete prepare, run and read workflow. Conversion is a storage operation; it does not resample or change physical units.
+    """
     print("converting ascii files to bytes files")
     with open(os.path.join(path_green, "green_lib_info.json"), "r") as fr:
         green_info = json.load(fr)

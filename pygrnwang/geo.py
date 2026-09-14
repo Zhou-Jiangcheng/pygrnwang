@@ -6,12 +6,19 @@ d2km = 111.19492664455874
 
 
 def rotate_2d_points(points: np.ndarray, degree: float) -> np.ndarray:
-    """
-    Rotate a 2D point counterclockwise by a given number of degrees.
+    """Rotate Cartesian point rows counterclockwise in their plane.
 
-    :param points: np.array([[x1, y1],[x2,y2],...])
-    :param degree: The angle in degrees by which the point is to be rotated (anti-clockwise).
-    :return: rotated_points.
+    Parameters
+    ----------
+    points : numpy.ndarray
+        Point coordinates with shape (N, 2), in any consistent length unit.
+    degree : float
+        Counterclockwise rotation angle in degrees.
+
+    Returns
+    -------
+    rotated : numpy.ndarray
+        Shape (N, 2), retaining input coordinate units.
     """
     # Convert degrees to radians
     radians = np.radians(degree)
@@ -29,6 +36,28 @@ def rotate_2d_points(points: np.ndarray, degree: float) -> np.ndarray:
 
 
 def rotate_rtz_to_enz(az_in_deg, r, t, z):
+    """Rotate radial, transverse, up components to east, north, up.
+
+    Parameters
+    ----------
+    az_in_deg : float
+        Source-to-receiver azimuth in degrees clockwise from north.
+    r : float or numpy.ndarray
+        Radial component, positive away from the source along the surface.
+    t : float or numpy.ndarray
+        Transverse component, positive counterclockwise from radial when viewed from above.
+    z : float or numpy.ndarray
+        Vertical component, positive up; use the same shape and unit as r and t.
+
+    Returns
+    -------
+    enz : numpy.ndarray
+        Shape (3,) for scalar components or (3, N) for time series.
+
+    Notes
+    -----
+    E = R*sin(az) - T*cos(az); N = R*cos(az) + T*sin(az); U = Z. No vertical sign reversal is performed.
+    """
     az = np.deg2rad(az_in_deg)
     e = r * np.sin(az) - t * np.cos(az)
     n = r * np.cos(az) + t * np.sin(az)
@@ -145,13 +174,27 @@ def cartesian_2_spherical(x, y, z):
 
 
 def geo_2_r_earth(lat, lon, dep, r0=6371000):
-    """
+    """Convert spherical geographic coordinates to Earth-centered Cartesian metres.
 
-    :param lat: deg
-    :param lon: deg
-    :param dep: m
-    :param r0: m
-    :return: r_earth (unit m)
+    Parameters
+    ----------
+    lat : float
+        Latitude in degrees.
+    lon : float
+        Longitude in degrees.
+    dep : float
+        Depth in metres, positive down.
+    r0 : float, optional
+        Reference spherical Earth radius in metres. Default: 6371000.
+
+    Returns
+    -------
+    position : numpy.ndarray
+        Shape (3,), x/y/z in metres.
+
+    Notes
+    -----
+    Uses a sphere, not an ellipsoid. Unlike Green-library depths, dep is in metres.
     """
     lat, lon = np.deg2rad(lat), np.deg2rad(lon)
     r_earth = np.array(
@@ -167,11 +210,23 @@ def geo_2_r_earth(lat, lon, dep, r0=6371000):
 
 
 def r_earth_2_geo(r_earth, r0=6371000):
-    """
+    """Convert Earth-centered Cartesian metres to spherical geographic coordinates.
 
-    :param r_earth: m
-    :param r0: m
-    :return: lat, lon, depth (deg, deg, m)
+    Parameters
+    ----------
+    r_earth : array_like
+        Earth-centered Cartesian position, shape (3,), in metres.
+    r0 : float, optional
+        Reference spherical Earth radius in metres. Default: 6371000.
+
+    Returns
+    -------
+    location : numpy.ndarray
+        [latitude in degrees, longitude in degrees, depth in metres].
+
+    Notes
+    -----
+    Uses a sphere; longitude is wrapped to the interval [-180, 180].
     """
     r, lon, co_lat = cartesian_2_spherical(r_earth[0], r_earth[1], r_earth[2])
     depth = r0 - r
@@ -183,15 +238,31 @@ def r_earth_2_geo(r_earth, r0=6371000):
 
 
 def convert_axis_delta_geo2ned(lat0, lon0, dep0, lat1, lon1, dep1):
-    """
+    """Project an Earth-centered chord into the reference local NED frame.
 
-    :param lat0:
-    :param lon0:
-    :param dep0:
-    :param lat1:
-    :param lon1:
-    :param dep1:
-    :return: r (in ned axis), unit m
+    Parameters
+    ----------
+    lat0 : float
+        Reference latitude in degrees.
+    lon0 : float
+        Reference longitude in degrees.
+    dep0 : float
+        Reference depth in metres, positive down.
+    lat1 : float
+        Target latitude in degrees.
+    lon1 : float
+        Target longitude in degrees.
+    dep1 : float
+        Target depth in metres, positive down.
+
+    Returns
+    -------
+    offset : numpy.ndarray
+        Shape (3,), north, east, down in metres.
+
+    Notes
+    -----
+    This is a Cartesian chord projection on a spherical Earth, not a surface-distance formula.
     """
     r_earth0 = geo_2_r_earth(lat0, lon0, dep0)
     r_earth1 = geo_2_r_earth(lat1, lon1, dep1)
@@ -210,13 +281,23 @@ def convert_axis_delta_geo2ned(lat0, lon0, dep0, lat1, lon1, dep1):
 
 
 def convert_axis_delta_ned2geo(lat0, lon0, dep0, r_ned):
-    """
+    """Convert a local NED Cartesian offset to spherical geographic coordinates.
 
-    :param lat0: deg
-    :param lon0: deg
-    :param dep0: m
-    :param r_ned: np.ndarray, m
-    :return: lat, lon, depth (deg, deg, m)
+    Parameters
+    ----------
+    lat0 : float
+        Reference latitude in degrees.
+    lon0 : float
+        Reference longitude in degrees.
+    dep0 : float
+        Reference depth in metres, positive down.
+    r_ned : array_like
+        Local Cartesian north, east, down displacement from the reference point, shape (3,), in metres.
+
+    Returns
+    -------
+    location : numpy.ndarray
+        [latitude in degrees, longitude in degrees, depth in metres].
     """
     r_ned = np.array(r_ned).flatten()
     r_earth0 = geo_2_r_earth(lat0, lon0, dep0)
@@ -339,16 +420,17 @@ def cal_max_dist_from_2d_points(A: np.ndarray, B: np.ndarray):
 
 
 def create_rotate_z_mat(gamma):
-    """
-    Generates a rotation matrix about the Z-axis.
-    From y to x.
-    Parameters:
-        gamma : float
-            Rotation angle in radians.
+    """Construct a Cartesian rotation matrix about the third axis.
 
-    Returns:
-        R : numpy.ndarray
-            A 3x3 rotation matrix.
+    Parameters
+    ----------
+    gamma : float
+        Rotation angle in radians.
+
+    Returns
+    -------
+    rotation : numpy.ndarray
+        Shape (3, 3), [[cos(g), -sin(g), 0], [sin(g), cos(g), 0], [0, 0, 1]].
     """
     R = np.array(
         [
@@ -361,18 +443,23 @@ def create_rotate_z_mat(gamma):
 
 
 def rotate_symmetric_tensor_series(tensor, gamma):
-    """
-    Rotates a series of symmetric tensors without using an explicit loop.
+    """Transform symmetric tensor series with R.T @ tensor @ R.
 
-    Parameters:
-        tensor: numpy array of shape (n, 6)
-            Each row is [xx, xy, xz, yy, yz, zz] representing a symmetric tensor.
-        gamma: float
-            Rotation angle around the z-axis (in radians) used to create the rotation matrix.
+    Parameters
+    ----------
+    tensor : numpy.ndarray
+        Shape (N, 6), each row [xx, xy, xz, yy, yz, zz]; off-diagonal strains are tensor components, not doubled engineering strains.
+    gamma : float
+        Rotation angle in radians.
 
-    Returns:
-        rotated_tensor: numpy array of shape (n, 6)
-            Rotated tensor components in the same order as the input.
+    Returns
+    -------
+    rotated : numpy.ndarray
+        Shape (N, 6), in the same component ordering and units as tensor.
+
+    Notes
+    -----
+    gamma is in radians; the function does not infer a physical NED/ENU convention.
     """
     # Create the 3x3 rotation matrix (assumed to be defined elsewhere).
     R = create_rotate_z_mat(gamma)

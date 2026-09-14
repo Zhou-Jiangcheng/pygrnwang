@@ -149,44 +149,75 @@ def seek_qssp2020(
     butter_order: int = 4,
     zero_phase: bool = False,
 ):
-    """
-    Read synthetic seismograms.
+    """Synthesize qssp2020 waveforms from a precomputed Green library.
 
-    :param path_green: Root directory of the data.
-    :param event_depth_km: Event depth in km.
-    :param receiver_depth_km: Receiver depth in km.
-    :param az_deg: Azimuth in degrees.
-    :param dist_km: Epicentral distance in km.
-    :param focal_mechanism: [strike, dip, rake] or [M11, M12, M13, M22, M23, M33].
-    :param srate: Sampling rate in Hz.
-    :param output_type:
-        one_com - "gravimeter"
-        three_com - "disp", "velo", "acce", "rota", "rota_rate", "gravitation"
-        six_com - "strain", "strain_rate", "stress", "stress_rate"
-    :param before_p: Time before P-wave.
-    :param pad_zeros: Pad with zeros.
-    :param shift: Shift seismograms based on tpts.
-    :param rotate: Rotate rtz2ned.
-    :param only_seismograms: Return only seismograms.
-    :param model_name: Model name.
-    :param green_info: Green's function library info.
-    :param interpolate_type:
-            0 for nearest neighbor,
-            1 for trilinear interpolation (Source Depth, Receiver Depth, Distance).
-    :param freq_band: Frequency band for bandpass filter [low_freq, high_freq] in Hz.
-            Use None or [None, None] for no filtering (default).
-            Use [low_freq, None] for highpass, [None, high_freq] for lowpass.
-    :param butter_order: Order of Butterworth filter (default: 4).
-    :param zero_phase: Whether to use zero-phase filtering (default: False).
-    :return: (
-            seismograms_resample,
-            tpts_table,
-            first_p,
-            first_s,
-            grn_dep_source,
-            grn_dep_receiver,
-            grn_dist,
-        )
+    Parameters
+    ----------
+    path_green : str
+        Absolute library root containing green_lib_info.json and backend subdirectories.
+    event_depth_km : float
+        Requested source depth in km, positive down.
+    receiver_depth_km : float
+        Requested receiver depth in km, positive down.
+    az_deg : float
+        Source-to-receiver azimuth in degrees clockwise from north.
+    dist_km : float
+        Epicentral distance in km; query within the stored distance grid.
+    focal_mechanism : array_like
+        Either [strike, dip, rake] in degrees; [M0, strike, dip, rake]; six NED components [Mnn, Mne, Mnd, Mee, Med, Mdd]; or [M0, six components]. Three angles imply unit moment; seven entries normalize the six-component shape to M0. Moments are in N m.
+    srate : float
+        Positive output sampling rate in Hz.
+    output_type : str, optional
+        Requested observable; supported values and units are listed in Notes. Default: 'disp'.
+    rotate : bool, optional
+        Rotate vector output to east, north, up when True; False retains radial, transverse, up. Tensor layouts are specified in Notes. Default: True.
+    before_p : float or None, optional
+        Seconds before the library P onset at the new first sample. None preserves the native window. Default: None.
+    pad_zeros : bool, optional
+        Shift to source-origin time using zero padding. Use separately from before_p. Default: False.
+    shift : bool, optional
+        Correct the time axis using P/S arrivals recomputed for the requested geometry and model. Default: False.
+    only_seismograms : bool, optional
+        Return just the waveform array when True; False returns the array and six metadata fields. Default: True.
+    model_name : str, optional
+        TauP built-in model name or path to a custom model. Use a model consistent with the Green library. Default: 'ak135fc'.
+    green_info : dict or None, optional
+        Preloaded green_lib_info.json mapping; None loads it from path_green. Default: None.
+    interpolate_type : int, optional
+        0 selects nearest neighbor; 1 interpolates source depth, receiver depth and distance. Returned grid metadata remains nearest neighbor. Default: 0.
+    freq_band : sequence of float or None, optional
+        Two cutoff frequencies [low, high] in Hz. None disables filtering in readers; a missing corner selects lowpass or highpass. Default: None.
+    butter_order : int, optional
+        Butterworth filter order. Default: 4.
+    zero_phase : bool, optional
+        True applies forward/backward filtering; False uses causal filtering. Default: False.
+
+    Returns
+    -------
+    seismograms : numpy.ndarray
+        Shape (C, N): components by resampled time samples. C is 3 for vectors,
+        6 for tensors and 1 for scalar outputs.
+    metadata : tuple, conditional
+        If only_seismograms=False, returns the seven-tuple
+        (seismograms, tpts_table, first_p, first_s, grn_dep_source,
+        grn_dep_receiver, grn_dist). The last three fields describe the nearest
+        stored node in km, including when waveforms are interpolated.
+        first_p and first_s are None unless shift=True; calculated arrivals
+        are in seconds relative to source origin and may be NaN if absent.
+        tpts_table is None when before_p is None and shift/pad_zeros are False; otherwise it contains p_onset and s_onset in seconds.
+
+    Raises
+    ------
+    OSError
+        Metadata, selected observables or travel-time files are missing.
+    ValueError
+        Incompatible time-window options or invalid filter/output parameters.
+    KeyError
+        Library metadata lacks keys required by this backend.
+
+    Notes
+    -----
+    Vector rows with rotate=True are east, north, up (ENU), not NED. With rotate=False they are radial, transverse, up; positive transverse points counterclockwise from radial when viewed from above. Moments retain the scale supplied to check_convert_fm. See the qssp2020 tutorial and scientific conventions for the native time origin. Supported outputs: disp (m), velo (m/s), acce (m/s2), strain, strain_rate (1/s), stress (Pa), stress_rate (Pa/s), rota (rad), rota_rate (rad/s), gravitation (m/s2), gravimeter (m/s2). Tensor rows are [ee, en, eu, nn, nu, uu] after rotation; with rotate=False they remain the backend local ENU ordering for a receiver north of the source. Request only observables enabled during preprocessing.
     """
     if green_info is None:
         with open(os.path.join(path_green, "green_lib_info.json"), "r") as fr:
