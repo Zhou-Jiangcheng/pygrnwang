@@ -33,10 +33,10 @@ for the complete platform instructions.
 
 2. For developer mode
 
-```
-conda create -n pygrnwang python=3.12
-conda activate pygrnwang
-conda install obspy tqdm gfortran -c conda-forge
+Prepare and activate the environment and platform-specific compiler described
+in the [installation guide](https://zhou-jiangcheng.github.io/pygrnwang/installation.html), then:
+
+```bash
 git clone https://github.com/Zhou-Jiangcheng/pygrnwang.git
 cd pygrnwang
 pip install -e .
