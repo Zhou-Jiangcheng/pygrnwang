@@ -1,6 +1,6 @@
 {
   "backend": "SPGRN2020",
-  "started_utc": "2026-09-14T08:17:58Z",
+  "started_utc": "2026-09-14T12:27:48Z",
   "platform": "Windows-11-10.0.26200-SP0",
   "python": "3.12.13",
   "dependencies": {
@@ -35,7 +35,7 @@
       ],
       "unit": "m",
       "finite": true,
-      "peak_absolute": 1.4550723940949578e-08
+      "peak_absolute": 1.4688964615463429E-08
     }
   },
   "sampling_interval_s": 4.0,
@@ -46,7 +46,7 @@
     900.0
   ],
   "spec_time_window_s": 4092.0,
-  "max_frequency_hz": 0.0625,
+  "max_frequency_hz": 0.125,
   "green_before_p_s": 40.0,
   "source_duration_s": 64.0,
   "max_slowness_s_km": 0.0,
@@ -56,7 +56,45 @@
     40.0,
     78.0
   ],
-  "elapsed_seconds": 17.141,
+  "physical_source_time_function": {
+    "shape": "normalized_sin_squared_moment_rate",
+    "duration_s": 64.0,
+    "physical_integral": 1.0,
+    "centroid_s": 32.0
+  },
+  "spectral_settings": {
+    "requested_max_frequency_hz": 0.125,
+    "nyquist_frequency_hz": 0.125,
+    "highest_computed_frequency_hz": 0.124755859375,
+    "nyquist_bin_zeroed": true,
+    "nyquist_bin_zeroed_source": "Fortran inverse FFT sets bin nf + 1 to zero",
+    "sampling_interval_s": 4.0,
+    "fft_samples": 1024,
+    "frequency_spacing_hz": 0.000244140625,
+    "computed_frequency_samples": 512,
+    "spec_time_window_s": 4092.0,
+    "fft_period_s": 4096.0,
+    "anti_alias": 0.01,
+    "fi_hz": -0.00017893935519517278,
+    "fi_window_s": 4096.0,
+    "fi_source": "Validated library anti_alias and the solver window formula",
+    "ldegup": 4304,
+    "native_header": {
+      "nt": 1024,
+      "ntcut": 1024,
+      "dt": 4.0,
+      "nf": 512,
+      "nfcut": 512,
+      "df": 0.000244140625,
+      "ldegup": 4304
+    },
+    "native_header_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\spgrn2020-matched-band\\library\\GreenSpec\\10.00\\0.00\\T_grn_d10.00",
+    "validation_source": "Native Fortran spectrum header and library metadata"
+  },
+  "source_radius_km": 0.0,
+  "elapsed_seconds": 62.476,
   "file_count": 15,
-  "output_bytes": 121654111
+  "output_bytes": 279069176,
+  "post_run_verification_utc": "2026-09-14T12:36:49Z",
+  "verification_note": "Fresh native runtime and output-size fields; metadata and figures checked by a compatible reread with the final example script."
 }

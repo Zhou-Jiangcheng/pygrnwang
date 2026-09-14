@@ -103,8 +103,8 @@ def _source_definition():
     effective_area = float(np.sum(quadrature_rates * weights) * step * 0.5)
     centroid = float(np.sum(quadrature_times * quadrature_rates * weights) * step * 0.5 / effective_area)
     # Reproduce qswavelet's analytic transform of linear segments and compare
-    # it with the desired pulse at complex frequency, over the spherical band.
-    frequency = np.arange(257, dtype=float) / 4096.0
+    # it with the desired pulse at complex frequency, through the shared Nyquist limit.
+    frequency = np.arange(513, dtype=float) / 4096.0
     spectrum = np.zeros(frequency.size, dtype=complex)
     spectrum[0] = _integral(supplied, time)
     for index, value in enumerate(frequency[1:], 1):
@@ -139,7 +139,7 @@ def _source_definition():
         "effective_rate_integral": effective_area,
         "target_centroid_s": 32.0, "effective_centroid_s": centroid,
         "effective_rate_relative_l2": time_error,
-        "spectral_relative_l2_0_to_0_0625_hz": spectral_error,
+        "spectral_relative_l2_0_to_0_125_hz": spectral_error, "validated_max_frequency_hz": 0.125,
         "spectral_max_absolute_error_0_to_0_0625_hz": float(np.max(np.abs(spectrum - expected_spectrum))),
         "physical_validation_limits": {"area_absolute_error": 1e-8, "centroid_absolute_error_s": 1e-5,
                                        "rate_relative_l2": 1e-5, "spectral_relative_l2": 1e-5},

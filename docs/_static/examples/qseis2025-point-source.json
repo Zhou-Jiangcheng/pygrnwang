@@ -1,6 +1,6 @@
 {
   "backend": "QSEIS2025",
-  "started_utc": "2026-09-14T12:31:33Z",
+  "started_utc": "2026-09-14T12:27:59Z",
   "platform": "Windows-11-10.0.26200-SP0",
   "python": "3.12.13",
   "dependencies": {
@@ -35,43 +35,7 @@
       ],
       "unit": "m",
       "finite": true,
-      "peak_absolute": 1.3862526806476928E-08
-    },
-    "strain": {
-      "shape": [
-        3,
-        6,
-        256
-      ],
-      "components": [
-        "EE",
-        "EN",
-        "EU",
-        "NN",
-        "NU",
-        "UU"
-      ],
-      "unit": "1",
-      "finite": true,
-      "peak_absolute": 2.0537011131837202E-13
-    },
-    "stress": {
-      "shape": [
-        3,
-        6,
-        256
-      ],
-      "components": [
-        "EE",
-        "EN",
-        "EU",
-        "NN",
-        "NU",
-        "UU"
-      ],
-      "unit": "Pa",
-      "finite": true,
-      "peak_absolute": 0.01279058879999433
+      "peak_absolute": 1.416866183701976E-08
     }
   },
   "sampling_interval_s": 4.0,
@@ -93,8 +57,8 @@
   "wavelet_duration_s": 64.0,
   "flat_earth_transform": true,
   "regional": true,
-  "source_radius_ratio": 0.05,
-  "point_source": false,
+  "source_radius_ratio": 0.0,
+  "point_source": true,
   "source_time_function": {
     "scheme_id": "normalized_sin_squared_64s_damping_compensated_v1",
     "duration_s": 64.0,
@@ -128,8 +92,8 @@
     },
     "reader_instruction": "Read velo/strain_rate/stress_rate; integrate once with cumsum(rate)*4 s in the example",
     "input_relative_path": "10.00/0.00/0_0/grn.inp",
-    "input_original_sha256": "60e1d673030b4beb47f564b8e358adcdd76da148a029446ffeca44e1d03c5b5e",
-    "input_prepared_sha256": "fc95e2e799e808f0afc7f2822ca7824d12254c3ee4e6a55df2a7998db661b5f1",
+    "input_original_sha256": "66ded0e4209be985253c5c6409c3025fedd556a6e76e2d173ea0c5f1ee03c8b0",
+    "input_prepared_sha256": "2c3859e0e472ac6cfafbc40225a069a3ef6511ec34b737e2034a63529ec57369",
     "samples_relative_path": "../source_time_function.npz",
     "description_relative_path": "../source_time_function.json",
     "samples_sha256": "338b4f06ebd8d08487d654680d42ec451effbace3de55d48a38a3a3d4a38c7c3"
@@ -166,9 +130,9 @@
       "df": 0.000244140625,
       "ldegup": null
     },
-    "native_header_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qseis2025-matched-band\\library\\10.00\\0.00\\0_0\\ss.tz",
+    "native_header_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\build\\equal-band-audit\\qseis2025-point-source\\library\\10.00\\0.00\\0_0\\ss.tz",
     "validation_source": "Native input, all native T_sec output rows, and library metadata; nf, nfcut and df derived from qsgetinp.f (not stored in the text header)",
-    "native_input_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qseis2025-matched-band\\library\\10.00\\0.00\\0_0\\grn.inp",
+    "native_input_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\build\\equal-band-audit\\qseis2025-point-source\\library\\10.00\\0.00\\0_0\\grn.inp",
     "native_output_columns": [
       "T_sec",
       "Uz0001",
@@ -176,9 +140,9 @@
       "Uz0003"
     ]
   },
-  "elapsed_seconds": 187.37,
-  "file_count": 83,
-  "output_bytes": 3833775,
-  "post_run_verification_utc": "2026-09-14T12:45:27Z",
+  "elapsed_seconds": 647.47,
+  "file_count": 27,
+  "output_bytes": 1005149,
+  "post_run_verification_utc": "2026-09-14T12:45:34Z",
   "verification_note": "Fresh native runtime and output-size fields; metadata and figures checked by a compatible reread with the final example script."
 }

@@ -18,7 +18,7 @@ for reproducing libraries based on `t0 + distance / v0`.
 ## Complete calculation
 
 ```console
-python examples/spgrn2012.py
+python examples/spgrn2012.py --output-dir examples/output/spgrn2012-matched-band
 ```
 
 The example uses the full Earth model, a 10 km source, surface receivers
@@ -37,35 +37,88 @@ Displacement in metres. Each trace uses its own reduced start time to
 show time since source origin.
 ```
 
-The output defaults to `examples/output/spgrn2012/`, with `disp.npz`,
-`disp.png`, `summary.json` and `library/`. The waveform array has three
-distances, three components and 256 samples.
+The command above saves results beneath
+`examples/output/spgrn2012-matched-band/`. `disp.npz` has shape
+`(3 distances, 3 ENU components, 256 samples)` in metres; `disp.png` and
+`summary.json` describe the exported result. `library/` contains the
+native spectral and velocity files. Three additional archives make the
+source calculation inspectable:
+
+- `velocity-impulse.npz`: the complete native impulse response, read and
+  rotated to ENU and scaled by the stated moment, in m/s;
+- `velocity-matched.npz`: the complete velocity after forward source
+  convolution, in m/s;
+- `source_time_function.npz` and `.json`: the physical pulse, its analytic
+  complex-frequency transform, validated native settings and archive hashes.
+
+Both velocity archives have shape `(3, 3, 1024)` and retain the original
+per-distance time axes. The script's default output directory remains
+`examples/output/spgrn2012/`; the explicit directory above keeps this
+calculation separate from earlier tutorial runs.
 
 ## Spectra, output window and source
 
-The example's spectral window is 4092 s and its output window is 1020 s,
-both sampled at 4 s. These are distinct settings: a longer spectral window
-helps separate repeated signals in the inverse transform while keeping
-the useful saved waveform short.
+Both the spectral window and the **native velocity output window** are
+4092 s, sampled at 4 s. The native FFT has 1024 samples and period 4096 s.
+The script retains all 1024 samples while applying the physical source,
+then integrates once and exports the first 256 samples spanning 1020 s.
+Convolving only the cropped displacement cannot reproduce this operation.
 
-`max_frequency=0.0625` Hz selects a long-period calculation;
-`source_duration=64` s is a squared half-sinusoid duration.
-`max_slowness` is s/km. `cal_sph` and `cal_tor` select P-SV and SH
-contributions. `gravity_fc`/`gravity_harmonic` control the range of
-self-gravitation; both are zero in this example. `physical_dispersion=0`
-is also an explicit tutorial choice.
+`max_frequency=0.125` Hz equals the sampling Nyquist frequency.
+The actual spectrum header must contain `nfcut=512`, with frequency spacing
+`1/4096` Hz. The solver explicitly zeroes the Nyquist bin, so its highest
+computed frequency is `511/4096 = 0.124755859375` Hz.
+`max_slowness=0` requests the full wavefield. `cal_sph=1` and `cal_tor=1`
+include P-SV and SH contributions, and `source_radius=0` selects a point
+source. `gravity_fc`/`gravity_harmonic` and `physical_dispersion` are zero;
+the native additional Butterworth filter is disabled.
 
-`cal_gf=1` requests spectral calculation. Reuse spectra with `0` only
-when the model and spectral parameters are unchanged.
-`delta_dist_range` gives smallest/largest distance increments in km;
-equal values request a uniform grid. Use the actual `dist_list` in
-`green_lib_info.json` for reading.
+The physical source shared with the other regional examples is the
+unit-area moment-rate pulse
+
+```{math}
+r(t)=\frac{2}{64}\sin^2\left(\frac{\pi t}{64}\right),\qquad 0\leq t\leq64\ \mathrm{s},
+```
+
+with zero rate outside that interval and centroid 32 s. This tutorial
+sets the **native** `source_duration=0`, whose spectrum is unity, and
+applies the target 64 s source in the example script. The library metadata
+therefore correctly records zero native duration; the summary separately
+records `native_source_duration_s=0` and `effective_source_duration_s=64`.
+No solver kernel or public reader behavior is changed.
+
+The native imaginary frequency is
+`fi = log(0.01) / (2*pi*4096)`. The helper restores the numerical damping
+of the complete impulse velocity, transforms it, multiplies by the exact
+transform of `r(t)` at `f + i*fi`, transforms back and removes damping.
+This is forward convolution: there is no division by an existing source
+spectrum, fitted amplitude or time shift. The damped DC coefficient is
+about 0.9647432; it must not be renormalized because the **physical** rate
+already integrates to one. Independent quadrature checks the analytic
+transform across the full 0–0.125 Hz band.
+
+```{literalinclude} ../../examples/spherical_source_time_function.py
+:language: python
+:pyobject: apply_spgrn2012_stf
+:caption: Full-period forward source convolution before displacement integration
+```
+
+`cal_gf=1` requests spectral calculation. `delta_dist_range` gives the
+smallest/largest distance increments in km; equal values request a uniform
+grid. The script reads the actual `dist_list` from `green_lib_info.json`.
 
 Fortran rounds `t0 + distance / v0` to the nearest integer second for
 the native start time. Here `t0=-40` s and `v0=10` km/s, giving starts
-of -10, 20 and 50 s. SPGRN2020 uses a different rule based on P onset.
-Both example figures nevertheless express their time axes relative to
-source origin, allowing comparisons over their common time interval.
+of -10, 20 and 50 s. The saved displacement axes therefore cover
+-10–1010, 20–1040 and 50–1070 s relative to source origin. SPGRN2020
+uses a different start rule based on P onset; compare their traces only
+over the shared origin-time interval.
+
+Use `--reuse` with the same explicit output directory only after a
+successful run. The script checks native input records, all spectral
+headers, complete velocity blocks, the physical pulse and archive hashes.
+Older libraries with a native 64 s source, a 0.0625 Hz cutoff, a slowness
+limit or a cropped native output are rejected and require a fresh build.
 
 ## Travel-time tables are part of the workflow
 
@@ -81,20 +134,22 @@ Python-readable SPGRN2012 library.
 
 ## Reading and limits
 
-The raw basis library represents velocity. `output_type="disp"` integrates
-it; `"acce"` differentiates it. The example scales a unit mechanism by
-`10^15 N m` and returns E/N/up displacement. Nearest and trilinear
-waveform interpolation are available.
+The raw basis library represents velocity. In the general reader,
+`output_type="disp"` integrates it and `"acce"` differentiates it.
+This example explicitly reads `"velo"`, applies the physical source above,
+and uses `cumsum * dt` exactly once to obtain displacement. It scales a
+unit mechanism by `10^15 N m` and returns E/N/up components. Nearest and
+trilinear waveform interpolation remain available in the reader.
 
-The [controlled spherical-backend comparison](../guides/backend-comparison.md)
-found approximately 4% displacement differences from SPGRN2020's
-full-wavefield result over the shared interval ending at 500 s.
-SPGRN2012's older wavelet implementation evaluates the source spectrum
-at real frequency, while SPGRN2020 and QSSP2020 include the imaginary
-frequency used for numerical damping. With this example's parameters,
-the older implementation produces an effective source-pulse area about
-3.67% larger after damping correction. This is consistent with much of
-the amplitude difference; it does not explain every residual difference.
+Earlier tutorial comparisons reported approximately 4% differences from
+SPGRN2020. Those results used a different frequency cutoff and SPGRN2012's
+native real-frequency wavelet, whose effective area became about 3.67%
+larger after damping correction. They are historical results, not a
+characterization of the source-matched example above. See the
+[controlled backend comparison](../guides/backend-comparison.md) for the
+current calculation, measured differences and remaining model/sampling
+limitations. Matching the physical source and requested frequency band
+does not establish exact equivalence between the solvers.
 
 The 64 s source and coarse distance grid do not establish convergence for
 high-frequency regional phases or other source/receiver geometries.

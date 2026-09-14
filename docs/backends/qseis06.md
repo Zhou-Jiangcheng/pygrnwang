@@ -56,7 +56,11 @@ same 24 numeric model rows. A 4 s interval and 4092 s native window give
 1024 library samples. After synthesis, the script saves 0–1020 s
 inclusive, or 256 samples, under `examples/output/qseis06-regional/`.
 The resulting `disp.npz` has shape `(3, 3, 256)` and a source-origin
-time axis.
+time axis. The regional QSEIS, SPGRN and QSSP examples share the 4 s
+interval and 0.125 Hz Nyquist limit. QSEIS obtains its frequency range
+from the sampling interval rather than a separate `max_frequency`
+argument. With 1024 FFT samples, the final computed positive-frequency
+bin is `511/4096 = 0.124755859375 Hz`; the Nyquist bin is zero.
 
 The regional source uses `wavelet_type=0, wavelet_duration=16` with
 1024 custom moment-rate samples spanning 0–64 s. The physical target is
@@ -81,12 +85,29 @@ Regional displacement in metres, saved from 0 to 1020 s since source
 origin. The native 4092 s library window is retained.
 ```
 
-Matching the effective source pulse does not make this truncated
-half-space model identical to the complete spherical model. The
-flat-Earth transformation does not restore the omitted deep structure,
-and the QSEIS numerical frequency range extends above the spherical
-examples' 0.0625 Hz cutoff. See
-[regional comparison limits](../guides/backend-comparison.md#qseis-at-the-same-regional-distances).
+The regional examples share the effective 64 s moment-rate pulse,
+strike/dip/rake 30°/45°/90°, moment `10^15 N m` and azimuth 30°.
+Matching those settings and the frequency band does not make the
+half-space and spherical calculations identical.
+
+QSEIS06 also applies frequency- and distance-dependent Gaussian spatial
+smoothing. The native solver fixes its radius ratio at 0.05; the current
+Python API cannot turn it off. The radius at each receiver and frequency
+is 0.05 times the smaller of the source–receiver separation and
+`Vp_source/(f + df)`, using the backend's model coordinates and source-layer
+P-wave speed. Its wavenumber multiplier is `exp(-(k*radius)**2/2)`.
+This differs from the spherical examples' point sources even when their
+effective time functions agree. The default QSEIS2025 regional example
+retains the same 0.05 ratio for comparison with QSEIS06.
+
+The [QSEIS2025 point-source control](qseis2025.md#point-source-control)
+turns off this spatial smoothing. It reduces the discrepancy against
+SPGRN2020, but the measured relative differences remain 11.493%, 17.076%
+and 19.718% at 300, 600 and 900 km. Spatial smoothing therefore explains
+only part of the discrepancy. See the
+[regional comparison limits](../guides/backend-comparison.md#qseis-at-the-same-regional-distances)
+for the remaining differences in geometry, model and numerical treatment.
+
 Use `--regional --reuse` only for a completed library with the current
 custom source and matching regional parameters. A library from the
 earlier type-2 regional example must be rebuilt.

@@ -17,6 +17,12 @@ from pygrnwang.ak135fc import s as AK135_ELASTIC_MODEL
 
 MOMENT_NM = 1e15
 MECHANISM = [30.0, 45.0, 90.0]
+REGIONAL_SAMPLING_INTERVAL_S = 4.0
+REGIONAL_MAX_FREQUENCY_HZ = 0.5 / REGIONAL_SAMPLING_INTERVAL_S
+REGIONAL_SOURCE_DURATION_S = 64.0
+REGIONAL_STF = {"shape": "normalized_sin_squared_moment_rate",
+                "duration_s": REGIONAL_SOURCE_DURATION_S,
+                "physical_integral": 1.0, "centroid_s": 32.0}
 
 
 def parser_for(name):

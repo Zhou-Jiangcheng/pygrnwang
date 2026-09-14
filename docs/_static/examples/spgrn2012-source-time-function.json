@@ -1,0 +1,48 @@
+{
+  "scheme_id": "normalized_sin_squared_64s_complex_frequency_forward_v1",
+  "physical_source_time_function": {
+    "shape": "normalized_sin_squared_moment_rate",
+    "duration_s": 64.0,
+    "physical_integral": 1.0,
+    "centroid_s": 32.0
+  },
+  "native_source_duration_s": 0.0,
+  "effective_source_duration_s": 64.0,
+  "method": "full-period damped-domain analytic forward convolution of native impulse velocity",
+  "spectral_division": false,
+  "fitted_amplitude": false,
+  "fitted_time_shift": false,
+  "native": {
+    "fft_header": {
+      "nt": 1024,
+      "ntcut": 1024,
+      "dt": 4.0,
+      "nf": 512,
+      "nfcut": 512,
+      "df": 0.000244140625,
+      "ldegup": 5293
+    },
+    "fft_period_s": 4096.0,
+    "fi_hz": -0.00017893935519517278,
+    "requested_max_frequency_hz": 0.125,
+    "last_retained_frequency_hz": 0.124755859375,
+    "nyquist_bin_zero": true,
+    "trace_start_times_s": [
+      -10.0,
+      20.0,
+      50.0
+    ],
+    "input_sha256": "e023149349e01edf39da2212e00b13f2ade104807e8757ed79ec03d5db4cfa43",
+    "native_velocity_sha256": "26efb10c519beddc78a54b7671377f37cd6edec971972a94ad27b8415f0987d3"
+  },
+  "physical_rate_integral": 1.0000000000000013,
+  "analytic_transform_relative_l2_vs_quadrature": 1.752096421854238e-15,
+  "damped_dc_coefficient": 0.9647432173888302,
+  "integration": "cumsum of matched velocity times 4 s, then retain the first 256 samples",
+  "archive_sha256": {
+    "velocity-impulse.npz": "da082632511beae4dde16f11c64242b88d18a70c9e9e0d54098fe54bd0bff6ef",
+    "velocity-matched.npz": "9688322761b709bd9b3ec722e6b23d5bac8fa4129a08706ca9e6c5ec19c10bfe",
+    "source_time_function.npz": "8d6bce58c173b165991160331c80f4d329bd61f2d82a40f0671eb65b5300e0a1",
+    "disp.npz": "cd8a44eb4430c0347cc00fb7b61ccdf7b2dcdfe2895a0bcc5dca6d46de8e4663"
+  }
+}

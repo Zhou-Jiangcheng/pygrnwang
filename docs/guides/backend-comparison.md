@@ -1,380 +1,279 @@
 # Comparing backend waveforms
 
-The SPGRN2012, SPGRN2020 and QSSP2020 examples use the same elastic model
-and source, but matching their named parameters alone does not produce
-equivalent numerical truncation. A controlled comparison found that the
-original low-cost SPGRN2020 and QSSP2020 settings retained too little
-low-frequency spatial content. Their files and array shapes were valid
-and their values finite, but their displacement waveforms differed
-substantially.
+This report compares QSEIS06, QSEIS2025, SPGRN2012, SPGRN2020 and QSSP2020
+with a common temporal frequency band, mechanism and effective 64 s
+moment-rate pulse. These matched conditions do not make the numerical
+models identical. The earlier unequal-band calculation and harmonic
+parameter scans remain in the [historical report](backend-comparison-history.md).
 
-The current [SPGRN2020 tutorial](../backends/spgrn2020.md) therefore uses
-`max_slowness=0`, and [QSSP2020](../backends/qssp2020.md) uses
-`min_harmonic=2000, max_harmonic=8000`. These choices were checked for
-this example. They are not universal convergence settings or an absolute
-reference solution.
+## After matching the effective STF
+
+SPGRN2020 with `max_slowness=0` is the numerical reference, not an absolute
+reference solution. The relative L2 metric is
+
+$$
+100\,\frac{\lVert u-u_{\rm ref}\rVert_2}{\lVert u_{\rm ref}\rVert_2},
+$$
+
+over east, north and up displacement together. Each distance uses linear
+interpolation onto a 1 s grid through 500 s, starting at the latest native
+start among the five backends: 3, 40 and 78 s respectively. No fitted time
+shift, amplitude scale or baseline removal is applied.
+
+| Calculation versus SPGRN2020 | 300 km | 600 km | 900 km |
+| --- | ---: | ---: | ---: |
+| QSEIS06, default spatial source | 12.7410% | 19.5740% | 22.7979% |
+| QSEIS2025, default spatial source | 12.7410% | 19.5740% | 22.7979% |
+| SPGRN2012, matched effective STF | 1.2266% | 0.0739% | 0.0534% |
+| QSSP2020, harmonic controls 2000/8000 | 1.2772% | 0.4085% | 2.3022% |
+
+The default QSEIS versions produced exactly equal saved displacement
+samples in this run. The script retains two checks: the QSEIS version
+pair over all saved samples (`rtol=1e-5`, `atol=1e-20 m`), and QSSP2020
+versus SPGRN2020 below 5% at each distance. Both pass; the checks do not
+assert agreement of every backend pair.
+
+```{figure} ../_static/examples/all-backends.png
+:alt: Five backend displacement waveforms at 300, 600 and 900 km with the same temporal frequency band and effective source.
+
+Current comparison on physical source-origin time axes. The default
+QSEIS pair still has substantial differences from SPGRN2020.
+```
 
 ```{figure} ../_static/examples/spherical-comparison.png
-:alt: SPGRN2012, SPGRN2020 and QSSP2020 displacement compared on a common source-origin time axis.
+:alt: SPGRN2012, SPGRN2020 and QSSP2020 displacement with the common frequency band and physical source.
 
-Three-component displacement at 300, 600 and 900 km. SPGRN2020 uses its
-full-wavefield branch and QSSP2020 uses the revised harmonic settings.
-All horizontal axes refer to source origin; their stored start times differ.
+Spherical examples with the effective 64 s pulse and common Nyquist band.
 ```
 
-After running the three spherical examples and both QSEIS regional
-examples, generate comparisons from the completed libraries' saved arrays:
+Download the [current comparison record](../_static/examples/backend-comparison.json)
+for component metrics, input hashes, source evidence and native spectral settings.
 
-```console
-python examples/compare_backends.py
-```
+## Common physical and frequency settings
 
-The script uses the default example input directories and writes
-`all-backends.png`, `spherical-comparison.png`, `qseis-comparison.png`
-and `comparison.json` beneath `examples/output/backend-comparison/`.
-It compares physical times and reports differences without fitting a
-time shift or amplitude scale. It does not rerun solvers.
+The examples use the bundled AK135 elastic profile with illustrative
+constant `Qp=600` and `Qs=300`, rather than the original AK135-F attenuation.
+Source depth is 10 km, receiver depth is zero, distances are 300/600/900 km,
+and receiver azimuth is 30°. The shared strike/dip/rake is 30°/45°/90°,
+scalar moment is `1e15 N m`, and displacement is ENU in metres.
+The spherical examples enable spheroidal and toroidal motion, with
+self-gravitation and physical dispersion disabled.
 
-## What the comparison holds fixed
+| Temporal setting | All five regional calculations |
+| --- | --- |
+| Native sampling interval | 4 s |
+| FFT sample count `N` | 1024 |
+| Requested spectral/native QSEIS span | 4092 s |
+| FFT period `N dt` | 4096 s |
+| Frequency spacing `df` | `1/4096 = 0.000244140625 Hz` |
+| Requested upper frequency / Nyquist | 0.125 Hz |
+| Retained nonnegative bins | 512, including zero frequency |
+| Highest computed frequency | `511/4096 = 0.124755859375 Hz` |
+| Nyquist bin at 0.125 Hz | Set to zero |
+| Anti-aliasing factor | 0.01 |
+| Exported displacement shape | `(3 distances, 3 components, 256 samples)` |
 
-The calculation uses the full bundled AK135 elastic model with constant
-`Qp=600` and `Qs=300`, not the original AK135-F attenuation profile.
-The source is 10 km deep and receivers are at the surface, at 300, 600
-and 900 km. Source strike/dip/rake are 30°/45°/90°, receiver azimuth is
-30°, and scalar moment is `1e15 N m`. Returned components are east,
-north and up, in metres.
+QSEIS derives its frequency range from the time grid. The spherical inputs
+explicitly request `max_frequency=0.125`. Their native routines use
+`nfcut=min(nf, 1+nint(fcut/df))`, retaining bins zero through 511 and
+zeroing the separate Nyquist endpoint. The 64 s pulse is not strictly
+band-limited; this solver cutoff is distinct from a source corner frequency.
 
-All three use a 64 s squared half-sinusoid moment-rate pulse, a 4 s
-sample interval, 256 output samples, and a 0.0625 Hz frequency cutoff.
-The requested spectral window is 4092 s, giving a 4096 s FFT period;
-the output span is 1020 s. The anti-aliasing factor is 0.01.
-Spheroidal and toroidal modes are enabled, and self-gravitation and
-physical dispersion are disabled. The original positive slowness
-cutoff was 0.3 s/km in all three backends.
+The actual damping conventions are:
 
-## Align physical times before comparing arrays
+| Solver | Imaginary frequency `fi` |
+| --- | --- |
+| QSEIS06/2025 | `ln(0.01)/(2*pi*4092) = -0.000179114271475911 Hz` |
+| SPGRN2012/2020 and QSSP2020 | `ln(0.01)/(2*pi*4096) = -0.000178939355195173 Hz` |
 
-The native sample starts, in seconds since source origin, are:
+The source construction uses these respective damping frequencies,
+even though the real-frequency grids agree.
 
-| Backend | 300 km | 600 km | 900 km |
-| --- | ---: | ---: | ---: |
-| SPGRN2012 | -10 | 20 | 50 |
-| SPGRN2020 | 3 | 40 | 78 |
-| QSSP2020 | 0 | 0 | 0 |
+## Matching the effective source time function
 
-SPGRN2012 rounds `t0 + distance / v0` to integer seconds. SPGRN2020
-rounds the P onset minus `green_before_p` to integer seconds.
-For this example, its fractional P onsets are approximately 43.417,
-80.497 and 117.540 s. The SPGRN2020 example uses the native binary
-header starts when saving and plotting times. A P-relative axis starting
-at -40 s, or simply adding those fractional P onsets, is different from
-the stored source-origin grid.
-
-Use the common physical time interval when comparing traces. Do not
-compare sample indices across libraries or infer a 32 s source-centroid
-shift from the source duration.
-
-## Why the original harmonic settings differed
-
-The original logs report these highest retained harmonic degrees:
-
-| Backend and original setting | At 0 Hz | At 0.015625 Hz | At 0.0625 Hz |
-| --- | ---: | ---: | ---: |
-| SPGRN2012, slowness 0.3 s/km | 504 | 566 | 751 |
-| SPGRN2020, slowness 0.3 s/km | 54 | 242 | 804 |
-| QSSP2020, minimum 0 / maximum 800 | 12 | 196 | 750 |
-
-A low temporal frequency can still require high spatial degrees, especially
-for shallow-source near-field displacement. Truncation can introduce
-spatial aliasing and distorted displacement baselines. The method and
-differential transformation are discussed by
-[Wang et al. (2017)](https://doi.org/10.1093/gji/ggx259).
-
-For SPGRN2020, positive `max_slowness` uses the low-frequency baseline
-of 54 in this example; raising the cutoff from 0.3 to 1.0 s/km does not
-remove that limitation. A value of zero selects the full-wavefield branch,
-which starts from a baseline of 2500 and selects a model-dependent
-slowness limit. The actual maximum degree in the tested full-wavefield
-run was 3403. See the branch in
-[qpmaxdeg.f](https://github.com/Zhou-Jiangcheng/pygrnwang/blob/main/fortran_src_codes/spgrn2020_src/qpmaxdeg.f#L11)
-and its constants in
-[qpalloc.f](https://github.com/Zhou-Jiangcheng/pygrnwang/blob/main/fortran_src_codes/spgrn2020_src/qpalloc.f#L23).
-
-For QSSP2020, `min_harmonic` controls the low-frequency baseline of the
-frequency-dependent **upper** degree, subject to the solver's decay
-criterion. It does not exclude lower degrees: summation begins at zero.
-`max_harmonic` caps that upper degree. These operations appear in
-[qpgrnspec.f](https://github.com/Zhou-Jiangcheng/pygrnwang/blob/main/fortran_src_codes/qssp2020_src/qpgrnspec.f#L141).
-
-### QSSP maximum degree also affects synthesis
-
-QSSP's spatial differential-transformation order depends on the maximum
-degree allocated from `max_harmonic`. Let `L_max` denote that input
-parameter; the allocated maximum is `L_max + 3`. For this
-surface-receiver, 10 km source example, its threshold in radians is
-
-$$
-d_0=5\left(\frac{2\pi}{L_{\max}+3}+\frac{10}{6371}\right).
-$$
-
-For angular distance `d <= d_0` the order is zero. Otherwise it is
-`min(2, trunc(log(d / d_0)))`, using the natural logarithm. This gives:
-
-| `max_harmonic` | Order at 300 km | Order at 600 km | Order at 900 km |
-| --- | ---: | ---: | ---: |
-| 800 | 0 | 0 | 1 |
-| 1600 | 0 | 1 | 1 |
-| 3200 | 0 | 1 | 2 |
-
-The formula is specialized to this geometry; the full implementation also
-uses a path-depth measure. See
-[qpwvint.f](https://github.com/Zhou-Jiangcheng/pygrnwang/blob/main/fortran_src_codes/qssp2020_src/qpwvint.f#L128).
-
-With `min_harmonic=0`, maximum settings 800, 1600 and 3200 produced
-eight corresponding `GreenSpec` files with identical SHA-256 hashes:
-the actual spectral upper degree remained 750. Nevertheless the synthesis
-order changed, and the waveforms changed at the affected distances.
-Similarly, with minimum 2000, raising the maximum from 3200 to 8000
-left the spectra identical while changing the 300 km waveform by 23.68%.
-At finite truncation, changing the transformation and taper can alter the
-error. Increasing only the maximum need not improve the waveform monotonically.
-
-## Measured differences and scope
-
-The following differences use SPGRN2020 with `max_slowness=0` as the
-numerical reference. Each pair is compared from its latest native start
-time through 500 s, with linear interpolation onto a 1 s common grid.
-The metric is `100 * norm(u - u_ref) / norm(u_ref)` across all three
-components. No amplitude fitting, time-shift fitting or baseline removal
-is applied; the reference is not treated as absolute truth.
-
-| Calculation setting | 300 km | 600 km | 900 km |
-| --- | ---: | ---: | ---: |
-| SPGRN2012, original | 4.078% | 4.403% | 4.258% |
-| SPGRN2020, slowness 0.3 | 42.406% | 3.991% | 2.331% |
-| SPGRN2020, slowness 1.0 | 32.107% | 2.327% | 0.262% |
-| QSSP, minimum 0 / maximum 800 | 179.242% | 110.920% | 16.750% |
-| QSSP, 0 / 1600 | 179.242% | 31.137% | 16.750% |
-| QSSP, 0 / 3200 | 179.242% | 31.137% | 112.873% |
-| QSSP, 500 / 3200 | 484.041% | 1.620% | 2.329% |
-| QSSP, 1000 / 3200 | 8.596% | 0.378% | 1.423% |
-| QSSP, 2000 / 3200 | 19.109% | 0.378% | 1.423% |
-| QSSP, 2000 / 8000 | 0.889% | 0.378% | 1.423% |
-| QSSP, 4000 / 8000 | 0.890% | 0.378% | 1.423% |
-
-At a fixed maximum of 8000, increasing the minimum from 2000 to 4000
-changes QSSP's own traces by at most 0.0074% over the complete 0–1020 s
-window, comparing matching samples with the same relative-norm metric.
-Over each complete common window, QSSP 2000/8000 differs from SPGRN2020's
-full-wavefield result by approximately 0.99%, 0.64% and 1.94%.
-This checks stability and cross-backend agreement for the stated geometry
-and frequency band; it does not validate arbitrary models or static limits.
-
-These measurements include nine fresh parameter-variation builds:
-two SPGRN2020 and seven QSSP2020 runs, in addition to the original
-three examples. Download the
-[comparison measurements](../_static/examples/spherical-comparison.json)
-and see [validation](../validation.md) for the execution environment
-and example checks.
-
-## Remaining differences
-
-All three intended source pulses span 0–64 s; there is no seconds-versus-
-samples error in these spherical examples. SPGRN2020 and QSSP2020
-evaluate the pulse spectrum at complex frequency, including the numerical
-damping term. SPGRN2012's older routine uses only real frequency.
-After damping correction, the latter gives an effective pulse area of
-approximately 1.03672 for the stated settings, about 3.67% above unity.
-This is consistent with much of its roughly 4% residual amplitude
-difference, but does not establish that the entire residual has that cause.
-Compare
-[SPGRN2012 wavelet.f](https://github.com/Zhou-Jiangcheng/pygrnwang/blob/main/fortran_src_codes/spgrn2012_src/wavelet.f)
-and
-[SPGRN2020 swavelet.f](https://github.com/Zhou-Jiangcheng/pygrnwang/blob/main/fortran_src_codes/spgrn2020_src/swavelet.f).
-
-SPGRN readers integrate native velocity using `cumsum * dt`, while QSSP
-accumulates displacement inside Fortran from a zero initial value.
-Different output windows and sample grids can therefore introduce
-baseline and discrete-integration differences. The remaining 1–4%
-inter-backend differences have not been completely separated into causes.
-
-## Repeating the check for your model
-
-Match the full model, attenuation, mechanism, units, source pulse,
-enabled physics and physical time coordinates. First compare exact
-library grid points without arrival adjustment or post-processing.
-Inspect the actual frequency-dependent degree limits in solver logs;
-input values alone do not describe the retained spectrum.
-
-Vary both QSSP harmonic controls and use SPGRN2020's full-wavefield
-branch as an additional comparison where appropriate. Test the time
-window, source duration and frequency range needed for your observations,
-including late-time displacement if it matters. Record changes in waveforms
-as well as runtime and storage.
-
-Use fresh output directories and recalculate compatible spectra after
-changing these parameters. `--reuse` only rereads an existing library;
-it does not update its physical or numerical settings. Archive generated
-inputs and the model alongside the output, and report the parameter range
-that was actually checked.
-
-## QSEIS at the same regional distances
-
-The [QSEIS2025 regional example](../backends/qseis2025.md#regional-waveforms-at-300-600-and-900-km)
-and [QSEIS06 regional example](../backends/qseis06.md#regional-waveforms-at-300-600-and-900-km)
-also use 300, 600 and 900 km, with 64 s source support and 4 s sampling.
-They enable the flat-Earth transformation and retain their 24-row
-layered half-space model. Their saved 0–1020 s windows make regional
-phases easier to inspect alongside the spherical examples.
-
-### Matching the effective source time function
-
-The current regional examples explicitly match the effective physical
-moment-rate pulse to the one used by SPGRN2020 and QSSP2020:
+The common physical moment-rate pulse is
 
 $$
 r(t)=\frac{2}{T}\sin^2\left(\frac{\pi t}{T}\right),
 \qquad 0\leq t\leq T,\quad T=64\ {\rm s},
 $$
 
-with zero rate outside this interval. Its area is one and its centroid
-is 32 s. Matching the duration alone is insufficient: the built-in QSEIS
-pulse is transformed at real frequency, while SPGRN2020/QSSP2020 use
-complex frequency. In the previous regional calculation, the final
-QSEIS damping correction therefore increased the effective pulse area
-to approximately 1.03676 and shifted its centroid to 32.151 s.
+and zero elsewhere. Its integral is one and its centroid is 32 s.
+The shared `REGIONAL_STF` in `examples/common.py` is recorded as
+`physical_source_time_function` in every summary.
 
-The regional examples now select `wavelet_type=0` and install a custom
-input block of 1024 equally spaced nodes:
+SPGRN2020 and QSSP2020 evaluate this pulse at complex frequency.
+QSEIS uses `wavelet_type=0` with 1024 source nodes over 0–64 s, separate
+from the 4 s seismogram grid. Written node values are
+`r(t_j) exp(2*pi*fi*t_j)`; do not renormalize these compensated inputs.
+Fortran's final damping correction restores the physical pulse from
+their piecewise-linear interpolant. Its archived time-domain relative
+L2 error is `1.988e-6` and spectral relative L2 error over 0–0.125 Hz is
+`1.783e-6`. Effective area is approximately `1.000000000413` and centroid
+`32.000000734 s`, within the recorded tolerances.
 
-$$
-t_j=\frac{jT}{1023},\qquad
-w_j=r(t_j)\exp(2\pi f_i t_j),\qquad
-f_i=\frac{\ln(0.01)}{2\pi\,4092},\qquad j=0,\ldots,1023.
-$$
-
-Since `fi < 0`, the exponential decreases the input samples.
-Do **not** renormalize these written samples: their area is approximately
-0.9647094485. Fortran transforms their piecewise-linear interpolant at
-real frequency, and its subsequent multiplication by
-`exp(-2*pi*fi*t)` restores the intended physical rate. The result
-approximates the analytic complex-frequency pulse; it is not assumed
-identical merely because both inputs say 64 s.
-
-The source-construction helper is
-{download}`source_time_function.py <../../examples/source_time_function.py>`.
-It supplies the low-level sample block after normal preprocessing.
-Each new regional output directory contains `source_time_function.npz`
-and `source_time_function.json`; `library/stf.json` records the
-matching library source metadata and hashes. The NPZ preserves the node
-times, target rate, written input rate and reconstructed effective pulse,
-so the source check can be repeated independently of the waveform plots.
-The ordinary package reader does not infer that a type-0 input is a
-moment-rate pulse and does not automatically integrate it when asked for
-displacement. These examples explicitly read `velo`, `strain_rate`
-or `stress_rate`, then perform exactly one `cumsum * dt` to obtain
-displacement, strain or stress. The short near-distance examples retain
-their built-in type-2 source.
-
-An independent reconstruction of Fortran's piecewise-linear transform
-gives the following checks for the 1024-node pulse:
-
-| Check | Measured value |
-| --- | ---: |
-| Time-domain relative L2 error against analytic `r(t)` | `1.988e-6` |
-| Relative spectral L2 error, 0–0.0625 Hz | `1.758e-6` |
-| Effective physical area | `1.000000000412` |
-| Effective centroid | `32.000000734 s` |
-
-Both L2 checks pass the `1e-5` tolerance. The spectral comparison uses
-the analytic transform at `f + i*fi`, with the QSEIS damping frequency.
-No additional time shift or waveform amplitude fit is applied.
-The tolerance applies to the relative norm across the sampled spectrum;
-pointwise relative errors near spectral zeros can be larger.
+SPGRN2012 now uses `source_duration=0`, selecting its native unit-spectrum
+impulse branch. It exports the complete 1024-sample, 4092 s velocity span
+with `max_slowness=0`. The example restores damping, transforms the full
+record, multiplies by the analytic transform of `r(t)` at `f+i*fi`,
+inverts, and removes damping. This is **forward convolution**, with no
+deconvolution or fitted scaling. Only then does it integrate once using
+`cumsum * dt` and export 256 displacement samples. The summary distinguishes
+the native zero duration from the effective physical duration of 64 s.
 
 ```{figure} ../_static/examples/source-time-function.png
-:alt: Analytic source rate and the effective QSEIS custom pulse after damping compensation.
+:alt: Analytic moment-rate pulse and the independently reconstructed effective QSEIS pulse.
 
-Physical moment-rate pulse and its numerical verification. The input
-samples include the damping compensation; the target physical area is one.
+The normalized 64 s physical pulse and its numerical verification.
 ```
 
-Download the [source-time-function verification](../_static/examples/source-time-function.json)
-for the pulse checks and numerical settings.
+The helpers {download}`source_time_function.py <../../examples/source_time_function.py>`
+and {download}`spherical_source_time_function.py <../../examples/spherical_source_time_function.py>`
+archive definitions, source samples or transfer functions, and file hashes.
+The [source verification](../_static/examples/source-time-function.json)
+preserves the QSEIS checks. SPGRN2012 also saves native impulse velocity,
+matched velocity and its analytic transfer function.
 
-### Before matching the effective STF
+## QSEIS at the same regional distances
 
-The following **historical** results used the earlier QSEIS regional
-`wavelet_type=2` pulse, before the damping compensation described above.
-They are not the results of the current custom-source example.
-The two QSEIS versions produced identical saved displacement samples
-in that run. Their differences relative to the SPGRN2020 full-wavefield
-example, on the same common time grid, were:
+The default QSEIS pair retains the same Gaussian spatial smoothing.
+In the wavenumber integral, the kernel is multiplied by
 
-| Backend before STF matching | 300 km | 600 km | 900 km |
+$$
+G(k,f,d)=\exp\left[-\frac{1}{2}\{k\,a(f,d)\}^2\right],
+\qquad
+a(f,d)=\rho\,\min\left[
+\sqrt{d^2+(z_s-z_r)^2},\,
+\frac{v_{P,s}}{f+df}
+\right].
+$$
+
+Here `k` is horizontal wavenumber; `d`, the depths and source-layer P
+velocity are the solver's working coordinates and model values.
+The dimensionless `rho` is `source_radius_ratio`. This frequency- and
+distance-dependent spatial smoothing is separate from the temporal STF.
+See the multiplication in
+[QSEIS2025 qswvint.f](https://github.com/Zhou-Jiangcheng/pygrnwang/blob/main/fortran_src_codes/qseis2025_src/qswvint.f#L195).
+
+QSEIS06 fixes `rho=0.05` inside Fortran. QSEIS2025 exposes the parameter;
+its default regional run also uses 0.05 to preserve the version-pair
+comparison. The spherical examples set `source_radius=0`.
+
+### Optional point-source control
+
+QSEIS2025 `--regional --point-source` sets `rho=0`, making `G=1`.
+The remaining requested model, temporal source and frequency settings
+stay the same. Radius also enters automatic wavenumber-limit estimation,
+so the control changes that numerical setting as implemented by the solver.
+
+| QSEIS2025 versus SPGRN2020 | 300 km | 600 km | 900 km |
 | --- | ---: | ---: | ---: |
-| QSEIS06 | 10.819% | 17.516% | 20.739% |
-| QSEIS2025 | 10.819% | 17.516% | 20.739% |
+| Default `rho=0.05` | 12.7410% | 19.5740% | 22.7979% |
+| Point-source control `rho=0` | 11.4926% | 17.0758% | 19.7176% |
 
-The corresponding combined ENU correlations were approximately 0.998,
-0.994 and 0.991. These differences include the unmatched effective
-source pulse and other model/numerical effects. The source-area excess
-of about 3.68% alone does not establish the cause of the full 11–21%
-waveform discrepancy. The
-[record before STF matching](../_static/examples/backend-comparison-before-stf.json)
-preserves that calculation separately from current results.
+This reduces the relative differences by about 1.25–3.08 percentage
+points, leaving an 11–20% residual. It does not establish that spatial
+smoothing explains the dominant discrepancy or isolate the remaining
+contributions. The control has no additional pass/fail threshold.
 
-### After matching the effective STF
+```{figure} ../_static/examples/source-radius-comparison.png
+:alt: Default and point-source QSEIS2025 displacement compared with SPGRN2020.
 
-Fresh runs with the compensated custom pulse gave the following comparison
-on exactly the same origin-time intervals, without fitting amplitudes or shifts:
-
-| QSEIS06 and QSEIS2025 versus SPGRN2020 | 300 km | 600 km | 900 km |
-| --- | ---: | ---: | ---: |
-| Before matching the effective STF | 10.819% | 17.516% | 20.739% |
-| After matching the effective STF | 12.684% | 19.748% | 22.951% |
-
-The two QSEIS versions again produced identical saved displacement samples.
-Their combined ENU correlations with SPGRN2020 after matching were 0.9978,
-0.9935 and 0.9897. The shared pulse passes the independent area, centroid,
-time-shape and spectrum checks above, even though the seismogram differences
-increase. This controlled result rules out the previous STF mismatch as the
-main explanation of the 11–21% discrepancy: its excess amplitude had partly
-offset other waveform differences. No waveform was rescaled to force agreement.
-The remaining residuals have not been isolated into their separate physical
-and numerical contributions.
-
-### Remaining model and frequency differences
-
-Matching the effective source does not make the physical models identical.
-The QSEIS model extends its bottom layer as a half-space, while the
-spherical model includes the complete Earth. The flat-Earth transformation
-does not restore the omitted deep structure.
-
-Nor are the numerical frequency limits identical: at 4 s sampling,
-QSEIS evaluates frequencies up to the 0.125 Hz Nyquist limit and zeros
-the Nyquist bin, while the spherical examples impose a 0.0625 Hz cutoff.
-The 64 s source suppresses higher frequencies but is not strictly
-band-limited. Baseline and discrete-integration differences can also
-remain. The spherical harmonic-convergence percentages above do not
-include QSEIS.
-
-```{figure} ../_static/examples/all-backends.png
-:alt: Five backend displacement waveforms compared at 300, 600 and 900 km.
-
-Comparison generated from the current example outputs over the common
-valid interval through 500 s. Each regional example separately exports
-0–1020 s; physical source-origin times are used for the comparison.
+Effect of the QSEIS2025 radius setting on the same comparison grids.
 ```
 
 ```{figure} ../_static/examples/qseis-comparison.png
-:alt: Overlapping QSEIS06 and QSEIS2025 regional displacement traces.
+:alt: Equal QSEIS06 and default QSEIS2025 regional displacement traces.
 
-QSEIS06 and QSEIS2025 regional displacement on the same source-origin axis.
+The standard version pair retains its common radius ratio of 0.05.
 ```
 
-Download the [five-backend record](../_static/examples/backend-comparison.json)
-for per-component metrics, common time ranges, input hashes and model/parameter
-metadata. Run `python examples/compare_backends.py` after the five dynamic
-examples, including both QSEIS `--regional` commands, to regenerate the figures
-and checks. Its backend path options accept independent output directories.
+## Time origins, model boundaries and spatial convergence
+
+Native starts, in seconds since source origin, are:
+
+| Backend | 300 km | 600 km | 900 km |
+| --- | ---: | ---: | ---: |
+| QSEIS06/2025 and QSSP2020 | 0 | 0 | 0 |
+| SPGRN2012 | -10 | 20 | 50 |
+| SPGRN2020 | 3 | 40 | 78 |
+
+SPGRN2012 rounds `t0 + distance/v0`; SPGRN2020 rounds the P onset minus
+`green_before_p`. The examples read those native start records.
+Compare physical times, not sample indices, without fitting a 32 s
+source-centroid shift. The 256 exported samples span 1020 s from each start.
+
+QSEIS uses a 24-row layered model continued as a half-space, with the
+flat-Earth transformation enabled; the spherical examples use the complete
+Earth profile. Flattening does not restore omitted deep structure.
+Integration also differs: the Python examples use `cumsum * dt`, while
+QSSP accumulates displacement in Fortran from a zero initial value.
+Model boundaries, spatial truncation and integration baselines remain
+distinct; their individual contributions have not been isolated.
+
+| Spherical setting | Actual maximum degree in the new native spectrum header |
+| --- | ---: |
+| SPGRN2012, `max_slowness=0` | 5293 |
+| SPGRN2020, `max_slowness=0` | 4304 |
+| QSSP2020, `min_harmonic=2000, max_harmonic=8000` | 2001 |
+
+A zero slowness input selects automatic full-wavefield truncation in SPGRN;
+the sum remains finite. QSSP's minimum constrains its frequency-dependent
+**upper cutoff**; it does not exclude low degrees. Its maximum also affects
+allocation and spatial differential filtering in synthesis. Equal spectrum
+files therefore need not give equal waveforms after changing that maximum.
+
+These header values are observations, not general convergence guarantees.
+The historical parameter sweep used 0.0625 Hz and does not establish
+convergence at 0.125 Hz. Further checks must vary spatial controls, model
+extent and integration/window choices separately.
+
+## Reproduce and verify
+
+From a clean checkout, run the five examples and compare their saved arrays:
+
+```console
+python examples/qseis06.py --regional
+python examples/qseis2025.py --regional
+python examples/spgrn2012.py
+python examples/spgrn2020.py
+python examples/qssp2020.py
+python examples/compare_backends.py
+```
+
+Add the separately reported radius control with:
+
+```console
+python examples/qseis2025.py --regional --point-source
+python examples/compare_backends.py --qseis2025-point-source examples/output/qseis2025-regional-point-source
+```
+
+On Windows with Conda, prefix Python commands with `conda run -n YOUR_ENV`.
+Use fresh `--output-dir` directories when outputs already exist. Comparison
+backend options accept an example directory or its `disp.npz`.
+An old library cannot gain the new frequency band or STF through `--reuse`
+or an edited summary.
+
+Every current summary includes `spectral_settings`.
+{download}`spectral_settings.py <../../examples/spectral_settings.py>`
+reads spherical native headers and verifies
+`nt=ntcut=1024, dt=4, nf=nfcut=512, df=1/4096`.
+For QSEIS it verifies native input and all output time labels, then derives
+`nf` and `df` using the solver's formula: the text header does not store
+them. The report identifies the evidence source and records `fi` and the
+actual harmonic cutoff.
+
+{download}`compare_backends.py <../../examples/compare_backends.py>`
+repeats these checks against the libraries and summaries, validates archived
+effective sources, and rejects an old 0.0625 Hz band or inconsistent STF.
+The optional control also checks QSEIS2025's native radius input.
+Three standard comparison figures and `comparison.json` are written;
+`source-radius-comparison.png` and control metrics are added only when
+control data are supplied. Preserve native inputs, source evidence and
+models alongside the arrays to keep these checks repeatable.
+
+```{toctree}
+:hidden:
+
+backend-comparison-history
+```

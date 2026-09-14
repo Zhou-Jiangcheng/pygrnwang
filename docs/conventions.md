@@ -154,19 +154,25 @@ formats duration as an integer.
 
 SPGRN stores velocity kernels and its reader integrates displacement or
 differentiates acceleration. QSSP writes each selected observable directly.
-For the spherical examples, a duration `T=64` s describes a normalized
-squared half-sinusoid on 0 to `T`, with its centroid at 32 s. The examples
-do not apply a separate centroid shift.
+All five regional examples target the same normalized squared half-sinusoid
+moment-rate pulse on 0 to `T=64` s, with unit area and centroid 32 s.
+They do not apply a separate centroid shift. SPGRN2020 and QSSP2020
+apply this pulse natively at the complex frequency used for numerical damping.
 
-There is an implementation difference despite the shared physical source
-definition: SPGRN2012's old wavelet routine omits the imaginary frequency
-used in numerical damping, whereas SPGRN2020 and QSSP2020 include it.
-For the examples' 4096 s FFT period and 0.01 anti-aliasing factor, the
-effective SPGRN2012 source-pulse area after damping correction is about
-3.67% larger. This value depends on the duration and damping settings;
-it is not a universal amplitude conversion. See the
-[backend comparison](guides/backend-comparison.md) before interpreting
-small inter-backend amplitude differences.
+For a **positive native** `source_duration`, SPGRN2012's older wavelet
+routine evaluates the pulse at real frequency and omits the imaginary
+frequency. With a 64 s duration, 4096 s FFT period and 0.01 anti-aliasing
+factor, its effective area after damping correction is about 1.0367.
+That native API behavior remains unchanged; the factor depends on the
+source duration and damping and is not a universal amplitude conversion.
+The current SPGRN2012 example avoids that source bias: it sets native
+`source_duration=0`, requests the complete 4092 s / 1024-sample impulse
+velocity, and applies the analytic 64 s pulse in the damped frequency domain.
+It integrates the matched velocity once and only then retains 256 samples.
+This forward convolution uses neither source-spectrum division nor fitted
+amplitudes or time shifts. The physical source therefore matches the other
+regional examples. See the [SPGRN2012 tutorial](backends/spgrn2012.md) for
+its native-header, source-sample and archive-hash checks.
 
 The QSEIS regional examples use `wavelet_type=0` with 1024 custom
 moment-rate nodes spanning 64 s. For target rate
@@ -189,6 +195,28 @@ For this moment-rate pulse, the examples explicitly read `velo`,
 Calling the generic reader with `output_type="disp"` on this type-0
 library does not automatically integrate velocity. The default
 near-distance tutorials retain their built-in type-2 pulse.
+
+### Sampling band and spatial source
+
+All five regional calculations use `dt=4` s and a requested maximum
+frequency of `0.125` Hz, equal to Nyquist. Their 1024-point FFT grid has
+spacing `1/4096` Hz; the native inverse transforms zero the Nyquist bin,
+so the highest computed frequency is `511/4096 = 0.124755859375` Hz.
+These frequency settings are distinct from the source duration or pulse
+shape: the 64 s pulse has a characteristic scale `1/64` Hz but is not a
+hard frequency cutoff. Frequency `f` is in Hz; angular frequency is
+`omega=2*pi*f` in radians per second. The default near-distance QSEIS
+introductions retain their 0.5 s sampling and original short windows.
+
+The standard QSEIS06/QSEIS2025 pair uses Gaussian spatial source smoothing
+with dimensionless `source_radius_ratio=0.05`; the spherical examples use
+point sources with `source_radius=0` km. The QSEIS2025 regional
+`--point-source` control sets its ratio to zero while retaining the same
+mechanism, effective temporal pulse and frequency band. It reduces part
+of the measured residual but does not make the half-space and full-Earth
+calculations equivalent. See the
+[controlled comparison](guides/backend-comparison.md) for the measured
+source-radius effect and remaining differences.
 
 ## Time origin, reduction and arrivals
 

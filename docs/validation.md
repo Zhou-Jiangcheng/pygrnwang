@@ -23,12 +23,12 @@ They are measurements for these small examples, not performance guarantees.
 |---|---|---|---:|---:|---|
 | QSEIS2025 introduction | `--observables all` | displacement `(3, 3, 201)`; strain/stress `(3, 6, 201)` | 13.3 s | 1.21 MiB | [JSON](_static/examples/qseis2025.json) |
 | QSEIS06 introduction | default | `(3, 3, 256)` | 13.0 s | 0.38 MiB | [JSON](_static/examples/qseis06.json) |
-| SPGRN2012 | default | `(3, 3, 256)` | 9.4 s | 12.54 MiB | [JSON](_static/examples/spgrn2012.json) |
-| SPGRN2020 | default, complete wavefield | `(3, 3, 256)` | 17.1 s | 116.02 MiB | [JSON](_static/examples/spgrn2020.json) |
-| QSSP2020 | default, harmonics 2000/8000 | `(3, 3, 256)` | 38.2 s | 330.63 MiB | [JSON](_static/examples/qssp2020.json) |
+| SPGRN2012 | default, impulse + shared STF | `(3, 3, 256)` | 44.7 s | 203.41 MiB | [JSON](_static/examples/spgrn2012.json) |
+| SPGRN2020 | default, complete wavefield | `(3, 3, 256)` | 62.5 s | 266.14 MiB | [JSON](_static/examples/spgrn2020.json) |
+| QSSP2020 | default, harmonics 2000/8000 | `(3, 3, 256)` | 86.3 s | 657.98 MiB | [JSON](_static/examples/qssp2020.json) |
 | EDGRN2 → EDCMP2 | default, including both solvers | `(3, 3)` | 3.1 s | 0.17 MiB | [JSON](_static/examples/edgrn_edcmp.json) |
-| QSEIS2025 regional | `--regional --observables all` | displacement `(3, 3, 256)`; strain/stress `(3, 6, 256)` | 248.4 s | 3.66 MiB | [JSON](_static/examples/qseis2025-regional.json) |
-| QSEIS06 regional | `--regional` | `(3, 3, 256)` | 242.4 s | 1.18 MiB | [JSON](_static/examples/qseis06-regional.json) |
+| QSEIS2025 regional | `--regional --observables all` | displacement `(3, 3, 256)`; strain/stress `(3, 6, 256)` | 187.4 s | 3.66 MiB | [JSON](_static/examples/qseis2025-regional.json) |
+| QSEIS06 regional | `--regional` | `(3, 3, 256)` | 186.3 s | 1.18 MiB | [JSON](_static/examples/qseis06-regional.json) |
 
 The dynamic array axes are distance, component and sample. The static axes are
 distance and component. The default displacement-only QSEIS2025 command was also
@@ -42,57 +42,55 @@ The JSON records the exported interval in `output_time_range_s` separately
 from the native `time_window_s`. The refreshed displacement-only run took
 11.4 s.
 
-## Harmonic correction and regional comparison
+## Matched frequency band, mechanism and temporal source
 
-The revised SPGRN2020 example uses `max_slowness=0`; QSSP2020 uses
-`min_harmonic=2000, max_harmonic=8000`. Both current scripts were executed in
-fresh directories to update their figures and JSON records. The
-[controlled harmonic audit](guides/backend-comparison.md) includes nine
-additional parameter-variation calculations: increasing QSSP's minimum from
-2000 to 4000 at fixed maximum 8000 changed the complete saved waveform by
-less than 0.008%. The original parameter sets had produced finite files but
-had not established waveform convergence.
+All five regional scripts were run in fresh directories with 4 s sampling,
+1024 native FFT samples, frequency spacing 1/4096 Hz and a 0.125 Hz maximum.
+Native spectrum headers (SPGRN/QSSP) and input/output grids (QSEIS) were checked:
+512 nonnegative bins are computed through 511/4096 Hz, and Nyquist is zero.
+The three old spherical libraries were rejected because their native headers
+retained only 257 bins, even before checking the declared JSON settings.
 
-The QSEIS regional runs use 300/600/900 km, 4 s sampling, the 24-row model
-and the flat-Earth transformation. Native arrays contain 1024 samples over
-4092 s, with 256 samples over 0–1020 s exported. The first regional runs used
-the native real-frequency wavelet and differed from SPGRN2020 by 10.82%,
-17.52% and 20.74%; those measurements are retained in the
-[before-STF record](_static/examples/backend-comparison-before-stf.json).
+Every script uses the same strike/dip/rake (30/45/90 degrees), azimuth
+(30 degrees), scalar moment (10^15 N m), source depth (10 km), receiver depth
+(0 km), and effective normalized 64 s sin-squared moment-rate pulse.
+SPGRN2012 now uses full-wavefield spectra and the native zero-duration impulse
+branch. Its complete 1024-point velocity is convolved forward with the analytic
+source at the native complex frequencies, then integrated once and cropped to
+256 samples. Quadrature independently verified the full-band source transform
+with relative L2 error 1.75e-15. Input, native-velocity and four NPZ hashes were
+unchanged by compatible reuse. The old positive-duration library was rejected.
 
-The current regional examples instead supply 1024 custom moment-rate nodes
-with damping precompensated to match SPGRN2020's physical 64 s source.
-The effective pulse has unit integral, a 32 s centroid, and time-domain and
-spectral relative L2 errors below 1e-5 against the analytic target. These are
-checked independently of the resulting seismogram amplitude; the example
-never fits a waveform scale factor to improve agreement. It reads velocity,
-strain rate and stress rate explicitly and integrates each once. See the
-[STF record](_static/examples/source-time-function.json) and the updated
-[backend comparison](guides/backend-comparison.md) for the final waveforms.
+QSEIS retains its compensated custom source. Its independent spectral check
+now covers 0–0.125 Hz. Both QSEIS native calculations completed normally;
+their displacement samples were identical and their exported tensor arrays
+were finite. QSEIS2025's original short example still exports 0–100 s.
 
-Both custom-source QSEIS runs completed normally. Displacement arrays again
-matched sample for sample; the additional strain/stress outputs were finite.
-Relative L2 differences from SPGRN2020 were 12.68%, 19.75% and 22.95%, so
-matching the source did not explain or remove the earlier regional discrepancy.
-The source-area excess in the old run had partly offset other differences.
-These results are preserved without fitting a waveform scale or time shift.
+The [current comparison](guides/backend-comparison.md) uses the common native
+origin-time intervals [3,500], [40,500] and [78,500] s, interpolated to 1 s without
+amplitude or time-shift fitting. Relative ENU L2 differences from SPGRN2020 are:
 
-The default near-distance QSEIS results were reread and compared with their
-previous arrays: displacement and the QSEIS2025 tensor outputs were unchanged.
-Trying to reuse a near-distance library in regional mode was rejected, as was
-requesting missing tensors from a displacement-only library. A new tutorial
-run also rejects an existing library directory to prevent old completion
-markers from being mistaken for freshly calculated data.
+| Backend | 300 km | 600 km | 900 km |
+|---|---:|---:|---:|
+| SPGRN2012 | 1.2266% | 0.0739% | 0.0534% |
+| QSSP2020 | 1.2772% | 0.4085% | 2.3022% |
+| QSEIS06 / QSEIS2025, default spatial smoothing | 12.7410% | 19.5740% | 22.7979% |
+| QSEIS2025, point-source control | 11.4926% | 17.0758% | 19.7176% |
 
-`examples/compare_backends.py` saves three overlay figures and a
-[comparison record](_static/examples/backend-comparison.json), using each
-distance's common physical interval through 500 s. It checks the paired QSEIS
-outputs and requires the revised QSSP/SPGRN2020 relative L2 difference to
-remain below 5% for this example. Model, source-spectrum and integration
-limitations are explained in the [comparison guide](guides/backend-comparison.md).
-The example workflow now runs both regional QSEIS commands and this comparison
-on each supported CI platform; the archived run below predates these additions.
+The point-source control only changes QSEIS2025's Gaussian spatial-source ratio
+from 0.05 to zero; its model and temporal source samples are unchanged. That
+additional Windows run took 647.470 s and retained 1,005,149 bytes in 27 files;
+its `(3,3,256)` displacement was finite. See the
+[point-source record](_static/examples/qseis2025-point-source.json).
+It reduces only part of the residual and was not added to every CI calculation.
+QSEIS06 has the ratio fixed at 0.05 in the solver. No Fortran algorithm was changed.
 
+The fresh runtimes and output sizes above are preserved separately from the
+short compatible rereads used to check the final scripts and metadata. Archived
+JSON records identify those post-run checks explicitly. Older frequency-cutoff,
+harmonic and STF comparisons remain in the
+[historical audit](guides/backend-comparison-history.md).
+The initial cross-platform archive below predates these updated settings.
 ## Initial cross-platform installation and execution
 
 [GitHub Actions run 34801126315](https://github.com/Zhou-Jiangcheng/pygrnwang/actions/runs/34801126315)
@@ -173,7 +171,7 @@ its own `summary.json`, with the environment, elapsed time, array dimensions,
 maximum absolute value and output size. `--reuse` repeats the reader/plot checks
 without native recomputation and writes `summary-reuse.json`.
 
-The base runs check installation and workflow; the additional comparison records specific numerical checks. The tutorial model uses the bundled
+The base runs check installation and workflow; the additional comparison records verified frequency grids, temporal sources and specific numerical checks. The tutorial model uses the bundled
 AK135 elastic structure with explicit constant Qp = 600 and Qs = 300. Regional
 examples truncate it at 809.5 km; spherical examples retain the full structure.
 The figures are not a claim that these different discretizations, source time
