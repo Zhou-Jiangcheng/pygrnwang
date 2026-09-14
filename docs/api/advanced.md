@@ -36,6 +36,8 @@ call_edgrn2(obs_depth, path_green, check_finished=False)
 
 ## pygrnwang.create_qseis06_bulk
 
+**Deprecated backend: QSEIS06.** For new calculations use QSEIS2025, rebuild the library and revalidate settings and results.
+
 [Read the implementation](https://github.com/Zhou-Jiangcheng/pygrnwang/blob/main/pygrnwang/create_qseis06_bulk.py).
 
 ```python
@@ -43,6 +45,8 @@ create_order_ind(order, diff_accu_order)
 ```
 
 ## pygrnwang.create_qseis06
+
+**Deprecated backend: QSEIS06.** For new calculations use QSEIS2025, rebuild the library and revalidate settings and results.
 
 [Read the implementation](https://github.com/Zhou-Jiangcheng/pygrnwang/blob/main/pygrnwang/create_qseis06.py).
 
@@ -131,6 +135,8 @@ convert_pd2bin_qssp2020(path_green, event_depth, receiver_depth, output_type_ind
 ```
 
 ## pygrnwang.create_spgrn2012
+
+**Deprecated backend: SPGRN2012.** For new calculations use SPGRN2020, rebuild the library and revalidate settings, time alignment and results.
 
 [Read the implementation](https://github.com/Zhou-Jiangcheng/pygrnwang/blob/main/pygrnwang/create_spgrn2012.py).
 
@@ -244,6 +250,8 @@ interpolate_values(xmin, xmax, nx, ymin, ymax, ny, v_array, obs_array)
 
 ## pygrnwang.read_qseis06_diff
 
+**Deprecated backend: QSEIS06.** Use QSEIS2025 direct tensor outputs for new calculations, after rebuilding and validating the library. This backend status does not deprecate generic tensor utilities.
+
 [Read the implementation](https://github.com/Zhou-Jiangcheng/pygrnwang/blob/main/pygrnwang/read_qseis06_diff.py).
 
 ```python
@@ -251,6 +259,8 @@ diff_central_1order(v_array, diff_accu_order)
 ```
 
 ## pygrnwang.read_qseis06
+
+**Deprecated backend: QSEIS06.** Use QSEIS2025 readers with a newly built and validated QSEIS2025 library for new calculations.
 
 [Read the implementation](https://github.com/Zhou-Jiangcheng/pygrnwang/blob/main/pygrnwang/read_qseis06.py).
 

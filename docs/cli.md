@@ -7,9 +7,9 @@ The package registers the following commands during installation:
 | `pygrnwang` | Print an installation-success message |
 | `edgrn2` | Launch the packaged EDGRN 2 executable |
 | `edcmp2` | Launch the packaged EDCMP 2 executable |
-| `qseis06` | Launch the packaged QSEIS06 executable |
+| `qseis06` **(deprecated)** | Launch the packaged QSEIS06 executable; use [QSEIS2025](backends/qseis2025.md) for new calculations |
 | `qseis2025` | Launch the packaged QSEIS2025 executable |
-| `spgrn2012` | Launch the packaged SPGRN2012 executable |
+| `spgrn2012` **(deprecated)** | Launch the packaged SPGRN2012 executable; use [SPGRN2020](backends/spgrn2020.md) for new calculations |
 | `spgrn2020` | Launch the packaged SPGRN2020 executable |
 | `qssp2020` | Launch the packaged QSSP2020 executable |
 

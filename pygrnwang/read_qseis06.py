@@ -118,6 +118,13 @@ def seek_qseis06(
 ):
     """Synthesize qseis06 waveforms from a precomputed Green library.
 
+    .. warning::
+
+        QSEIS06 is deprecated. Use QSEIS2025 for new calculations.
+        Rebuild the Green library with the replacement backend and revalidate
+        numerical settings, source and time conventions, and results; existing
+        libraries and parameter choices are not guaranteed to be interchangeable.
+
     Parameters
     ----------
     path_green : str

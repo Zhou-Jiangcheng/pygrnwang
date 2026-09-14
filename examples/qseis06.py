@@ -1,4 +1,8 @@
-"""Build, read and plot a three-distance QSEIS06 displacement library."""
+"""Deprecated QSEIS06 tutorial; use qseis2025.py for new calculations.
+
+Retained to build, read and plot existing QSEIS06 workflows. Migration requires
+rebuilding the library and validating the replacement backend settings.
+"""
 from common import (MECHANISM, MOMENT_NM, finish, parser_for, prepare,
                     save_waveforms)
 from pygrnwang.create_qseis06_bulk import (
