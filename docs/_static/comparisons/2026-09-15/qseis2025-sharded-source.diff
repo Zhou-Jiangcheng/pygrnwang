@@ -1,0 +1,67 @@
+diff --git a/fortran_src_codes/qseis2025_src/qsglobal.h b/fortran_src_codes/qseis2025_src/qsglobal.h
+index 38b75d0..df95adb 100644
+--- a/fortran_src_codes/qseis2025_src/qsglobal.h
++++ b/fortran_src_codes/qseis2025_src/qsglobal.h
+@@ -6,7 +6,7 @@ c     nrmax: max. number of traces;
+ c     nfmax: max. number of frequency samples
+ c
+       integer*4 nzmax,lmax,nrmax,nfmax,ndtransmax
+-      parameter(lmax=500)
++      parameter(lmax=2048)
+       parameter(nzmax=lmax+2)
+       parameter(nrmax=101,nfmax=4096)
+       parameter(ndtransmax=4)
+diff --git a/fortran_src_codes/qseis2025_src/qswvint.f b/fortran_src_codes/qseis2025_src/qswvint.f
+index 187ef5a..95f63dd 100644
+--- a/fortran_src_codes/qseis2025_src/qswvint.f
++++ b/fortran_src_codes/qseis2025_src/qswvint.f
+@@ -6,6 +6,8 @@ c
+       include 'qsglobal.h'
+ c
+       integer*4 istp,n,nrec,l,lf,lf1,i,ir,nrr,nrs
++      integer*4 lfbegin,lfend,envstat,envlen,ioerr
++      character*32 envfirst,envlast
+       integer*4 ik,ik1,ik2,nk1,nk2,nbsj,idtrans
+       real*8 f,fcut,k,kc,dk,slwn
+       real*8 pi,pi2,rr,rs,delta,cmax,ymax,yabs
+@@ -191,7 +193,25 @@ c
+      &     1000.d0*kcut2(1)/(pi2*fcut),' / ',
+      &     1000.d0*kcut2(4)/(pi2*fcut),' s/km'
+ c
+-      do lf=lf1,nf
++      call get_environment_variable('PGW_FREQ_START',envfirst,
++     &     length=envlen,status=envstat)
++      if(envstat.ne.0.or.envlen.le.0)then
++        stop 'Error: PGW_FREQ_START must be defined'
++      endif
++      read(envfirst,*,iostat=ioerr)lfbegin
++      if(ioerr.ne.0)stop 'Error: invalid PGW_FREQ_START'
++      call get_environment_variable('PGW_FREQ_STOP',envlast,
++     &     length=envlen,status=envstat)
++      if(envstat.ne.0.or.envlen.le.0)then
++        stop 'Error: PGW_FREQ_STOP must be defined'
++      endif
++      read(envlast,*,iostat=ioerr)lfend
++      if(ioerr.ne.0)stop 'Error: invalid PGW_FREQ_STOP'
++      if(lfbegin.lt.1.or.lfend.gt.nf.or.lfbegin.gt.lfend)then
++        stop 'Error: frequency shard must lie within 1..nf'
++      endif
++      write(*,*)'Frequency shard:',lfbegin,lfend,' of ',nf
++      do lf=max0(lf1,lfbegin),min0(nf,lfend)
+         f=dble(lf-1)*df
+         n=nno(ls)
+         wvlen=vp(n)/(f+df)
+diff --git a/fortran_src_codes/qseis2025_src/qsfftinv.f b/fortran_src_codes/qseis2025_src/qsfftinv.f
+index a5debbc..b33e920 100644
+--- a/fortran_src_codes/qseis2025_src/qsfftinv.f
++++ b/fortran_src_codes/qseis2025_src/qsfftinv.f
+@@ -132,7 +132,7 @@ c
+       enddo
+       close(20)
+ 1003  format(f12.5,$)
+-1004  format(E12.4,$)
+-1005  format(E12.4)
++1004  format(E24.15,$)
++1005  format(E24.15)
+       return
+       end

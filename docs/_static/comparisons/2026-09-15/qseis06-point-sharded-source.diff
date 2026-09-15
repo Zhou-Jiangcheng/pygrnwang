@@ -1,0 +1,78 @@
+diff --git a/fortran_src_codes/qseis06_src/qsglobal.h b/fortran_src_codes/qseis06_src/qsglobal.h
+index d9437cd..0f663c4 100644
+--- a/fortran_src_codes/qseis06_src/qsglobal.h
++++ b/fortran_src_codes/qseis06_src/qsglobal.h
+@@ -6,7 +6,7 @@ c     nrmax: max. number of traces;
+ c     nfmax: max. number of frequency samples
+ c
+       integer*4 nzmax,lmax,nrmax,nfmax,ndtransmax
+-      parameter(lmax=500)
++      parameter(lmax=2048)
+       parameter(nzmax=lmax+2)
+       parameter(nrmax=101,nfmax=8192)
+       parameter(ndtransmax=4)
+diff --git a/fortran_src_codes/qseis06_src/qswvint.f b/fortran_src_codes/qseis06_src/qswvint.f
+index fc2eef2..c2fe332 100644
+--- a/fortran_src_codes/qseis06_src/qswvint.f
++++ b/fortran_src_codes/qseis06_src/qswvint.f
+@@ -5,7 +5,9 @@ c
+ c
+       include 'qsglobal.h'
+ c
+-      integer*4 istp,n,nrec,l,lf,lf1,i,ir,nrr,nrs
++      integer*4 istp,n,nrec,l,lf,lf1,i,ir,nrr,nrs
++      integer*4 lfbegin,lfend,envstat,envlen,ioerr
++      character*32 envfirst,envlast
+       integer*4 ik,ik1,ik2,nk1,nk2,nbsj,idtrans
+       real*8 f,fcut,k,kmax,kc,dk,slwn
+       real*8 pi,pi2,rr,rs,delta,cmax,ymax,yabs
+@@ -22,7 +24,7 @@ c
+ c
+       real*8 eps,rd2r
+       complex*16 c2
+-      data eps,rd2r/1.0d-06,5.0d-02/
++      data eps,rd2r/1.0d-06,0.0d+00/
+       data c2/(2.d0,0.d0)/
+ c
+ c     ics = 1  when the azmuth-factor is cos(ms*theta) for poloidal mode
+@@ -178,7 +180,25 @@ c
+      &     1000.d0*kcut2(1)/(pi2*fcut),' / ',
+      &     1000.d0*kcut2(4)/(pi2*fcut),' s/km'
+ c
+-      do lf=lf1,nf
++      call get_environment_variable('PGW_FREQ_START',envfirst,
++     &     length=envlen,status=envstat)
++      if(envstat.ne.0.or.envlen.le.0)then
++        stop 'Error: PGW_FREQ_START must be defined'
++      endif
++      read(envfirst,*,iostat=ioerr)lfbegin
++      if(ioerr.ne.0)stop 'Error: invalid PGW_FREQ_START'
++      call get_environment_variable('PGW_FREQ_STOP',envlast,
++     &     length=envlen,status=envstat)
++      if(envstat.ne.0.or.envlen.le.0)then
++        stop 'Error: PGW_FREQ_STOP must be defined'
++      endif
++      read(envlast,*,iostat=ioerr)lfend
++      if(ioerr.ne.0)stop 'Error: invalid PGW_FREQ_STOP'
++      if(lfbegin.lt.1.or.lfend.gt.nf.or.lfbegin.gt.lfend)then
++        stop 'Error: frequency shard must lie within 1..nf'
++      endif
++      write(*,*)'Frequency shard:',lfbegin,lfend,' of ',nf
++      do lf=max0(lf1,lfbegin),min0(nf,lfend)
+         f=dble(lf-1)*df
+         n=nno(ls)
+         wvlen=vp(n)/(f+df)
+diff --git a/fortran_src_codes/qseis06_src/qsfftinv.f b/fortran_src_codes/qseis06_src/qsfftinv.f
+index fa6e942..ea747d2 100644
+--- a/fortran_src_codes/qseis06_src/qsfftinv.f
++++ b/fortran_src_codes/qseis06_src/qsfftinv.f
+@@ -132,7 +132,7 @@ c
+       enddo
+       close(20)
+ 1003  format(f12.5,$)
+-1004  format(E12.4,$)
+-1005  format(E12.4)
++1004  format(E24.15,$)
++1005  format(E24.15)
+       return
+       end
