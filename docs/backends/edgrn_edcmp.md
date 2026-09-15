@@ -48,8 +48,7 @@ converge it for your geometry and material model.
 `edgrn.cl`. The low-level EDCMP writer also has a homogeneous half-space
 mode with `layered=False` and `lam`/`mu` in Pa. Layered mode uses a
 1 m × 1 m rectangle with 1 m slip. Half-space mode uses a unit-potency
-point source (1 m³, Okada's DC3D0). A 1 m rectangle there caused
-far-field artifacts at equal source and receiver depths. The complete tutorial
+point source (1 m³, Okada's DC3D0). The complete tutorial
 uses the layered mode and the model-based normalization.
 
 The four `output_observables` positions are displacement, strain,

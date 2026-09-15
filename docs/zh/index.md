@@ -2,7 +2,7 @@
 
 pygrnwang 为 Wang 系列 Fortran 程序提供 Python 前端，用于建立格林函数库、合成地震波形及计算静态形变。
 
-本节提供中文安装和快速开始。后端细节、科学约定和 API 以英文维护，示例脚本与英文文档共用。
+本节提供中文安装、快速开始和后端对比结果。完整后端细节、科学约定和 API 以英文维护，示例脚本与英文文档共用。
 
 **QSEIS06 和 SPGRN2012 已标记为 deprecated（不建议用于新计算）。**
 新任务请分别使用 [QSEIS2025](../backends/qseis2025.md) 和
@@ -14,6 +14,7 @@ pygrnwang 为 Wang 系列 Fortran 程序提供 Python 前端，用于建立格�
 
 installation
 quickstart
+backend-comparison
 ```
 
 ## 从哪里开始

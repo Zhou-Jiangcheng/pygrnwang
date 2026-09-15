@@ -15,6 +15,19 @@ main reader returns displacement, velocity or acceleration. It remains
 useful for reproducing QSEIS06 calculations and comparing an established
 library with the newer direct-observable workflow.
 
+The [fresh comparison dated 2026-09-15](../guides/backend-comparison.md)
+uses 0.25 s sampling, a 2 Hz Nyquist limit, a 1.25 s effective source pulse
+and receivers 1 km deep at 300, 600 and 900 km. It is separate from the
+near-distance and 64 s regional tutorials below; these commands do not
+produce the new comparison figures.
+
+That comparison retains stock QSEIS06's frequency-dependent Gaussian
+smoothing and adds an **isolated `rd2r=0` point-source control build**.
+The control is not the released backend or an option in its Python API.
+For the tested settings, stock QSEIS06 and ratio-0.05 QSEIS2025 have
+bit-identical saved displacement arrays, as do the two point-source
+controls. See the comparison for the limits of this result.
+
 ## Complete calculation
 
 ```console
@@ -69,7 +82,7 @@ example multiplies its samples by `exp(2*pi*fi*t)` to compensate for
 QSEIS's numerical damping convention; `fi` is negative. The written
 samples are not renormalized: their area is approximately 0.9647094,
 while the effective physical pulse has unit area and a 32 s centroid.
-The [STF verification](../guides/backend-comparison.md#matching-the-effective-source-time-function)
+The [STF verification](../guides/backend-comparison-64s.md#matching-the-effective-source-time-function)
 checks the actual pulse and its spectrum against the target.
 
 A custom type-0 pulse does not trigger the ordinary reader's automatic
@@ -100,12 +113,13 @@ This differs from the spherical examples' point sources even when their
 effective time functions agree. The default QSEIS2025 regional example
 retains the same 0.05 ratio for comparison with QSEIS06.
 
-The [QSEIS2025 point-source control](qseis2025.md#point-source-control)
+In the archived 64 s comparison, the
+[QSEIS2025 point-source control](qseis2025.md#point-source-control)
 turns off this spatial smoothing. It reduces the discrepancy against
 SPGRN2020, but the measured relative differences remain 11.493%, 17.076%
 and 19.718% at 300, 600 and 900 km. Spatial smoothing therefore explains
 only part of the discrepancy. See the
-[regional comparison limits](../guides/backend-comparison.md#qseis-at-the-same-regional-distances)
+[regional comparison limits](../guides/backend-comparison-64s.md#qseis-at-the-same-regional-distances)
 for the remaining differences in geometry, model and numerical treatment.
 
 Use `--regional --reuse` only for a completed library with the current

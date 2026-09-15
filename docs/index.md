@@ -39,6 +39,13 @@ Compare static and dynamic workflows, spherical and layered models, and supporte
 
 The [scientific conventions](conventions.md) are part of the interface. In particular, vector and tensor orders, time reduction and source-duration units vary across backends.
 
+## Compare displacement and stress
+
+The [fresh backend comparison](guides/backend-comparison.md) shows displacement
+from all five dynamic backends and six-component QSEIS2025/QSSP2020 stress at
+300, 600 and 900 km. It includes matched-source controls, downloadable arrays
+and a script to replot the results. [中文说明](zh/backend-comparison.md).
+
 ## What is included
 
 The package wraps **EDGRN/EDCMP**, **QSEIS06 (deprecated)**, **QSEIS2025**, **SPGRN2012 (deprecated)**, **SPGRN2020** and **QSSP2020**. Python provides preprocessing, serial and parallel orchestration, library lookup, source synthesis, coordinate transforms and signal processing. TauP travel times run through Java subprocesses or an ObsPy fallback.

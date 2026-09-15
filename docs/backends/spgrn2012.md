@@ -15,6 +15,12 @@ SPGRN2012 computes waveforms for a radially layered spherical Earth. Its
 time windows use a reduction offset and velocity, which makes it useful
 for reproducing libraries based on `t0 + distance / v0`.
 
+The [fresh comparison dated 2026-09-15](../guides/backend-comparison.md)
+includes a separate SPGRN2012 calculation with 0.25 s sampling, a 2 Hz
+Nyquist limit, a 1.25 s effective source pulse and receivers 1 km deep.
+This tutorial keeps its 4 s sampling, 64 s source and surface receivers;
+its command does not reproduce the new higher-frequency comparison.
+
 ## Complete calculation
 
 ```console
@@ -146,8 +152,8 @@ SPGRN2020. Those results used a different frequency cutoff and SPGRN2012's
 native real-frequency wavelet, whose effective area became about 3.67%
 larger after damping correction. They are historical results, not a
 characterization of the source-matched example above. See the
-[controlled backend comparison](../guides/backend-comparison.md) for the
-current calculation, measured differences and remaining model/sampling
+[archived 64 s comparison](../guides/backend-comparison-64s.md) for the
+source-matched tutorial, measured differences and remaining model/sampling
 limitations. Matching the physical source and requested frequency band
 does not establish exact equivalence between the solvers.
 

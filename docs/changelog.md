@@ -2,6 +2,23 @@
 
 ## Unreleased documentation
 
+### Fresh displacement and stress comparison, 15 September 2026
+
+- Added a new five-backend displacement comparison and QSEIS2025/QSSP2020
+  six-component stress at 300/600/900 km, with fresh AK135-FC libraries,
+  source/receiver depths 10/1 km, 0.25 s sampling, a common 2 Hz Nyquist band
+  and a normalized 1.25 s source. Added full-window and strong-wave plots,
+  downloadable arrays/metrics/model and a portable replotting script.
+- Documented the isolated QSEIS06 zero-smoothing control and matched-radius
+  equality with QSEIS2025. Distinguished Gaussian wavenumber smoothing from
+  the temporal STF, common continuous integration from native direct outputs,
+  and timing diagnostics from the unshifted comparison metrics.
+- Added a Chinese result summary and preserved the previous 64 s comparison
+  separately. Standard tutorial parameters and QSEIS2025's introductory
+  100 s crop remain unchanged; the new scientific record is Windows-only.
+
+### Earlier tutorial documentation
+
 - Unified all five regional examples at a 0.125 Hz Nyquist limit, with verified
   native frequency grids, the same mechanism, moment and physical 64 s source.
   SPGRN2012 now uses its native impulse branch and an analytic forward source

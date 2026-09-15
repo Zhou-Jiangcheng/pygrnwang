@@ -70,8 +70,15 @@ python examples/qseis2025.py --regional --observables all
 python examples/qseis06.py --regional
 ```
 
-See the [backend comparison](https://zhou-jiangcheng.github.io/pygrnwang/guides/backend-comparison.html)
-for spherical-harmonic convergence and the limits of comparing layered and spherical models.
+The [backend comparison](https://zhou-jiangcheng.github.io/pygrnwang/guides/backend-comparison.html)
+now includes a separate fresh 2 Hz / 1.25 s source calculation: five-backend
+regional displacement, QSEIS2025/QSSP2020 six-component stress, and Gaussian
+smoothing controls. The commands above retain the lighter 64 s tutorial
+protocol. Replot the documented new result from its committed arrays with:
+
+```bash
+python examples/plot_documented_comparison.py --output-dir examples/output/documented-comparison
+```
 
 Other complete workflows are listed in [the example scripts](https://github.com/Zhou-Jiangcheng/pygrnwang/tree/main/examples).
 Read the [scientific conventions](https://zhou-jiangcheng.github.io/pygrnwang/conventions.html) before interpreting

@@ -4,8 +4,9 @@ This page preserves the earlier comparison with a **0.0625 Hz spherical
 cutoff and a 0.125 Hz QSEIS Nyquist limit**. Its measurements, parameter
 scans and references to "current" examples describe that historical
 configuration, including the earlier SPGRN2012 effective source. Use the
-[current comparison](backend-comparison.md) for the unified frequency band
-and effective source. Downloaded source helpers and reproduction scripts
+[current comparison](backend-comparison.md) for the fresh 2 Hz / 1.25 s
+calculation, or the [64 s tutorial comparison](backend-comparison-64s.md)
+for the later unified 0.125 Hz example protocol. Downloaded source helpers and reproduction scripts
 now contain the updated implementation; they are not archived historical
 scripts.
 

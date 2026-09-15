@@ -7,7 +7,52 @@ built and executed all six workflows on Linux, Windows and macOS, as recorded
 below. The current spherical examples were recalculated after the harmonic
 cutoff audit, and additional QSEIS regional workflows were run at 300/600/900 km.
 
-## Environment and results
+## Fresh 2 Hz displacement and stress comparison
+
+On 15 September 2026, all five dynamic backends and two Gaussian smoothing
+controls completed new calculations at source depth 10 km, receiver depth
+1 km and distances 300/600/900 km. The shared AK135-FC model, 0.25 s sampling,
+2 Hz maximum and 1.25 s sin² source differ from the lightweight tutorials
+below. See the [fresh report](guides/backend-comparison.md) and
+[public validation summary](_static/comparisons/2026-09-15/result-summary.json).
+
+| Calculation | Complete processed displacement shape | Runtime | Recorded output size, decimal |
+| --- | --- | ---: | ---: |
+| QSEIS06, native 0.05 smoothing | `(3, 3, 2048)` | 971 s | 2.3 MB |
+| QSEIS2025, 0.05 smoothing control | `(3, 3, 2048)` | 983 s | 5.0 MB |
+| QSEIS06, isolated point-source control, eight frequency tasks | `(3, 3, 2048)` | 609 s | 24.9 MB |
+| QSEIS2025, point source, eight frequency tasks | `(3, 3, 2048)` | 689 s | 52.8 MB |
+| SPGRN2012 | `(3, 3, 2048)` | 1419 s | 1.207 GB |
+| SPGRN2020 | `(3, 3, 2048)` | 1542 s | 2.777 GB |
+| QSSP2020, new spectra and six basis-source syntheses | `(3, 3, 2048)` | 1908 s | 11.715 GB |
+
+QSEIS2025 and QSSP2020 stress arrays have shape `(3, 6, 2048)` and units Pa.
+The public comparison arrays contain 1601 samples on 0–400 s. Complete
+native records, finite values, source area/centroid/spectrum, executable
+hashes and QSSP's native rate/direct-output integration identity were checked.
+All 636 published metric rows were independently recomputed from the public
+arrays, with a maximum discrepancy of `1.42e-14` percentage points.
+
+Matched-radius QSEIS versions were bit-identical in displacement at both
+ratios 0.05 and 0. The latter QSEIS06 result requires an isolated control
+build; it is not the released default. The isolated QSEIS builds increase
+layer capacity to 2048, and the point calculations sum eight disjoint
+frequency ranges with validated linear superposition. Their source diffs
+and executable hashes are included in the public data record. No installed
+solver or package default was changed by these controls.
+
+These are **Windows 11** measurements using Python 3.12.13, NumPy 2.3.5,
+SciPy 1.18.0, Matplotlib 3.11.0 and ObsPy 1.5.0. Some calculations overlapped,
+so their elapsed times are not a controlled performance benchmark. Sizes
+include each result directory's retained data and exclude later website
+assets. These scientific runs were not added to per-PR tutorial CI and do
+not extend the older cross-platform validation claim to this new setup.
+
+The {download}`portable plotting script <../examples/plot_documented_comparison.py>`
+replots the committed comparison arrays with NumPy and Matplotlib. It does
+not recompute a native Green's library.
+
+## Environment and results for the lightweight tutorials
 
 The local environment was Windows 11 build 26200, 64-bit CPython 3.12.13, NumPy
 2.3.5, SciPy 1.18.0, pandas 3.0.0, Matplotlib 3.11.0 and ObsPy 1.5.0. Native
@@ -66,7 +111,7 @@ now covers 0–0.125 Hz. Both QSEIS native calculations completed normally;
 their displacement samples were identical and their exported tensor arrays
 were finite. QSEIS2025's original short example still exports 0–100 s.
 
-The [current comparison](guides/backend-comparison.md) uses the common native
+The [earlier 64 s comparison](guides/backend-comparison-64s.md) uses the common native
 origin-time intervals [3,500], [40,500] and [78,500] s, interpolated to 1 s without
 amplitude or time-shift fitting. Relative ENU L2 differences from SPGRN2020 are:
 

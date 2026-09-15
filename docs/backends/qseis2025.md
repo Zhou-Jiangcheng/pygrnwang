@@ -5,6 +5,14 @@ provides direct strain/stress and rotation kernels alongside vectors. Use
 this tutorial for a complete first calculation and for the introductory
 tensor workflow.
 
+The [fresh comparison dated 2026-09-15](../guides/backend-comparison.md)
+adds five-backend displacement and QSEIS2025/QSSP2020 stress comparisons
+with 0.25 s sampling, a 2 Hz Nyquist limit, a 1.25 s effective source pulse
+and receivers 1 km deep. It also separates point-source results from the
+frequency-dependent Gaussian smoothing controls. The commands and figures
+below retain the 0–100 s introduction and the 64 s regional source with
+surface receivers; they do not generate that new comparison.
+
 ## Build and inspect displacement
 
 From the repository root:
@@ -123,7 +131,7 @@ multiplying the input samples by `exp(2*pi*fi*t)`, where `fi<0` is
 the solver's numerical-damping frequency. It does not renormalize the
 written samples: their area is approximately 0.9647094, whereas the
 effective pulse after damping correction has unit area and centroid 32 s.
-See the [STF verification](../guides/backend-comparison.md#matching-the-effective-source-time-function).
+See the [STF verification](../guides/backend-comparison-64s.md#matching-the-effective-source-time-function).
 
 Custom type 0 does not invoke automatic rate conversion in the ordinary
 reader. The example explicitly reads velocity, then integrates once
@@ -172,7 +180,7 @@ spherical examples. The default QSEIS2025 regional calculation retains
 frequency- and distance-dependent spatial smoothing; the spherical
 examples use point sources. The 24-row half-space model and its
 flat-Earth transformation also differ from the complete spherical model.
-See [regional comparison limits](../guides/backend-comparison.md#qseis-at-the-same-regional-distances).
+See [regional comparison limits](../guides/backend-comparison-64s.md#qseis-at-the-same-regional-distances).
 Reuse requires `--regional` and a library built with the current custom
 source and the same selected observables and parameters. Rebuild libraries
 created by the earlier type-2 regional example.
@@ -218,8 +226,9 @@ Point-source control at 300, 600 and 900 km, with the same effective 64 s
 STF, mechanism and 0–1020 s output window as the standard regional example.
 ```
 
-The verified control changed only the spatial-source ratio among the
-numerical parameters; it requested displacement only. Relative L2 differences
+In the archived 64 s comparison, the verified control changed only the
+spatial-source ratio among the numerical parameters; it requested displacement
+only. Relative L2 differences
 against the SPGRN2020 point-source calculation at 0.125 Hz were:
 
 | Distance | QSEIS2025 ratio 0.05 | QSEIS2025 ratio 0 |

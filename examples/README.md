@@ -5,6 +5,22 @@ available for existing workflows. For new calculations use `qseis2025.py`
 and `spgrn2020.py`, respectively. Rebuild libraries and validate the new
 backend's settings and time origin when migrating.
 
+The [fresh single-depth comparison dated 2026-09-15](../docs/guides/backend-comparison.md)
+records a separate five-backend displacement calculation and a
+QSEIS2025/QSSP2020 stress comparison. It uses 0.25 s sampling, a 2 Hz
+Nyquist limit, a 1.25 s effective source pulse and receivers 1 km deep.
+The scripts below retain their existing short introductions and
+4 s/64 s regional tutorials with surface receivers; running them does
+not generate the new comparison results. Their measurements remain in
+the [64 s comparison archive](../docs/guides/backend-comparison-64s.md).
+
+The fresh comparison also isolates the frequency-dependent wavenumber
+Gaussian smoothing: stock QSEIS06 and ratio-0.05 QSEIS2025 have bit-identical
+native displacement arrays for that run, as do their point-source controls.
+The QSEIS06 point result requires an isolated native build with hard-coded
+`rd2r=0.05` changed to zero. It is not the released QSEIS06 default or a new
+example-script option. The comparison guide records this control separately.
+
 Install `pygrnwang` into the Python environment first, including its native
 executables. Run these commands from the repository root:
 
@@ -90,7 +106,7 @@ files, aligns source-origin time and plots 0–500 s in
 `examples/output/backend-comparison/`. It checks the paired QSEIS results and
 records cross-backend differences without fitting time shifts or amplitudes.
 Its path options accept independently calculated libraries. See the
-[comparison guide](../docs/guides/backend-comparison.md) for physical limits.
+[64 s comparison archive](../docs/guides/backend-comparison-64s.md) for physical limits.
 
 Use `--reuse` only with the same script and observables as a successful earlier
 run. It reads and plots the existing library without rebuilding it and saves
@@ -132,7 +148,7 @@ their complete-wavefield branches. QSSP uses
 content and spatial summation and require renewed convergence checks for
 other source depths, distances or bands. SPGRN2020 plots the actual native
 origin-time starts, including their integer-second rounding. See the
-[comparison guide](../docs/guides/backend-comparison.md) for current
+[64 s comparison archive](../docs/guides/backend-comparison-64s.md) for the tutorial
 cross-backend and harmonic-cutoff measurements.
 
 EDGRN requires at least two source depths, so the static library uses 10 and

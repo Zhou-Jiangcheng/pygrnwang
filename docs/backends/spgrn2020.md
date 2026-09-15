@@ -4,6 +4,13 @@ SPGRN2020 builds spherical-Earth waveform libraries whose stored time
 windows begin a chosen interval before direct P. Its native arrival
 tables include onset, takeoff angle and slowness.
 
+The [fresh comparison dated 2026-09-15](../guides/backend-comparison.md)
+uses an independent SPGRN2020 run with 0.25 s sampling, a 2 Hz Nyquist
+limit, a 1.25 s effective source pulse and receivers 1 km deep. It serves
+as the displacement comparison reference, not an exact solution. The
+4 s/64 s surface-receiver tutorial below keeps its existing parameters
+and does not generate the new comparison figures.
+
 ## Complete calculation
 
 ```console
@@ -43,7 +50,7 @@ which chooses a model-dependent slowness limit and a larger low-frequency
 harmonic baseline. It does not restrict the calculation to zero slowness.
 The previous positive cutoff of 0.3 s/km underestimated the required
 low-frequency content at 300 km in this example. See the
-[controlled comparison](../guides/backend-comparison.md) for the evidence
+[archived 64 s comparison](../guides/backend-comparison-64s.md) for the evidence
 and the scope of the revised setting.
 
 `green_before_p=40` requests a window beginning approximately 40 s

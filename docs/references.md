@@ -69,6 +69,13 @@ The tutorials use bundled AK135 elastic velocities/density with deliberately
 chosen constant `Qp=600` and `Qs=300`. Cite the actual model source and
 describe these attenuation choices when reusing the tutorial model in a
 study; do not label it as an unmodified AK135-F attenuation model.
+The separate [15 September comparison](guides/backend-comparison.md) instead
+uses the published model file listed in its downloads, with depth-dependent
+AK135-FC attenuation. Its source setup and component overlays refer to
+DynCFS Fig. 3, extended from the paper's 10 km distance to 300/600/900 km.
+The exact model hash and processing choices distinguish this result from
+the lightweight tutorial examples.
+
 For a publication, replace demonstration settings with a documented
 model and convergence study suited to the intended observations.
 
