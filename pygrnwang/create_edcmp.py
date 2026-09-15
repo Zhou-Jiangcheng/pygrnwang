@@ -10,7 +10,10 @@ fm_base_list = (
     (315.0, 90.0, 0.0),  # [1,0,0,-1,0,0] m1
     (0.0, 90.0, 0.0),  # [0,1,0,0,0,0] mne
     (0.0, 0.0, 180.0),  # [0,0,1,0,0,0] mnd
-    (180.0, 45.0, -90.0),  # [0,0,0,1,0,-1] m2
+    # Conjugate of (180, 45, -90), same tensor. Strike 180 put receivers at
+    # y=0 on the negative extension of a rectangle's edge, where Okada's DC3D
+    # singular-branch test gives inconsistent corners (stress up to 1e5 Pa).
+    (0.0, 45.0, -90.0),  # [0,0,0,1,0,-1] m2
     (0.0, 0.0, 90.0),  # [0,0,0,0,1,0] med
 )
 output_name_list = ("disp", "strain", "stress", "tilt")
@@ -77,8 +80,12 @@ def create_inp_edcmp2(
     )
     lines[91] = "1\n"
 
+    # Layered: 1 m x 1 m rectangle, 1 m slip. Half-space: unit-potency point
+    # source (1 m^3, Okada DC3D0), which has no rectangle-edge singularities.
+    size = 1 if layered else 0
     lines_sources = [
-        "1 1 0 0 %f 1 1 %.1f %.1f %.1f\n" % (event_depth * 1e3, fm[0], fm[1], fm[2])
+        "1 1 0 0 %f %d %d %.1f %.1f %.1f\n"
+        % (event_depth * 1e3, size, size, fm[0], fm[1], fm[2])
     ]
     if layered:
         lines_after_sources[32] = "1\n"
