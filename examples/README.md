@@ -69,16 +69,19 @@ Regional QSEIS uses a custom, normalized 64 s sin-squared moment-rate function
 numerical damping precompensated, so the effective physical pulse matches
 SPGRN2020/QSSP and the source-matched SPGRN2012 example. The input samples
 must not be normalized again: their area is about 0.964709, while the effective
-physical pulse has unit area and a 32 s centroid. The scripts read rate
-kernels and integrate them once before exporting displacement, strain or stress.
+physical pulse has unit area and a 32 s centroid. The scripts request
+`disp`, `strain` or `stress` directly; the readers treat type 0 as a
+moment-rate function and integrate its rate kernels once.
 The helper archives the source samples and numerical checks in
 `source_time_function.npz/json`; reuse verifies these and the generated input.
 
-SPGRN2012 uses a native zero-duration impulse, reads the complete 4092 s
-velocity record (1024 samples), and forward-convolves it with the analytic
-64 s physical source at the native complex frequencies. It integrates once
-before cropping to 256 samples. `spherical_source_time_function.py` saves
-`velocity-impulse.npz`, `velocity-matched.npz` and `source_time_function.npz/json`.
+SPGRN2012 uses a native zero-duration impulse and forward-convolves every
+complete 4092 s Green-function record (1024 samples) with the analytic 64 s
+physical source at the native complex frequencies.
+`spherical_source_time_function.py` writes these to
+`library-source-matched/`; the script reads it with `output_type="disp"`,
+so the reader integrates once before the script crops to 256 samples. It also
+saves `source_time_function.npz/json`.
 Native input records and spectrum headers, the analytic transform and pulse
 samples, and input/output hashes are checked. Thus the current example no
 longer retains the approximately 3.67% source-area bias of SPGRN2012's

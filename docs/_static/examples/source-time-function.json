@@ -29,7 +29,7 @@
     "rate_relative_l2": 1e-05,
     "spectral_relative_l2": 1e-05
   },
-  "reader_instruction": "Read velo/strain_rate/stress_rate; integrate once with cumsum(rate)*4 s in the example",
+  "reader_instruction": "Request disp/strain/stress; the reader integrates the type-0 rate kernels once",
   "input_relative_path": "10.00/0.00/0_0/grn.inp",
   "input_original_sha256": "60e1d673030b4beb47f564b8e358adcdd76da148a029446ffeca44e1d03c5b5e",
   "input_prepared_sha256": "fc95e2e799e808f0afc7f2822ca7824d12254c3ee4e6a55df2a7998db661b5f1",

@@ -1,8 +1,6 @@
 """Build QSEIS2025 introductory or regional traces; optionally include tensors."""
 from pathlib import Path
 
-import numpy as np
-
 from common import (MECHANISM, MOMENT_NM, REGIONAL_SAMPLING_INTERVAL_S, REGIONAL_STF, finish, parser_for, prepare,
                     require_library_settings, save_waveforms)
 from pygrnwang.create_qseis2025_bulk import (
@@ -88,18 +86,13 @@ def main():
             raise ValueError("Requested outputs are absent. Recalculate in a fresh "
                              "--output-dir without --reuse using --observables all.")
     for observable in observables:
-        read_type = ({"disp": "velo", "strain": "strain_rate", "stress": "stress_rate"}
-                     [observable] if args.regional else observable)
+        # Regional type-0 kernels are rates; the reader integrates them before cropping.
         arrays = [MOMENT_NM * seek_qseis2025(
             path_green=library, event_depth_km=10.0, receiver_depth_km=0.0,
             az_deg=30.0, dist_km=distance, focal_mechanism=MECHANISM,
-            srate=1 / dt, output_type=read_type, rotate=True,
+            srate=1 / dt, output_type=observable, rotate=True,
             before_p=None, shift=False, pad_zeros=False,
-        ) for distance in distances]
-        if args.regional:
-            # Integrate every custom-STF rate with the same origin-time rule.
-            arrays = [np.cumsum(values, axis=1) * dt for values in arrays]
-        arrays = [values[:, :output_samples] for values in arrays]
+        )[:, :output_samples] for distance in distances]
         labels = ["E", "N", "U"] if observable == "disp" else ["EE", "EN", "EU", "NN", "NU", "UU"]
         unit = {"disp": "m", "strain": "1", "stress": "Pa"}[observable]
         save_waveforms(output, report, observable, arrays, distances, dt, labels, unit,

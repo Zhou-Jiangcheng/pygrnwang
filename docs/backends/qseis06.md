@@ -85,11 +85,12 @@ while the effective physical pulse has unit area and a 32 s centroid.
 The [STF verification](../guides/backend-comparison-64s.md#matching-the-effective-source-time-function)
 checks the actual pulse and its spectrum against the target.
 
-A custom type-0 pulse does not trigger the ordinary reader's automatic
-conversion between velocity and displacement. This example explicitly
-reads `output_type="velo"`, integrates once using `cumsum * dt`, and
-then saves displacement. The default near-distance example retains
-type 2 with four 0.5 s samples; its behavior is unchanged.
+A custom type-0 pulse is a moment-rate function, so the library stores
+velocity kernels, as for type 1. This example requests
+`output_type="disp"`; the reader integrates once using `cumsum * dt`
+over the complete native record, and the script then crops and saves
+displacement. The default near-distance example retains type 2 with
+four 0.5 s samples; its behavior is unchanged.
 
 ```{figure} ../_static/examples/qseis06-regional.png
 :alt: QSEIS06 regional displacement at 300, 600 and 900 km.

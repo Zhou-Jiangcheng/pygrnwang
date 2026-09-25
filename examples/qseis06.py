@@ -5,8 +5,6 @@ rebuilding the library and validating the replacement backend settings.
 """
 from pathlib import Path
 
-import numpy as np
-
 from common import (MECHANISM, MOMENT_NM, REGIONAL_SAMPLING_INTERVAL_S, REGIONAL_STF, finish, parser_for, prepare,
                     require_library_settings, save_waveforms)
 from pygrnwang.create_qseis06_bulk import (
@@ -25,7 +23,8 @@ def main():
     if args.output_dir is None:
         directory = "qseis06-regional" if args.regional else "qseis06"
         args.output_dir = Path(__file__).resolve().parent / "output" / directory
-    output, library, model, report, started = prepare(args, "QSEIS06")
+    output, library, model, report, started = prepare(
+        args, "QSEIS06", extra={"display_name": "QSEIS06 (deprecated)"})
     dt, window = (REGIONAL_SAMPLING_INTERVAL_S, 4092.0) if args.regional else (0.5, 127.5)
     distances = [300.0, 600.0, 900.0] if args.regional else [30.0, 60.0, 90.0]
     wavelet_duration = 16 if args.regional else 4
@@ -58,16 +57,13 @@ def main():
     )
     if args.regional and args.reuse:
         source_time_function = validate_qseis_stf(library)
+    # Regional type-0 kernels are rates; the reader integrates them before cropping.
     arrays = [MOMENT_NM * seek_qseis06(
         path_green=library, event_depth_km=10.0, receiver_depth_km=0.0,
         az_deg=30.0, dist_km=distance, focal_mechanism=MECHANISM,
-        srate=1 / dt, output_type="velo" if args.regional else "disp", rotate=True,
+        srate=1 / dt, output_type="disp", rotate=True,
         before_p=None, shift=False, pad_zeros=False,
-    ) for distance in distances]
-    if args.regional:
-        # Custom type-0 Green functions are rates; integrate before cropping.
-        arrays = [np.cumsum(values, axis=1) * dt for values in arrays]
-    arrays = [values[:, :output_samples] for values in arrays]
+    )[:, :output_samples] for distance in distances]
     save_waveforms(output, report, "disp", arrays, distances, dt, ["E", "N", "U"], "m",
                    expected_samples=output_samples,
                    time_limits=(0.0, output_end) if args.regional else None)

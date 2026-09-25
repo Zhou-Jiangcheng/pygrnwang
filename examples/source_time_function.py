@@ -6,8 +6,8 @@ we supply r(t)*exp(2*pi*fi*t), where r(t)=2/64*sin(pi*t/64)**2 on [0, 64] s.
 The input's integral is about 0.9647: renormalizing that input to unit area would
 undo the physical compensation. The effective moment-rate integral is one.
 
-Type 0 returns rate kernels. Read velocity, strain_rate, or stress_rate and
-integrate once in the calling example; the reader does not integrate type 0.
+Type 0 returns rate kernels. The readers treat it like type 1, so request
+disp, strain, or stress directly; they integrate the rates once.
 This helper is deliberately restricted to the regional tutorial's one group.
 """
 import hashlib
@@ -143,7 +143,7 @@ def _source_definition():
         "spectral_max_absolute_error_0_to_0_0625_hz": float(np.max(np.abs(spectrum - expected_spectrum))),
         "physical_validation_limits": {"area_absolute_error": 1e-8, "centroid_absolute_error_s": 1e-5,
                                        "rate_relative_l2": 1e-5, "spectral_relative_l2": 1e-5},
-        "reader_instruction": "Read velo/strain_rate/stress_rate; integrate once with cumsum(rate)*4 s in the example",
+        "reader_instruction": "Request disp/strain/stress; the reader integrates the type-0 rate kernels once",
     }
     return arrays, metadata
 
@@ -209,6 +209,8 @@ def validate_qseis_stf(library):
     metadata = json.loads(metadata_bytes.decode("utf-8"))
     arrays, expected = _source_definition()
     for key, value in expected.items():
+        if key == "reader_instruction":
+            continue  # Guidance text only; archives from earlier runs stay valid.
         actual = metadata.get(key)
         if isinstance(value, float):
             valid = isinstance(actual, (float, int)) and np.isclose(actual, value, rtol=1e-12, atol=1e-14)

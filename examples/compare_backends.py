@@ -28,6 +28,7 @@ DISTANCES = np.array([300.0, 600.0, 900.0])
 COMPONENTS = ("E", "N", "U")
 COLORS = ("#9467bd", "#ff7f0e", "#2ca02c", "#1f77b4", "#d62728")
 STYLES = ("-", "--", "-.", "-", "--")
+LABELS = {"qseis06": "QSEIS06 (deprecated)", "spgrn2012": "SPGRN2012 (deprecated)"}
 
 
 def load_result(name, supplied_path, source_radius_ratio=0.05):
@@ -207,7 +208,8 @@ def plot_comparison(output_path, selected, grids, interpolated, title):
                     color, style, label = "#222222", ":", "QSEIS2025 point source"
                 else:
                     style_index = BACKENDS.index(name)
-                    color, style, label = COLORS[style_index], STYLES[style_index], name.upper()
+                    color, style = COLORS[style_index], STYLES[style_index]
+                    label = LABELS.get(name, name.upper())
                 axis.plot(grids[distance_index], interpolated[name][distance_index][component_index],
                           color=color, ls=style, lw=1.15, label=label)
             axis.set_xlim(0, 500)

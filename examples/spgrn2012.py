@@ -1,8 +1,9 @@
 """Deprecated SPGRN2012 tutorial with an explicitly matched physical source.
 
 Retained for existing long-period workflows; use SPGRN2020 for new calculations.
-Here a full-period native impulse velocity is forward-convolved with the same
-64 s moment-rate pulse used by the other regional examples, then integrated.
+Here the full-period native impulse Green functions are forward-convolved with
+the same 64 s moment-rate pulse used by the other regional examples. The reader
+then returns displacement from that source-matched library.
 """
 from pathlib import Path
 
@@ -17,13 +18,14 @@ from pygrnwang.create_spgrn2012_bulk import (
 from pygrnwang.pytaup import create_tpts_table
 from pygrnwang.read_spgrn2012 import seek_spgrn2012
 from spectral_settings import verify_spherical_spectrum
-from spherical_source_time_function import (apply_spgrn2012_stf, inspect_spgrn2012_native,
-                                           save_spgrn2012_stf, validate_spgrn2012_stf)
+from spherical_source_time_function import (inspect_spgrn2012_native, save_spgrn2012_stf,
+                                           validate_spgrn2012_stf, write_spgrn2012_matched_library)
 
 
 def main():
     args = parser_for("spgrn2012").parse_args()
-    output, library, model, report, started = prepare(args, "SPGRN2012")
+    output, library, model, report, started = prepare(
+        args, "SPGRN2012", extra={"display_name": "SPGRN2012 (deprecated)"})
     dt, native_window, output_window = REGIONAL_SAMPLING_INTERVAL_S, 4092.0, 1020.0
     t0, v0 = -40.0, 10.0
     output_samples = int(round(output_window / dt)) + 1
@@ -55,20 +57,20 @@ def main():
         # The serial builder does not create these tables; the reader needs them.
         create_tpts_table(str(Path(library) / "GreenFunc"), 10.0, 0.0,
                           distances, info["path_nd_without_Q"], False)
-    raw_velocity = np.array([MOMENT_NM * seek_spgrn2012(
-        path_green=library, event_depth_km=10.0, receiver_depth_km=0.0,
+    # Preserve the whole FFT period during source convolution. The reader then
+    # integrates all 1024 matched samples; export the first 256 on each trace's
+    # actual origin-time axis.
+    matched_library, source = write_spgrn2012_matched_library(library, native)
+    arrays = np.array([MOMENT_NM * seek_spgrn2012(
+        path_green=matched_library, event_depth_km=10.0, receiver_depth_km=0.0,
         az_deg=30.0, dist_km=distance, focal_mechanism=MECHANISM,
-        srate=1 / dt, output_type="velo", rotate=True,
+        srate=1 / dt, output_type="disp", rotate=True,
         before_p=None, shift=False, pad_zeros=False,
-    ) for distance in distances])
-    matched_velocity, source = apply_spgrn2012_stf(raw_velocity, native)
-    # Preserve the whole FFT period during source convolution. Integrate once,
-    # then export the first 256 samples on each trace's actual origin-time axis.
-    arrays = np.cumsum(matched_velocity, axis=2)[:, :, :output_samples] * dt
+    ) for distance in distances])[:, :, :output_samples]
     save_waveforms(output, report, "disp", arrays, distances, dt,
                    ["E", "N", "U"], "m", start_times=native["trace_start_times_s"],
                    expected_samples=output_samples)
-    source = save_spgrn2012_stf(output, native, raw_velocity, matched_velocity, source)
+    source = save_spgrn2012_stf(output, native, source)
     validate_spgrn2012_stf(library)
     report.update(sampling_interval_s=dt, time_window_s=native_window,
                   native_samples=1024, output_window_s=output_window,

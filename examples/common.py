@@ -102,7 +102,8 @@ def save_waveforms(output, report, name, arrays, distances, dt, labels,
         axis.ticklabel_format(axis="y", style="sci", scilimits=(-2, 2))
         axis.grid(alpha=0.2)
     axes[0, 0].legend(ncol=len(distances), fontsize=8)
-    axes[0, 0].set_title("%s: %s, M0 = 10^15 N m" % (report["backend"], name))
+    axes[0, 0].set_title("%s: %s, M0 = 10^15 N m"
+                         % (report.get("display_name", report["backend"]), name))
     axes[-1, 0].set_xlabel(time_label)
     if time_limits is not None:
         axes[-1, 0].set_xlim(*time_limits)

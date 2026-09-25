@@ -1,6 +1,6 @@
 {
   "backend": "QSEIS06",
-  "started_utc": "2026-09-14T02:21:53Z",
+  "started_utc": "2026-09-15T14:34:27Z",
   "platform": "Windows-11-10.0.26200-SP0",
   "python": "3.12.13",
   "dependencies": {
@@ -38,17 +38,28 @@
       "peak_absolute": 7.1784844945712516e-06
     }
   },
+  "display_name": "QSEIS06 (deprecated)",
   "sampling_interval_s": 0.5,
+  "max_frequency_hz": 1.0,
   "time_window_s": 127.5,
   "distances_km": [
     30.0,
     60.0,
     90.0
   ],
+  "output_time_range_s": [
+    0.0,
+    127.5
+  ],
+  "native_samples": 256,
   "earth_model_numeric_rows": 24,
   "wavelet_type": 2,
   "wavelet_duration_samples": 4,
-  "elapsed_seconds": 13.021,
+  "wavelet_duration_s": 2.0,
+  "flat_earth_transform": false,
+  "regional": false,
+  "source_radius_ratio": 0.05,
+  "elapsed_seconds": 10.019,
   "file_count": 28,
-  "output_bytes": 395752
+  "output_bytes": 398889
 }

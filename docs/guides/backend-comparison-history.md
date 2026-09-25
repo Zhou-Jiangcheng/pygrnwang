@@ -279,11 +279,12 @@ and `source_time_function.json`; `library/stf.json` records the
 matching library source metadata and hashes. The NPZ preserves the node
 times, target rate, written input rate and reconstructed effective pulse,
 so the source check can be repeated independently of the waveform plots.
-The ordinary package reader does not infer that a type-0 input is a
-moment-rate pulse and does not automatically integrate it when asked for
-displacement. These examples explicitly read `velo`, `strain_rate`
-or `stress_rate`, then perform exactly one `cumsum * dt` to obtain
-displacement, strain or stress. The short near-distance examples retain
+At that time the ordinary package reader did not infer that a type-0 input
+was a moment-rate pulse or integrate it when asked for displacement. These
+examples explicitly read `velo`, `strain_rate` or `stress_rate`, then
+performed exactly one `cumsum * dt` to obtain displacement, strain or stress.
+The readers now integrate type 0 like type 1, and the current examples request
+those observables directly. The short near-distance examples retain
 their built-in type-2 source.
 
 An independent reconstruction of Fortran's piecewise-linear transform

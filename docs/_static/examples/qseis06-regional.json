@@ -1,6 +1,6 @@
 {
   "backend": "QSEIS06",
-  "started_utc": "2026-09-14T12:31:05Z",
+  "started_utc": "2026-09-15T14:35:21Z",
   "platform": "Windows-11-10.0.26200-SP0",
   "python": "3.12.13",
   "dependencies": {
@@ -35,9 +35,10 @@
       ],
       "unit": "m",
       "finite": true,
-      "peak_absolute": 1.3862526806476928E-08
+      "peak_absolute": 1.386252680647693e-08
     }
   },
+  "display_name": "QSEIS06 (deprecated)",
   "sampling_interval_s": 4.0,
   "max_frequency_hz": 0.125,
   "time_window_s": 4092.0,
@@ -79,17 +80,17 @@
     "effective_rate_integral": 1.0000000004130927,
     "target_centroid_s": 32.0,
     "effective_centroid_s": 32.00000073412074,
-    "effective_rate_relative_l2": 1.9884466105608343E-06,
-    "spectral_relative_l2_0_to_0_125_hz": 1.7827637217585575E-06,
+    "effective_rate_relative_l2": 1.9884466105608343e-06,
+    "spectral_relative_l2_0_to_0_125_hz": 1.7827637217585575e-06,
     "validated_max_frequency_hz": 0.125,
-    "spectral_max_absolute_error_0_to_0_0625_hz": 1.5646882209943217E-06,
+    "spectral_max_absolute_error_0_to_0_0625_hz": 1.5646882209943217e-06,
     "physical_validation_limits": {
-      "area_absolute_error": 1E-08,
-      "centroid_absolute_error_s": 1E-05,
-      "rate_relative_l2": 1E-05,
-      "spectral_relative_l2": 1E-05
+      "area_absolute_error": 1e-08,
+      "centroid_absolute_error_s": 1e-05,
+      "rate_relative_l2": 1e-05,
+      "spectral_relative_l2": 1e-05
     },
-    "reader_instruction": "Read velo/strain_rate/stress_rate; integrate once with cumsum(rate)*4 s in the example",
+    "reader_instruction": "Request disp/strain/stress; the reader integrates the type-0 rate kernels once",
     "input_relative_path": "10.00/0.00/0_0/grn.inp",
     "input_original_sha256": "73e1996946b763bb449c2bd2040a1c0210bbbe0d95494d85bc7d2c3ae8c41373",
     "input_prepared_sha256": "cc84f2af0babb4c819a33036fd76746df67ccccf0561b7020092f50d7d77da0c",
@@ -129,9 +130,9 @@
       "df": 0.000244140625,
       "ldegup": null
     },
-    "native_header_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qseis06-matched-band\\library\\10.00\\0.00\\0_0\\ss.tz",
+    "native_header_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qseis06-regional-seek-disp\\library\\10.00\\0.00\\0_0\\ss.tz",
     "validation_source": "Native input, all native T_sec output rows, and library metadata; nf, nfcut and df derived from qsgetinp.f (not stored in the text header)",
-    "native_input_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qseis06-matched-band\\library\\10.00\\0.00\\0_0\\grn.inp",
+    "native_input_path": "C:\\Users\\zjc\\python_works\\pygrnwang\\examples\\output\\qseis06-regional-seek-disp\\library\\10.00\\0.00\\0_0\\grn.inp",
     "native_output_columns": [
       "T_sec",
       "Uz0001",
@@ -139,9 +140,7 @@
       "Uz0003"
     ]
   },
-  "elapsed_seconds": 186.287,
+  "elapsed_seconds": 175.066,
   "file_count": 31,
-  "output_bytes": 1240889,
-  "post_run_verification_utc": "2026-09-14T12:45:20Z",
-  "verification_note": "Fresh native runtime and output-size fields; metadata and figures checked by a compatible reread with the final example script."
+  "output_bytes": 1243934
 }

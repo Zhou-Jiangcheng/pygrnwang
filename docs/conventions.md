@@ -146,6 +146,8 @@ QSEIS2025 tensor workflow for the introductory tensor example.
 QSEIS `wavelet_type=1` selects a normalized squared half-sinusoid approximating
 a delta impulse; stored vector kernels represent velocity. Type 2 selects its
 integral, a tapered Heaviside; stored vector kernels represent displacement.
+Type 0 supplies custom wavelet samples, which the readers treat as a
+moment-rate function: its kernels represent velocity, as for type 1.
 The reader integrates/differentiates to obtain the requested observable.
 The same distinction applies to rate/non-rate strain, stress, volume and
 rotation kernels in QSEIS2025. A nonpositive duration requests the Fortran
@@ -167,8 +169,10 @@ That native API behavior remains unchanged; the factor depends on the
 source duration and damping and is not a universal amplitude conversion.
 The current SPGRN2012 example avoids that source bias: it sets native
 `source_duration=0`, requests the complete 4092 s / 1024-sample impulse
-velocity, and applies the analytic 64 s pulse in the damped frequency domain.
-It integrates the matched velocity once and only then retains 256 samples.
+velocity, and applies the analytic 64 s pulse to every Green function in the
+damped frequency domain. It writes these to a sibling source-matched library;
+reading that library with `output_type="disp"` integrates the matched velocity
+once, and only then does the script retain 256 samples.
 This forward convolution uses neither source-spectrum division nor fitted
 amplitudes or time shifts. The physical source therefore matches the other
 regional examples. See the [SPGRN2012 tutorial](backends/spgrn2012.md) for
@@ -188,13 +192,14 @@ The verified time-domain and spectral relative L2 errors are below
 
 Custom QSEIS wavelets require a sample block in the low-level input;
 the high-level preprocessor has no custom-array parameter. The regional
-example helper installs this block after preprocessing. The ordinary
-readers do not infer the normalization or rate/non-rate meaning of type 0.
-For this moment-rate pulse, the examples explicitly read `velo`,
-`strain_rate` or `stress_rate` and integrate once with `cumsum * dt`.
-Calling the generic reader with `output_type="disp"` on this type-0
-library does not automatically integrate velocity. The default
-near-distance tutorials retain their built-in type-2 pulse.
+example helper installs this block after preprocessing. The readers do not
+infer the normalization of type 0; they assume a moment-rate function and
+integrate once with `cumsum * dt` for `disp`, `strain`, `stress`, `volume`
+or `rota`. The regional examples therefore request those observables
+directly. For a custom wavelet shaped as a moment function rather than its
+rate, request the rate output (for example `velo`) to receive the stored
+kernels unchanged. The default near-distance
+tutorials retain their built-in type-2 pulse.
 
 ### Sampling band and spatial source
 

@@ -67,17 +67,24 @@ They are measurements for these small examples, not performance guarantees.
 | Workflow | Command argument | Validated output shape | Time | Output size | Machine-readable record |
 |---|---|---|---:|---:|---|
 | QSEIS2025 introduction | `--observables all` | displacement `(3, 3, 201)`; strain/stress `(3, 6, 201)` | 13.3 s | 1.21 MiB | [JSON](_static/examples/qseis2025.json) |
-| QSEIS06 introduction | default | `(3, 3, 256)` | 13.0 s | 0.38 MiB | [JSON](_static/examples/qseis06.json) |
-| SPGRN2012 | default, impulse + shared STF | `(3, 3, 256)` | 44.7 s | 203.41 MiB | [JSON](_static/examples/spgrn2012.json) |
+| QSEIS06 introduction | default | `(3, 3, 256)` | 10.0 s | 0.38 MiB | [JSON](_static/examples/qseis06.json) |
+| SPGRN2012 | default, impulse + source-matched library | `(3, 3, 256)` | 40.5 s | 203.39 MiB | [JSON](_static/examples/spgrn2012.json) |
 | SPGRN2020 | default, complete wavefield | `(3, 3, 256)` | 62.5 s | 266.14 MiB | [JSON](_static/examples/spgrn2020.json) |
 | QSSP2020 | default, harmonics 2000/8000 | `(3, 3, 256)` | 86.3 s | 657.98 MiB | [JSON](_static/examples/qssp2020.json) |
 | EDGRN2 → EDCMP2 | default, including both solvers | `(3, 3)` | 3.1 s | 0.17 MiB | [JSON](_static/examples/edgrn_edcmp.json) |
-| QSEIS2025 regional | `--regional --observables all` | displacement `(3, 3, 256)`; strain/stress `(3, 6, 256)` | 187.4 s | 3.66 MiB | [JSON](_static/examples/qseis2025-regional.json) |
-| QSEIS06 regional | `--regional` | `(3, 3, 256)` | 186.3 s | 1.18 MiB | [JSON](_static/examples/qseis06-regional.json) |
+| QSEIS2025 regional | `--regional --observables all` | displacement `(3, 3, 256)`; strain/stress `(3, 6, 256)` | 175.9 s | 3.66 MiB | [JSON](_static/examples/qseis2025-regional.json) |
+| QSEIS06 regional | `--regional` | `(3, 3, 256)` | 175.1 s | 1.19 MiB | [JSON](_static/examples/qseis06-regional.json) |
 
 The dynamic array axes are distance, component and sample. The static axes are
 distance and component. The default displacement-only QSEIS2025 command was also
 executed independently in a fresh output directory.
+
+On 15–16 September 2026, the QSEIS06 introduction, both regional QSEIS rows and
+SPGRN2012 were rerun in fresh directories after the examples switched to
+requesting displacement, strain and stress directly from the readers. The
+QSEIS arrays matched the earlier explicit rate integration to within
+`6e-16` of each peak. The SPGRN2012 displacement differed by relative L2
+`2.3e-7`, because the source-matched Green functions are stored as float32.
 
 The QSEIS2025 run and figures were refreshed after cropping every exported
 observable to 0–100 s inclusive. At 0.5 s spacing, the NPZ arrays contain
@@ -100,10 +107,12 @@ Every script uses the same strike/dip/rake (30/45/90 degrees), azimuth
 (30 degrees), scalar moment (10^15 N m), source depth (10 km), receiver depth
 (0 km), and effective normalized 64 s sin-squared moment-rate pulse.
 SPGRN2012 now uses full-wavefield spectra and the native zero-duration impulse
-branch. Its complete 1024-point velocity is convolved forward with the analytic
-source at the native complex frequencies, then integrated once and cropped to
-256 samples. Quadrature independently verified the full-band source transform
-with relative L2 error 1.75e-15. Input, native-velocity and four NPZ hashes were
+branch. Each complete 1024-point impulse Green function is convolved forward
+with the analytic source at the native complex frequencies and written to a
+source-matched library. Reading that library with `output_type="disp"`
+integrates once before the script crops to 256 samples. Quadrature
+independently verified the full-band source transform with relative L2 error
+1.75e-15. Input, native-velocity, matched Green-function and NPZ hashes were
 unchanged by compatible reuse. The old positive-duration library was rejected.
 
 QSEIS retains its compensated custom source. Its independent spectral check
@@ -117,14 +126,14 @@ amplitude or time-shift fitting. Relative ENU L2 differences from SPGRN2020 are:
 
 | Backend | 300 km | 600 km | 900 km |
 |---|---:|---:|---:|
-| SPGRN2012 | 1.2266% | 0.0739% | 0.0534% |
+| SPGRN2012 | 1.2266% | 0.0739% | 0.0535% |
 | QSSP2020 | 1.2772% | 0.4085% | 2.3022% |
 | QSEIS06 / QSEIS2025, default spatial smoothing | 12.7410% | 19.5740% | 22.7979% |
 | QSEIS2025, point-source control | 11.4926% | 17.0758% | 19.7176% |
 
 The point-source control only changes QSEIS2025's Gaussian spatial-source ratio
 from 0.05 to zero; its model and temporal source samples are unchanged. That
-additional Windows run took 647.470 s and retained 1,005,149 bytes in 27 files;
+additional Windows run took 615.795 s and retained 1,005,168 bytes in 27 files;
 its `(3,3,256)` displacement was finite. See the
 [point-source record](_static/examples/qseis2025-point-source.json).
 It reduces only part of the residual and was not added to every CI calculation.

@@ -34,7 +34,7 @@ shift, amplitude scale or baseline removal is applied.
 | --- | ---: | ---: | ---: |
 | QSEIS06, default spatial source | 12.7410% | 19.5740% | 22.7979% |
 | QSEIS2025, default spatial source | 12.7410% | 19.5740% | 22.7979% |
-| SPGRN2012, matched effective STF | 1.2266% | 0.0739% | 0.0534% |
+| SPGRN2012, matched effective STF | 1.2266% | 0.0739% | 0.0535% |
 | QSSP2020, harmonic controls 2000/8000 | 1.2772% | 0.4085% | 2.3022% |
 
 The default QSEIS versions produced exactly equal saved displacement
@@ -124,11 +124,12 @@ L2 error is `1.988e-6` and spectral relative L2 error over 0–0.125 Hz is
 
 SPGRN2012 now uses `source_duration=0`, selecting its native unit-spectrum
 impulse branch. It exports the complete 1024-sample, 4092 s velocity span
-with `max_slowness=0`. The example restores damping, transforms the full
-record, multiplies by the analytic transform of `r(t)` at `f+i*fi`,
-inverts, and removes damping. This is **forward convolution**, with no
-deconvolution or fitted scaling. Only then does it integrate once using
-`cumsum * dt` and export 256 displacement samples. The summary distinguishes
+with `max_slowness=0`. The example restores damping, transforms each full
+Green-function record, multiplies by the analytic transform of `r(t)` at
+`f+i*fi`, inverts, and removes damping. This is **forward convolution**, with no
+deconvolution or fitted scaling. Only then does the reader, called with
+`output_type="disp"` on the source-matched library, integrate once using
+`cumsum * dt`; the example exports 256 displacement samples. The summary distinguishes
 the native zero duration from the effective physical duration of 64 s.
 
 ```{figure} ../_static/examples/source-time-function.png
@@ -141,8 +142,8 @@ The helpers {download}`source_time_function.py <../../examples/source_time_funct
 and {download}`spherical_source_time_function.py <../../examples/spherical_source_time_function.py>`
 archive definitions, source samples or transfer functions, and file hashes.
 The [source verification](../_static/examples/source-time-function.json)
-preserves the QSEIS checks. SPGRN2012 also saves native impulse velocity,
-matched velocity and its analytic transfer function.
+preserves the QSEIS checks. SPGRN2012 also saves its source-matched
+Green-function library and analytic transfer function.
 
 ## QSEIS at the same regional distances
 
@@ -216,7 +217,7 @@ source-centroid shift. The 256 exported samples span 1020 s from each start.
 QSEIS uses a 24-row layered model continued as a half-space, with the
 flat-Earth transformation enabled; the spherical examples use the complete
 Earth profile. Flattening does not restore omitted deep structure.
-Integration also differs: the Python examples use `cumsum * dt`, while
+Integration also differs: the Python readers use `cumsum * dt`, while
 QSSP accumulates displacement in Fortran from a zero initial value.
 Model boundaries, spatial truncation and integration baselines remain
 distinct; their individual contributions have not been isolated.

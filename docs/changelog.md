@@ -2,6 +2,24 @@
 
 ## Unreleased documentation
 
+### Displacement requested directly from readers, 15 September 2026
+
+- `seek_qseis06` and `seek_qseis2025` now treat custom `wavelet_type=0`
+  samples as a moment-rate function, like type 1. Non-rate outputs such as
+  `disp`, `strain` and `stress` are integrated once, and `acce` is
+  differentiated. Previously type 0 returned the stored rate kernels for
+  every requested output type.
+- The regional QSEIS examples request `disp`, `strain` and `stress` directly.
+  SPGRN2012 applies the analytic 64 s source to every Green function in
+  `library-source-matched/` and reads `disp` from it; rebuild outputs of the
+  previous SPGRN2012 example before reuse. Reruns matched the earlier QSEIS
+  arrays to roundoff; SPGRN2012 differed by relative L2 `2.3e-7`, changing its
+  900 km comparison value from 0.0534% to 0.0535%.
+- The Quickstart now presents the 300/600/900 km QSEIS2025 calculation.
+  QSEIS06 and SPGRN2012 are labeled deprecated in every figure legend or
+  title. The English and Chinese comparison reports no longer contain their
+  sections on remaining timing/spatial differences and confirmed causes.
+
 ### Fresh displacement and stress comparison, 15 September 2026
 
 - Added a new five-backend displacement comparison and QSEIS2025/QSSP2020

@@ -47,18 +47,17 @@ The command above saves results beneath
 `examples/output/spgrn2012-matched-band/`. `disp.npz` has shape
 `(3 distances, 3 ENU components, 256 samples)` in metres; `disp.png` and
 `summary.json` describe the exported result. `library/` contains the
-native spectral and velocity files. Three additional archives make the
-source calculation inspectable:
+native spectral files and impulse Green functions. Two further outputs
+make the source calculation inspectable:
 
-- `velocity-impulse.npz`: the complete native impulse response, read and
-  rotated to ENU and scaled by the stated moment, in m/s;
-- `velocity-matched.npz`: the complete velocity after forward source
-  convolution, in m/s;
+- `library-source-matched/`: the same metadata and travel-time tables,
+  with every native Green function forward-convolved with the physical
+  source; the script reads displacement from this library;
 - `source_time_function.npz` and `.json`: the physical pulse, its analytic
-  complex-frequency transform, validated native settings and archive hashes.
+  complex-frequency transform, validated native settings and hashes of the
+  matched Green functions and exported displacement.
 
-Both velocity archives have shape `(3, 3, 1024)` and retain the original
-per-distance time axes. The script's default output directory remains
+The script's default output directory remains
 `examples/output/spgrn2012/`; the explicit directory above keeps this
 calculation separate from earlier tutorial runs.
 
@@ -66,9 +65,12 @@ calculation separate from earlier tutorial runs.
 
 Both the spectral window and the **native velocity output window** are
 4092 s, sampled at 4 s. The native FFT has 1024 samples and period 4096 s.
-The script retains all 1024 samples while applying the physical source,
-then integrates once and exports the first 256 samples spanning 1020 s.
-Convolving only the cropped displacement cannot reproduce this operation.
+The script applies the physical source to all 1024 samples of every Green
+function. The reader then integrates the complete matched record once, and
+the script exports the first 256 samples spanning 1020 s. Convolving only
+the cropped displacement cannot reproduce this operation. Neither can
+convolving displacement read from the impulse library: that integral of the
+unfiltered impulse velocity is dominated by drift.
 
 `max_frequency=0.125` Hz equals the sampling Nyquist frequency.
 The actual spectrum header must contain `nfcut=512`, with frequency spacing
@@ -88,14 +90,15 @@ r(t)=\frac{2}{64}\sin^2\left(\frac{\pi t}{64}\right),\qquad 0\leq t\leq64\ \math
 
 with zero rate outside that interval and centroid 32 s. This tutorial
 sets the **native** `source_duration=0`, whose spectrum is unity, and
-applies the target 64 s source in the example script. The library metadata
+applies the target 64 s source to the Green functions in the example
+script. The library metadata
 therefore correctly records zero native duration; the summary separately
 records `native_source_duration_s=0` and `effective_source_duration_s=64`.
 No solver kernel or public reader behavior is changed.
 
 The native imaginary frequency is
 `fi = log(0.01) / (2*pi*4096)`. The helper restores the numerical damping
-of the complete impulse velocity, transforms it, multiplies by the exact
+of each complete impulse Green function, transforms it, multiplies by the exact
 transform of `r(t)` at `f + i*fi`, transforms back and removes damping.
 This is forward convolution: there is no division by an existing source
 spectrum, fitted amplitude or time shift. The damped DC coefficient is
@@ -122,7 +125,8 @@ over the shared origin-time interval.
 
 Use `--reuse` with the same explicit output directory only after a
 successful run. The script checks native input records, all spectral
-headers, complete velocity blocks, the physical pulse and archive hashes.
+headers, complete velocity blocks, the physical pulse and archive hashes,
+and recomputes the matched Green functions from the native library.
 Older libraries with a native 64 s source, a 0.0625 Hz cutoff, a slowness
 limit or a cropped native output are rejected and require a fresh build.
 
@@ -142,8 +146,8 @@ Python-readable SPGRN2012 library.
 
 The raw basis library represents velocity. In the general reader,
 `output_type="disp"` integrates it and `"acce"` differentiates it.
-This example explicitly reads `"velo"`, applies the physical source above,
-and uses `cumsum * dt` exactly once to obtain displacement. It scales a
+This example reads the source-matched library with `output_type="disp"`,
+so the reader applies `cumsum * dt` exactly once. It scales a
 unit mechanism by `10^15 N m` and returns E/N/up components. Nearest and
 trilinear waveform interpolation remain available in the reader.
 

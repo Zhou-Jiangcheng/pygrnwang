@@ -42,6 +42,7 @@ it is not a literal reproduction of that figure.
 | Last retained frequency / Nyquist endpoint | 1.998046875 Hz / endpoint at 2 Hz set to zero |
 | Moment-rate STF | Unit-area sin² pulse on 0–1.25 s; centroid 0.625 s |
 | Free surface / physical dispersion / gravity | Included / disabled / disabled |
+| Spherical slowness / harmonic controls | SPGRN `max_slowness=0` (full wavefield); QSSP `min_harmonic=2000`, `max_harmonic=40000`, `max_slowness=0.4` |
 | Anti-aliasing factor | 0.01 |
 | Comparison time grid | Earthquake-origin time 0–400 s, dt = 0.25 s, 1601 samples |
 | Display low-pass | Fourth-order Butterworth at 0.4 Hz, applied forwards and backwards |
@@ -236,43 +237,6 @@ start at zero after documented grid recovery. Filtering precedes selection
 of the common physical interval. Complete processed native arrays have shape
 `(3, 3, 2048)` for displacement and `(3, 6, 2048)` for stress. Downloads
 contain the exact 1601-sample arrays used for the figures and main metrics.
-
-## Remaining timing and spatial differences
-
-A separate diagnostic scanned `h` from −1 to 1 s in 0.005 s steps, comparing
-linearly interpolated `QSEIS(t+h)` with the reference over **1–399 s**.
-This fixed window avoids extrapolation. No amplitude was fitted.
-
-| Distance | Displacement peak ratio / best h / diagnostic L2 | Stress peak ratio / best h / diagnostic L2 |
-| --- | --- | --- |
-| 300 km | 0.998011 / −0.030 s / 1.4931% | 1.000608 / −0.030 s / 1.6788% |
-| 600 km | 1.011463 / −0.060 s / 2.6688% | 1.015645 / −0.060 s / 2.4978% |
-| 900 km | 1.015645 / −0.100 s / 3.6249% | 0.998467 / −0.090 s / 3.4307% |
-
-Peak ratios use the largest absolute value across all components, not each
-component's peak. Negative `h` delays QSEIS in this diagnostic. Small timing
-differences contribute strongly to pointwise L2; interpolation also smooths
-slightly. **These fitted shifts are not applied to any main figure or main
-metric**, and the scan is not a precise phase measurement or a quantitative
-attribution to Earth curvature.
-
-| Spherical backend | Actual maximum degree in native spectrum header |
-| --- | ---: |
-| SPGRN2012 | 23795 |
-| SPGRN2020 | 31390 |
-| QSSP2020 | 31992 |
-
-SPGRN uses its automatic full-wavefield `max_slowness=0` branch. QSSP uses
-`min_harmonic=2000`, `max_harmonic=40000`, `max_slowness=0.4`; the maximum
-allowed degree was not reached. The spherical results agree closely, so
-this evidence does not support insufficient harmonic degree as the explanation
-for the remaining QSEIS residual. No independent degree sweep was performed
-at 2 Hz; this is not a general convergence guarantee.
-
-Earth flattening, omitted deep structure, layer discretization and wavenumber
-integration accuracy remain possible contributors not varied separately.
-A common frequency band, mechanism and STF alone do not make the numerical
-Earth models identical.
 
 ## Recorded data and verification
 

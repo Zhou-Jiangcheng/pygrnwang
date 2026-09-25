@@ -2876,20 +2876,20 @@
   },
   "assets": {
     "displacement.png": {
-      "bytes": 457854,
-      "sha256": "ef5a49bebadbeb5383ccae7344a20f9ee7318b83c0cbe13c270ebaa60dccc526"
+      "bytes": 484865,
+      "sha256": "41981ef91e14c1e6d4894c3fe7d9c77ae726e3b247d837b66eed5b3279d04870"
     },
     "displacement-zoom.png": {
-      "bytes": 576130,
-      "sha256": "a4ce4a473568c11d5a356dfe40af19413d6a0d9e65e519910c9c461c28633ef5"
+      "bytes": 607528,
+      "sha256": "b3336620cb12edc3792c77c54414a53752a59ab7a1ae5c36b2d3979236c509e0"
     },
     "displacement-unfiltered.png": {
-      "bytes": 457157,
-      "sha256": "1c39db0d560f1ff122d7b53976a143dbcc858551cb06984814dfe87624211a32"
+      "bytes": 484644,
+      "sha256": "705485cb16709a00ebd56a33f7b30294a3fc0eb5f0946448f04ccc1036e63c26"
     },
     "source-radius-control.png": {
-      "bytes": 621983,
-      "sha256": "86cb54c17dcd47978ae5b64fafdbbdc0794a70eb11767d7cf6044edd4d7c7d5d"
+      "bytes": 660059,
+      "sha256": "e005dfd40f4b6a933d9c38aa4c6b5a9a5688676f890697e479b0eba196f5da6d"
     },
     "model-ak135fc.nd": {
       "bytes": 7308,

@@ -133,9 +133,10 @@ written samples: their area is approximately 0.9647094, whereas the
 effective pulse after damping correction has unit area and centroid 32 s.
 See the [STF verification](../guides/backend-comparison-64s.md#matching-the-effective-source-time-function).
 
-Custom type 0 does not invoke automatic rate conversion in the ordinary
-reader. The example explicitly reads velocity, then integrates once
-using `cumsum * dt` to obtain displacement. QSEIS duration is still
+Custom type-0 samples are a moment-rate function, so the library stores
+rate kernels, as for type 1. The example requests `output_type="disp"`
+and the reader integrates velocity once using `cumsum * dt` over the
+complete native record before the script crops it. QSEIS duration is still
 measured in native time samples: sixteen 4 s intervals define the
 64 s support, while the independent custom array has 1024 nodes.
 The near-distance default remains type 2 with four samples at 0.5 s.
@@ -156,11 +157,9 @@ python examples/qseis2025.py --regional --observables all --output-dir examples/
 This additionally saves `strain.npz/png` and `stress.npz/png`, with
 tensor shape `(3, 6, 256)` and component order EE, EN, EU, NN, NU, UU.
 Their units and moment normalization are the same as in the near-distance
-tensor example. For the regional type-0 library, the script reads
-`strain_rate` and `stress_rate` and integrates each exactly once using
-`cumsum * dt` before saving the non-rate tensors. Requesting `strain`
-or `stress` directly from a generic type-0 reader does not perform
-that conversion automatically.
+tensor example. For the regional type-0 library, the script requests
+`strain` and `stress` directly; the reader integrates the stored
+`strain_rate` and `stress_rate` kernels exactly once using `cumsum * dt`.
 
 ```{figure} ../_static/examples/qseis2025-regional-strain.png
 :alt: Six QSEIS2025 regional ENU strain components at three distances.
@@ -251,8 +250,8 @@ smoothing as the sole cause or demonstrate convergence of all settings.
 ```
 
 The [recorded point-source run](../_static/examples/qseis2025-point-source.json)
-took 647.470 s on the recorded Windows environment, versus approximately
-247 s for the earlier default-ratio run. Its arrays were finite and the
+took 615.795 s on the recorded Windows environment, versus 175.929 s for
+the default-ratio regional run with tensors. Its arrays were finite and the
 native output contained no warnings or errors; runtimes depend on hardware
 and concurrent work. See [validation](../validation.md) for run records.
 
