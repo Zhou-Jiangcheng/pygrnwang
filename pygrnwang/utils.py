@@ -394,26 +394,69 @@ def reshape_sub_faults(sub_faults, num_strike, num_dip):
     return X, Y, Z
 
 
+def _fortran_stopped_with_error(stderr_text):
+    # gfortran exits with code 0 after STOP 'message', and every backend uses a
+    # STOP message only for errors; runtime errors print a recognizable prefix.
+    for line in stderr_text.splitlines():
+        line = line.strip()
+        if line.startswith(("STOP", "ERROR STOP")) or "runtime error" in line.lower():
+            return True
+    return False
+
+
 def call_exe(path_inp, path_finished, name):
+    """Run one backend executable and record whether it succeeded.
+
+    Parameters
+    ----------
+    path_inp : str
+        Absolute backend input file path, passed on standard input.
+    path_finished : str
+        Success marker path. The executable log is written here only on success;
+        otherwise it is written to ``.failed`` in the same directory.
+    name : str
+        Executable name without the platform suffix.
+
+    Returns
+    -------
+    ok : bool
+        False when the executable could not start, exited with a nonzero code
+        (for example after being killed for lack of memory) or stopped with a
+        Fortran error message.
+    """
     if platform.system() == "Windows":
         name_exe = "%s.exe" % name
         path_exe = os.path.join(sys.exec_prefix, "Scripts", name_exe)
     else:
         name_exe = "%s.bin" % name
         path_exe = os.path.join(sys.exec_prefix, "bin", name_exe)
-    proc = subprocess.Popen(
-        [path_exe],
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
-    stdout_bytes, stderr_bytes = proc.communicate(str.encode(path_inp))
+    path_failed = os.path.join(os.path.dirname(path_finished), ".failed")
+    # drop the status of an earlier run so a failure can never keep an old marker
+    for path in (path_finished, path_failed):
+        if os.path.exists(path):
+            os.remove(path)
+    try:
+        proc = subprocess.Popen(
+            [path_exe],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        stdout_bytes, stderr_bytes = proc.communicate(str.encode(path_inp))
+    except OSError as exc:
+        # e.g. Windows refuses to start a process when the commit limit is reached
+        with open(path_failed, "w", encoding="utf-8") as fw:
+            fw.write("%s could not run: %s\n" % (path_exe, exc))
+        return False
     stdout_text = stdout_bytes.decode(errors="ignore")
     stderr_text = stderr_bytes.decode(errors="ignore")
     output = stdout_text + stderr_text
-    with open(path_finished, "w", encoding="utf-8") as fw:
+    ok = proc.returncode == 0 and not _fortran_stopped_with_error(stderr_text)
+    with open(path_finished if ok else path_failed, "w", encoding="utf-8") as fw:
         fw.writelines(output)
-        return None
+        if not ok:
+            fw.write("\nexit code: %d\n" % proc.returncode)
+    return ok
 
 
 def read_tpts_table(path_green, event_depth_km, receiver_depth_km, ind):
