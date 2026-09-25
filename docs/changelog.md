@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased documentation
+## 3.0.1
 
 ### Memory checks, retries and library checks for every backend, 25 September 2026
 

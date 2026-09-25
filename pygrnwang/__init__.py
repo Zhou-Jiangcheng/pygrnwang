@@ -8,4 +8,4 @@ Wang, 2003; Wang and wang, 2007; Wang et al., 2017; Zhou et al., 2026).
 
 """
 
-__version__ = "3.0.0"
+__version__ = "3.0.1"
