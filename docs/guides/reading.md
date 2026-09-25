@@ -14,8 +14,8 @@ separate observable files, so an unselected output is not synthesized by
 the reader.
 
 For the exact QSEIS2025 flag order and the direct strain/stress example see
-[QSEIS2025](../backends/qseis2025.md). QSSP has a different eleven-flag order
-and a documented [conversion limitation](troubleshooting.md#known-implementation-limitations).
+[QSEIS2025](../backends/qseis2025.md). QSSP has a different eleven-flag order; see
+[QSSP2020](../backends/qssp2020.md).
 
 The dynamic readers' default `only_seismograms=True` returns an array.
 Use `False` to obtain the seven-element tuple described in

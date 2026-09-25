@@ -62,9 +62,7 @@ ASCII helps inspect units, headers and failures. Disable removal with
 
 EDCMP sequential creation does not perform the bulk conversion automatically;
 call `convert_pd2bin_edcmp2_all` explicitly if it is required. Its tutorial
-shows the complete sequence. QSSP has an
-[observable-selection conversion issue](troubleshooting.md#known-implementation-limitations)
-for strain/rotation, so retain original output when exploring those families.
+shows the complete sequence.
 
 Before removing ASCII, confirm that the binary reader reproduces the expected
 array shape, finite values and representative traces. Do not move only the

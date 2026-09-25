@@ -81,17 +81,6 @@ inspect the unfiltered trace and source-time function.
 These are observations from the current source audit, not changes to the
 numerical code made by the documentation project.
 
-**QSSP selected strain/rotation conversion.** The Fortran output flags
-(zero-based) 3/4 mean strain/strain rate and 7/8 mean rotation/rotation rate.
-The Python `create_qssp2020.output_type_list` instead places rotation at
-3/4 and strain at 7/8. The automatic bulk converter uses that Python list
-to decide which files to open. Selecting only one of these families can
-therefore make conversion seek a file that was not generated. Displacement,
-velocity, acceleration and stress/stress-rate entries agree between both
-lists. The introductory QSSP tutorial exercises displacement. Retain native
-ASCII and inspect enabled output files when investigating the affected
-families; automatic conversion of arbitrary selections is not validated.
-
 **QSEIS06 derivative libraries.** The finite-difference reader requires
 the extra spatial samples and metadata produced by
 `pre_process_qseis06_strain_rate`. An ordinary `pre_process_qseis06`

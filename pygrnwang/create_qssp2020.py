@@ -8,16 +8,17 @@ from .qssp2020inp import s as str_inp
 from .utils import convert_earth_model_nd2inp, call_exe, cal_grid
 
 mt_com_list = ["mrr", "mtt", "mpp", "mrt", "mrp", "mtp"]
+# the order of the eleven output_observables flags read by qssp2020 (qpgetinp.f)
 output_type_list = [
     "disp",
     "velo",
     "acce",
-    "rota",
-    "rota_rate",
-    "stress",
-    "stress_rate",
     "strain",
     "strain_rate",
+    "stress",
+    "stress_rate",
+    "rota",
+    "rota_rate",
     "gravitation",
     "gravimeter",
 ]
