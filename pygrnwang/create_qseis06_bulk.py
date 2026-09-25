@@ -107,7 +107,7 @@ def pre_process_qseis06(
     wavelet_duration : int, optional
         Wavelet duration in native time samples, not seconds. Nonpositive values request the backend default of two samples. Default: 0.
     wavelet_type : int, optional
-        1 selects the normalized squared half-sinusoid; 2 selects its tapered Heaviside integral. Custom type 0 requires manually supplying wavelet samples. Default: 1.
+        1 selects the normalized squared half-sinusoid; 2 selects its tapered Heaviside integral. Custom type 0 requires manually supplying wavelet samples; readers treat them as a moment-rate function, like type 1. Default: 1.
     flat_earth_transform : bool, optional
         Apply the backend flat-Earth transformation and receiver-radius distance correction. Default: True.
     path_nd : str or None, optional
@@ -308,7 +308,7 @@ def pre_process_qseis06_strain_rate(
     wavelet_duration : int, optional
         Wavelet duration in native time samples, not seconds. Nonpositive values request the backend default of two samples. Default: 0.
     wavelet_type : int, optional
-        1 selects the normalized squared half-sinusoid; 2 selects its tapered Heaviside integral. Custom type 0 requires manually supplying wavelet samples. Default: 1.
+        1 selects the normalized squared half-sinusoid; 2 selects its tapered Heaviside integral. Custom type 0 requires manually supplying wavelet samples; readers treat them as a moment-rate function, like type 1. Default: 1.
     flat_earth_transform : bool, optional
         Apply the backend flat-Earth transformation and receiver-radius distance correction. Default: True.
     path_nd : str or None, optional

@@ -189,7 +189,7 @@ def seek_qseis06(
 
     Notes
     -----
-    Vector rows with rotate=True are east, north, up (ENU), not NED. With rotate=False they are radial, transverse, up; positive transverse points counterclockwise from radial when viewed from above. Moments retain the scale supplied to check_convert_fm. See the qseis06 tutorial and scientific conventions for the native time origin. Supported outputs: disp (m), velo (m/s), acce (m/s2); C=3. Displacement integrates native velocity kernels and acceleration differentiates them.
+    Vector rows with rotate=True are east, north, up (ENU), not NED. With rotate=False they are radial, transverse, up; positive transverse points counterclockwise from radial when viewed from above. Moments retain the scale supplied to check_convert_fm. See the qseis06 tutorial and scientific conventions for the native time origin. Supported outputs: disp (m), velo (m/s), acce (m/s2); C=3. Wavelet types 1 and 0 (a custom moment-rate STF) store velocity kernels: displacement integrates them and acceleration differentiates them. Type 2 stores displacement kernels.
     """
     if green_info is None:
         with open(os.path.join(path_green, "green_lib_info.json"), "r") as fr:
@@ -329,10 +329,12 @@ def seek_qseis06(
                 seismograms[i], srate_old=srate_grn, srate_new=srate, zero_phase=True
             )[:len_after_resample]
 
-    # wavelet_type == 1 (delta impulse): the library holds velocity.
+    # wavelet_type == 1 (delta impulse) or 0 (custom moment-rate STF): the
+    # library holds velocity.
     # wavelet_type == 2 (tapered Heaviside): it holds displacement.
+    rate_kernels = wavelet_type in (0, 1)
     if output_type == "acce":
-        if wavelet_type == 1:
+        if rate_kernels:
             seismograms_resample = (
                 signal.convolve(
                     seismograms_resample.T,
@@ -353,7 +355,7 @@ def seek_qseis06(
                 * srate
                 * srate
             )
-    elif wavelet_type == 1 and output_type == "disp":
+    elif rate_kernels and output_type == "disp":
         seismograms_resample = np.cumsum(seismograms_resample, axis=1) / srate
     elif wavelet_type == 2 and output_type == "velo":
         seismograms_resample = (

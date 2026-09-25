@@ -246,7 +246,7 @@ def seek_qseis2025(
 
     Notes
     -----
-    Vector rows with rotate=True are east, north, up (ENU), not NED. With rotate=False they are radial, transverse, up; positive transverse points counterclockwise from radial when viewed from above. Moments retain the scale supplied to check_convert_fm. See the qseis2025 tutorial and scientific conventions for the native time origin. Supported outputs: disp (m), velo (m/s), acce (m/s2), volume, strain (dimensionless), strain_rate (1/s), stress (Pa), stress_rate (Pa/s), rota (rad), rota_rate (rad/s). Six tensor rows after rotation are [ee, en, eu, nn, nu, uu]. Before rotation they are [tt, rt, -zt, rr, -zr, zz] in terms of synthesized native components, not [rr, rt, ru, tt, tu, uu]. Wavelet type 1 kernels are integrated for non-rate quantities; type 2 kernels are differentiated for rates.
+    Vector rows with rotate=True are east, north, up (ENU), not NED. With rotate=False they are radial, transverse, up; positive transverse points counterclockwise from radial when viewed from above. Moments retain the scale supplied to check_convert_fm. See the qseis2025 tutorial and scientific conventions for the native time origin. Supported outputs: disp (m), velo (m/s), acce (m/s2), volume, strain (dimensionless), strain_rate (1/s), stress (Pa), stress_rate (Pa/s), rota (rad), rota_rate (rad/s). Six tensor rows after rotation are [ee, en, eu, nn, nu, uu]. Before rotation they are [tt, rt, -zt, rr, -zr, zz] in terms of synthesized native components, not [rr, rt, ru, tt, tu, uu]. Wavelet types 1 and 0 (a custom moment-rate STF) store rate kernels, which are integrated for non-rate quantities; type 2 kernels are differentiated for rates.
     """
     if green_info is None:
         with open(os.path.join(path_green, "green_lib_info.json"), "r") as fr:
@@ -507,11 +507,12 @@ def seek_qseis2025(
             seismograms_resample[i] = resample(
                 seismograms[i], srate_old=srate_grn, srate_new=srate, zero_phase=True
             )[:len_after_resample]
-    # wavelet_type == 1 (delta impulse): the library holds rate quantities
-    # (velo / volume_rate / strain_rate / ...).
+    # wavelet_type == 1 (delta impulse) or 0 (custom moment-rate STF): the
+    # library holds rate quantities (velo / volume_rate / strain_rate / ...).
     # wavelet_type == 2 (tapered Heaviside): it holds disp / volume / strain / ...
+    rate_kernels = wavelet_type in (0, 1)
     if output_type == "acce":
-        if wavelet_type == 1:
+        if rate_kernels:
             seismograms_resample = (
                 signal.convolve(
                     seismograms_resample.T,
@@ -532,7 +533,7 @@ def seek_qseis2025(
                 * srate
                 * srate
             )
-    elif (wavelet_type == 1) and ("rate" not in output_type) and (output_type != "velo"):
+    elif rate_kernels and ("rate" not in output_type) and (output_type != "velo"):
         seismograms_resample = np.cumsum(seismograms_resample, axis=1) / srate
     elif (wavelet_type == 2) and (("rate" in output_type) or (output_type == "velo")):
         seismograms_resample = (
