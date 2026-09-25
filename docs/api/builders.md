@@ -22,6 +22,10 @@ The native programs can change the process working directory. The Python executi
 .. autofunction:: pygrnwang.create_edgrn_bulk.create_grnlib_edgrn2_parallel_multi_nodes
 ```
 
+```{eval-rst}
+.. autofunction:: pygrnwang.create_edgrn_bulk.check_grnlib_edgrn2
+```
+
 ## create_edcmp_bulk
 
 ```{eval-rst}
@@ -42,6 +46,10 @@ The native programs can change the process working directory. The Python executi
 
 ```{eval-rst}
 .. autofunction:: pygrnwang.create_edcmp_bulk.convert_pd2bin_edcmp2_all
+```
+
+```{eval-rst}
+.. autofunction:: pygrnwang.create_edcmp_bulk.check_grnlib_edcmp2
 ```
 
 ## create_qseis06_bulk
@@ -72,6 +80,10 @@ The native programs can change the process working directory. The Python executi
 .. autofunction:: pygrnwang.create_qseis06_bulk.convert_pd2bin_qseis06_all
 ```
 
+```{eval-rst}
+.. autofunction:: pygrnwang.create_qseis06_bulk.check_grnlib_qseis06
+```
+
 ## create_qseis2025_bulk
 
 ```{eval-rst}
@@ -94,6 +106,10 @@ The native programs can change the process working directory. The Python executi
 .. autofunction:: pygrnwang.create_qseis2025_bulk.convert_pd2bin_qseis2025_all
 ```
 
+```{eval-rst}
+.. autofunction:: pygrnwang.create_qseis2025_bulk.check_grnlib_qseis2025
+```
+
 ## create_spgrn2012_bulk
 
 **Deprecated backend: SPGRN2012.** Use SPGRN2020 for new calculations. Rebuild the Green library and revalidate numerical settings, source and time conventions, and results when migrating.
@@ -114,6 +130,10 @@ The native programs can change the process working directory. The Python executi
 .. autofunction:: pygrnwang.create_spgrn2012_bulk.create_grnlib_spgrn2012_parallel_multi_nodes
 ```
 
+```{eval-rst}
+.. autofunction:: pygrnwang.create_spgrn2012_bulk.check_grnlib_spgrn2012
+```
+
 ## create_spgrn2020_bulk
 
 ```{eval-rst}
@@ -130,6 +150,10 @@ The native programs can change the process working directory. The Python executi
 
 ```{eval-rst}
 .. autofunction:: pygrnwang.create_spgrn2020_bulk.create_grnlib_spgrn2020_parallel_multi_nodes
+```
+
+```{eval-rst}
+.. autofunction:: pygrnwang.create_spgrn2020_bulk.check_grnlib_spgrn2020
 ```
 
 ## create_qssp2020_bulk
@@ -156,4 +180,8 @@ The native programs can change the process working directory. The Python executi
 
 ```{eval-rst}
 .. autofunction:: pygrnwang.create_qssp2020_bulk.convert_pd2bin_qssp2020_all
+```
+
+```{eval-rst}
+.. autofunction:: pygrnwang.create_qssp2020_bulk.check_grnlib_qssp2020
 ```

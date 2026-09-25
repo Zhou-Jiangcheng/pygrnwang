@@ -1,11 +1,18 @@
 import os
 import math
 
-import numpy as np
-import pandas as pd
-
 from .qseis06inp import s as str_inp
 from .utils import convert_earth_model_nd2inp, call_exe
+from .create_qseis2025 import PSV_STYPES, SH_STYPES, convert_qseis_ascii
+
+# nrmax in fortran_src_codes/qseis06_src/qsglobal.h: distances per input file
+QSEIS06_NRMAX = 101
+# The Fortran arrays are static, so every qseis06 process commits about
+# 0.67 GiB (measured) whatever the grid size; the margin covers the Python side.
+QSEIS06_MEMORY_PER_JOB_GB = 0.75
+# qseis06 always writes displacement and volume change for ex, ss, ds, cl
+QSEIS06_COMS = [("tr", PSV_STYPES), ("tz", PSV_STYPES), ("tv", PSV_STYPES),
+                ("tt", SH_STYPES)]
 
 
 def create_dir_qseis06(
@@ -276,53 +283,7 @@ def call_qseis06(
 
 
 def convert_pd2bin_qseis06(path_greenfunc, remove=False):
-    for com in ["tr", "tz", "tv"]:
-        ex_com = pd.read_csv(
-            str(os.path.join(path_greenfunc, "ex.%s" % com)), sep="\\s+"
-        ).to_numpy()
-        ss_com = pd.read_csv(
-            str(os.path.join(path_greenfunc, "ss.%s" % com)), sep="\\s+"
-        ).to_numpy()
-        ds_com = pd.read_csv(
-            str(os.path.join(path_greenfunc, "ds.%s" % com)), sep="\\s+"
-        ).to_numpy()
-        cl_com = pd.read_csv(
-            str(os.path.join(path_greenfunc, "cl.%s" % com)), sep="\\s+"
-        ).to_numpy()
-        time_series_com = np.concatenate(
-            [
-                ex_com[:, 1:],
-                ss_com[:, 1:],
-                ds_com[:, 1:],
-                cl_com[:, 1:],
-            ]
-        )
-        time_series_com = np.array(time_series_com, dtype=np.float32)
-        time_series_com.T.tofile(os.path.join(path_greenfunc, "grn_%s.bin" % com))
-        if remove:
-            os.remove(os.path.join(path_greenfunc, "ex.%s" % com))
-            os.remove(os.path.join(path_greenfunc, "ss.%s" % com))
-            os.remove(os.path.join(path_greenfunc, "ds.%s" % com))
-            os.remove(os.path.join(path_greenfunc, "cl.%s" % com))
-
-    for com in ["tt"]:
-        ss_r = pd.read_csv(
-            str(os.path.join(path_greenfunc, "ss.%s" % com)), sep="\\s+"
-        ).to_numpy()
-        ds_r = pd.read_csv(
-            str(os.path.join(path_greenfunc, "ds.%s" % com)), sep="\\s+"
-        ).to_numpy()
-        time_series_com = np.concatenate(
-            [
-                ss_r[:, 1:],
-                ds_r[:, 1:],
-            ]
-        )
-        time_series_com = np.array(time_series_com, dtype=np.float32)
-        time_series_com.T.tofile(os.path.join(path_greenfunc, "grn_%s.bin" % com))
-        if remove:
-            os.remove(os.path.join(path_greenfunc, "ss.%s" % com))
-            os.remove(os.path.join(path_greenfunc, "ds.%s" % com))
+    convert_qseis_ascii(path_greenfunc, QSEIS06_COMS, remove)
 
 
 if __name__ == "__main__":

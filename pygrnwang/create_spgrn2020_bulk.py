@@ -2,17 +2,129 @@ import os
 import json
 import pickle
 import datetime
-from multiprocessing import Pool
 
-from tqdm import tqdm
-
-from .create_spgrn2020 import create_dir_spgrn, create_inp_spgrn2020, call_spgrn2020
+from .create_spgrn2020 import (
+    create_dir_spgrn,
+    create_inp_spgrn2020,
+    call_spgrn2020,
+    check_output_spgrn,
+)
 from .read_green_info_spgrn import read_green_info_spgrn
-from .utils import group, convert_earth_model_nd2nd_without_Q
+from .utils import (
+    group,
+    convert_earth_model_nd2nd_without_Q,
+    check_path_lengths,
+    run_checked_job,
+    run_jobs_sequential,
+    run_jobs_parallel,
+    run_jobs_mpi,
+    run_until_complete,
+    finish_library,
+)
+
+# SPGRN2020 writes its own Fortran-record P and S travel-time tables
+SPGRN2020_TABLES = ("tptable.dat", "tstable.dat")
 
 
-def _call_spgrn2020_star(args):
-    return call_spgrn2020(*args)
+def _load_green_info(path_green):
+    with open(
+        os.path.join(path_green, "green_lib_info.json"), "r", encoding="utf-8"
+    ) as fr:
+        return json.load(fr)
+
+
+def spgrn_job_dir(path_green, event_depth, receiver_depth):
+    return str(
+        os.path.join(
+            path_green, "GreenFunc", "%.2f" % event_depth, "%.2f" % receiver_depth
+        )
+    )
+
+
+def check_spgrn_paths(path_green, event_depth_list, receiver_depth_list):
+    """Raise ValueError when SPGRN would truncate an input or output path."""
+    check_path_lengths(
+        os.path.join(spgrn_job_dir(path_green, event_dep, receiver_dep), name)
+        for event_dep in event_depth_list
+        for receiver_dep in receiver_depth_list
+        for name in ["grn.inp", "GreenInfo%.2f.dat" % event_dep]
+    )
+
+
+def spgrn_tasks(path_green, check_finished):
+    with open(os.path.join(path_green, "group_list.pkl"), "rb") as fr:
+        group_list = pickle.load(fr)
+    return [[tuple(job + [path_green, check_finished]) for job in grp] for grp in group_list]
+
+
+def check_spgrn_library(path_green, check_job, check_values=False):
+    """Check every source/receiver depth pair of an SPGRN library.
+
+    check_job(path_func, event_depth, expected_info, check_values) lists the
+    problems of one pair; the library metadata must already hold the
+    dist_list and samples_num of the finished run.
+    """
+    green_info = _load_green_info(path_green)
+    if "dist_list" not in green_info:
+        return [
+            "%s has no dist_list; the calculation did not finish"
+            % os.path.join(path_green, "green_lib_info.json")
+        ]
+    problems = []
+    for event_dep in green_info["event_depth_list"]:
+        for receiver_dep in green_info["receiver_depth_list"]:
+            problems += check_job(
+                spgrn_job_dir(path_green, event_dep, receiver_dep),
+                event_dep,
+                green_info,
+                check_values,
+            )
+    return problems
+
+
+def _check_job(path_func, event_depth, expected_info=None, check_values=False):
+    return check_output_spgrn(
+        path_func, event_depth, SPGRN2020_TABLES, expected_info, check_values
+    )
+
+
+def _run_job(task):
+    """Run one job unless check_finished finds it complete; return its problems."""
+    event_depth, receiver_depth, path_green, check_finished = task
+    path_func = spgrn_job_dir(path_green, event_depth, receiver_depth)
+    return run_checked_job(
+        path_func,
+        check_finished,
+        lambda: call_spgrn2020(event_depth, receiver_depth, path_green),
+        lambda: _check_job(path_func, event_depth),
+        # outputs of an earlier run would pass the check if this run fails
+        stale=["grn_d*", "GreenInfo*", "tptable.dat", "tstable.dat"],
+    )
+
+
+def record_spgrn_distances(path_green):
+    """Copy dist_list and samples_num of the first finished job into green_lib_info.json.
+
+    Returns the updated metadata, or None when no job wrote its GreenInfo file.
+    """
+    green_info = _load_green_info(path_green)
+    for event_dep in green_info["event_depth_list"]:
+        for receiver_dep in green_info["receiver_depth_list"]:
+            path_info = os.path.join(
+                spgrn_job_dir(path_green, event_dep, receiver_dep),
+                "GreenInfo%.2f.dat" % event_dep,
+            )
+            if os.path.exists(path_info):
+                return update_green_info_lib_json(
+                    path_green, float(event_dep), float(receiver_dep)
+                )
+    return None
+
+
+def _finish(path_green, run_problems):
+    """Record the distances, check the whole library and raise if incomplete."""
+    record_spgrn_distances(path_green)
+    finish_library(path_green, run_problems, lambda: check_grnlib_spgrn2020(path_green))
 
 
 def _get_mpi():
@@ -108,11 +220,14 @@ def pre_process_spgrn2020(
     ------
     OSError
         Required files are missing or output paths cannot be read or written.
+    ValueError
+        An input or output path is longer than the 160 characters spgrn2020 can hold.
 
     Notes
     -----
     See the spgrn2020 tutorial for a complete prepare, run and read workflow. Preprocessing writes inputs and travel-time/model metadata; run the matching create_grnlib function to calculate Green functions.
     """
+    check_spgrn_paths(path_green, event_depth_list, receiver_depth_list)
     item_list = []
     for event_depth in event_depth_list:
         for receiver_depth in receiver_depth_list:
@@ -206,7 +321,7 @@ def update_green_info_lib_json(path_green, event_depth, receiver_depth):
     return green_info
 
 
-def create_grnlib_spgrn2020_sequential(path_green, check_finished=False):
+def create_grnlib_spgrn2020_sequential(path_green, check_finished=False, max_retries=2):
     """Compute the prepared spgrn2020 library sequentially.
 
     Parameters
@@ -214,97 +329,9 @@ def create_grnlib_spgrn2020_sequential(path_green, check_finished=False):
     path_green : str
         Absolute library root containing green_lib_info.json and backend subdirectories.
     check_finished : bool, optional
-        Reuse outputs marked finished. Markers do not verify that inputs are unchanged. Default: False.
-
-    Returns
-    -------
-    None
-        Writes backend inputs, metadata or output files to the library.
-
-    Raises
-    ------
-    OSError
-        Required files are missing or output paths cannot be read or written.
-
-    Notes
-    -----
-    See the spgrn2020 tutorial for a complete prepare, run and read workflow. Prepare jobs first. Backend runners can change the process working directory; use absolute paths and restore the caller directory if needed. Check output files and logs after execution.
-    """
-    s = datetime.datetime.now()
-    with open(os.path.join(path_green, "group_list.pkl"), "rb") as fr:
-        group_list = pickle.load(fr)
-    for item in group_list:
-        for i in range(len(item)):
-            print("computing " + str(item[i]))
-            call_spgrn2020(item[i][0], item[i][1], path_green, check_finished)
-    update_green_info_lib_json(path_green, group_list[0][0][0], group_list[0][0][1])
-    e = datetime.datetime.now()
-    print("run time:%s" % str(e - s))
-
-
-def create_grnlib_spgrn2020_parallel(path_green, check_finished=False):
-    """Compute the prepared spgrn2020 library with local worker processes.
-
-    Parameters
-    ----------
-    path_green : str
-        Absolute library root containing green_lib_info.json and backend subdirectories.
-    check_finished : bool, optional
-        Reuse outputs marked finished. Markers do not verify that inputs are unchanged. Default: False.
-
-    Returns
-    -------
-    None
-        Writes backend inputs, metadata or output files to the library.
-
-    Raises
-    ------
-    OSError
-        Required files are missing or output paths cannot be read or written.
-
-    Notes
-    -----
-    See the spgrn2020 tutorial for a complete prepare, run and read workflow. Prepare jobs first. Backend runners can change the process working directory; use absolute paths and restore the caller directory if needed. Check output files and logs after execution. On Windows call under an if __name__ == "__main__" guard.
-    """
-    s = datetime.datetime.now()
-    with open(os.path.join(path_green, "group_list.pkl"), "rb") as fr:
-        group_list = pickle.load(fr)
-
-    tasks = []
-    for grp in group_list:
-        for item in grp:
-            tasks.append(tuple(item + [path_green, check_finished]))
-
-    with open(os.path.join(path_green, "green_lib_info.json"), "r") as fr:
-        green_info = json.load(fr)
-    processes = green_info.get("processes_num", None)
-
-    with Pool(processes=processes) as pool:
-        for _ in tqdm(
-            pool.imap_unordered(_call_spgrn2020_star, tasks, chunksize=1),
-            total=len(tasks),
-            desc="Computing SPGRN2020 library",
-        ):
-            pass
-
-    update_green_info_lib_json(
-        path_green,
-        float(green_info["event_depth_list"][0]),
-        float(green_info["receiver_depth_list"][0]),
-    )
-    e = datetime.datetime.now()
-    print("run time:" + str(e - s))
-
-
-def create_grnlib_spgrn2020_parallel_multi_nodes(path_green, check_finished=False):
-    """Compute the prepared spgrn2020 library with MPI.
-
-    Parameters
-    ----------
-    path_green : str
-        Absolute library root containing green_lib_info.json and backend subdirectories.
-    check_finished : bool, optional
-        Reuse outputs marked finished. Markers do not verify that inputs are unchanged. Default: False.
+        Reuse jobs marked finished whose output is complete; recompute the others. Markers do not verify that inputs are unchanged. Default: False.
+    max_retries : int, optional
+        Extra passes over the jobs that did not complete, for example because they ran out of memory; each pass recomputes only those jobs, with the same worker count. Default: 2.
 
     Returns
     -------
@@ -316,40 +343,140 @@ def create_grnlib_spgrn2020_parallel_multi_nodes(path_green, check_finished=Fals
     OSError
         Required files are missing or output paths cannot be read or written.
     RuntimeError
-        mpi4py is unavailable.
+        Jobs still fail after the retries, or the finished library is incomplete (see check_grnlib_spgrn2020).
+
+    Notes
+    -----
+    See the spgrn2020 tutorial for a complete prepare, run and read workflow. Prepare jobs first. Backend runners can change the process working directory; use absolute paths and restore the caller directory if needed. A failed job does not stop the others: afterwards the jobs that did not complete are computed again, up to max_retries times, and the library is checked. Ctrl+C stops the run at once and kills the running backends. After an error, rerun with check_finished=True to compute only unfinished jobs.
+    """
+    s = datetime.datetime.now()
+    problems = run_until_complete(
+        lambda tasks: run_jobs_sequential(_run_job, tasks, desc="Computing SPGRN2020 library"),
+        sum(spgrn_tasks(path_green, check_finished), []),
+        max_retries,
+    )
+    _finish(path_green, problems)
+    e = datetime.datetime.now()
+    print("run time:%s" % str(e - s))
+
+
+def create_grnlib_spgrn2020_parallel(
+    path_green, check_finished=False, memory_per_job_gb=None, max_retries=2
+):
+    """Compute the prepared spgrn2020 library with local worker processes.
+
+    Parameters
+    ----------
+    path_green : str
+        Absolute library root containing green_lib_info.json and backend subdirectories.
+    check_finished : bool, optional
+        Reuse jobs marked finished whose output is complete; recompute the others. Markers do not verify that inputs are unchanged. Default: False.
+    memory_per_job_gb : float or None, optional
+        Peak memory of one spgrn2020 process in GiB. A RuntimeWarning is issued when min(processes_num, number of jobs) such processes may not fit in the currently available memory (including Slurm/container cgroup limits); the run goes on and jobs that run out of memory are computed again. spgrn2020 allocates its arrays from the input, so there is no fixed value; None skips the warning. Default: None.
+    max_retries : int, optional
+        Extra passes over the jobs that did not complete, for example because they ran out of memory; each pass recomputes only those jobs, with the same worker count. Default: 2.
+
+    Returns
+    -------
+    None
+        Writes backend inputs, metadata or output files to the library.
+
+    Raises
+    ------
+    OSError
+        Required files are missing or output paths cannot be read or written.
+    RuntimeError
+        Jobs still fail after the retries, or the finished library is incomplete (see check_grnlib_spgrn2020).
+
+    Notes
+    -----
+    See the spgrn2020 tutorial for a complete prepare, run and read workflow. Prepare jobs first. Backend runners can change the process working directory; use absolute paths and restore the caller directory if needed. A job fails when the executable cannot start, exits with an error (for example after being killed or refused memory) or leaves incomplete output files; it never gets a .finished marker. A failed job does not stop the others: afterwards the jobs that did not complete are computed again, up to max_retries times, and the library is checked. Ctrl+C stops the run at once and kills the running backends. After an error, rerun with check_finished=True to compute only unfinished jobs. On Windows call under an if __name__ == "__main__" guard.
+    """
+    s = datetime.datetime.now()
+    processes = _load_green_info(path_green).get("processes_num", None)
+    problems = run_until_complete(
+        lambda tasks: run_jobs_parallel(
+            _run_job, tasks, processes, memory_per_job_gb, desc="Computing SPGRN2020 library"
+        ),
+        sum(spgrn_tasks(path_green, check_finished), []),
+        max_retries,
+    )
+    _finish(path_green, problems)
+    e = datetime.datetime.now()
+    print("run time:" + str(e - s))
+
+
+def create_grnlib_spgrn2020_parallel_multi_nodes(
+    path_green, check_finished=False, memory_per_job_gb=None, max_retries=2
+):
+    """Compute the prepared spgrn2020 library with MPI.
+
+    Parameters
+    ----------
+    path_green : str
+        Absolute library root containing green_lib_info.json and backend subdirectories.
+    check_finished : bool, optional
+        Reuse jobs marked finished whose output is complete; recompute the others. Markers do not verify that inputs are unchanged. Default: False.
+    memory_per_job_gb : float or None, optional
+        Peak memory of one spgrn2020 process in GiB. A RuntimeWarning is issued when the ranks on a node may not fit in its available memory (including Slurm/container cgroup limits); the run goes on and jobs that run out of memory are computed again. spgrn2020 allocates its arrays from the input, so there is no fixed value; None skips the warning. Default: None.
+    max_retries : int, optional
+        Extra passes over the jobs that did not complete, for example because they ran out of memory; each pass recomputes only those jobs, with the same worker count. Default: 2.
+
+    Returns
+    -------
+    None
+        Writes backend inputs, metadata or output files to the library.
+
+    Raises
+    ------
+    OSError
+        Required files are missing or output paths cannot be read or written.
+    RuntimeError
+        mpi4py is unavailable, or (on rank 0) jobs still fail after the retries or the finished library is incomplete.
     ValueError
         MPI rank count does not match the prepared group width.
 
     Notes
     -----
-    See the spgrn2020 tutorial for a complete prepare, run and read workflow. Prepare jobs first. Backend runners can change the process working directory; use absolute paths and restore the caller directory if needed. Check output files and logs after execution.
+    See the spgrn2020 tutorial for a complete prepare, run and read workflow. Prepare jobs first. Backend runners can change the process working directory; use absolute paths and restore the caller directory if needed. A failed job does not stop the others: after all ranks finish, the jobs that did not complete are shared among the ranks and computed again, up to max_retries times. After all ranks finish, rank 0 records the distances in green_lib_info.json and checks the library; after an error, rerun with check_finished=True to compute only unfinished jobs.
     """
     s = datetime.datetime.now()
     MPI = _get_mpi()
-    with open(os.path.join(path_green, "group_list.pkl"), "rb") as fr:
-        group_list = pickle.load(fr)
-    for ind_group in range(len(group_list)):
-        comm = MPI.COMM_WORLD
-        processes_num = comm.Get_size()
-        rank = comm.Get_rank()
-        if processes_num != len(group_list[0]):
-            raise ValueError(
-                "processes_num is %d, item num in group is %d. \n"
-                "Pleasse check the process num!" % (processes_num, len(group_list[0]))
-            )
-        print("ind_group:%d rank:%d" % (ind_group, rank))
-        # the last group holds the remainder and may be shorter than processes_num
-        if rank >= len(group_list[ind_group]):
-            continue
-        call_spgrn2020(
-            event_depth=group_list[ind_group][rank][0],
-            receiver_depth=group_list[ind_group][rank][1],
-            path_green=path_green,
-            check_finished=check_finished,
-        )
-    update_green_info_lib_json(path_green, group_list[0][0][0], group_list[0][0][1])
+    rank, problems = run_jobs_mpi(
+        MPI, spgrn_tasks(path_green, check_finished), _run_job, memory_per_job_gb,
+        max_retries=max_retries,
+    )
+    if rank == 0:
+        _finish(path_green, problems)
     e = datetime.datetime.now()
     print("run time:" + str(e - s))
+
+
+def check_grnlib_spgrn2020(path_green, check_values=False):
+    """Check that a spgrn2020 library holds every file the readers need.
+
+    Parameters
+    ----------
+    path_green : str
+        Absolute library root containing green_lib_info.json and backend subdirectories.
+    check_values : bool, optional
+        Also read every Green's function file and report NaN or infinite values; this reads the whole library. Default: False.
+
+    Returns
+    -------
+    problems : list of str
+        One line per missing or incomplete file; empty when the library is complete.
+
+    Raises
+    ------
+    OSError
+        green_lib_info.json cannot be read.
+
+    Notes
+    -----
+    For every source/receiver depth pair, GreenInfo must list the same distances and samples as green_lib_info.json, grn_d must hold every distance, and tptable.dat and tstable.dat must hold one entry per distance. Spectra under GreenSpec are not checked. Rerun the create_grnlib function with check_finished=True to recompute only incomplete jobs.
+    """
+    return check_spgrn_library(path_green, _check_job, check_values)
 
 
 if __name__ == "__main__":

@@ -1,7 +1,10 @@
 import os
 
+import numpy as np
+
 from .spgrn2020inp import s as str_inp
-from .utils import call_exe, convert_earth_model_nd2inp
+from .read_green_info_spgrn import read_green_info_spgrn
+from .utils import call_exe, convert_earth_model_nd2inp, check_file_size
 
 
 def create_dir_spgrn(event_depth, receiver_depth, path_green):
@@ -125,6 +128,64 @@ def call_spgrn2020(event_depth, receiver_depth, path_green, check_finished=False
         name="spgrn2020",
     )
     return output
+
+
+def check_output_spgrn(path_func, event_depth, tables=(), expected_info=None,
+                       check_values=False):
+    """List the problems with the output of one SPGRN job.
+
+    Parameters
+    ----------
+    path_func : str
+        Job directory, path_green/GreenFunc/event_depth/receiver_depth.
+    event_depth : float
+        Source depth in km, used in the output file names.
+    tables : sequence of str, optional
+        Names of Fortran-record travel-time tables the job writes (SPGRN2020:
+        tptable.dat, tstable.dat); each holds 12 bytes per distance plus two
+        4-byte record markers. Default: ().
+    expected_info : dict or None, optional
+        Library metadata whose dist_list and samples_num the job must match.
+        Default: None.
+    check_values : bool, optional
+        Also read the Green's functions and report NaN or infinite values. Default: False.
+
+    Returns
+    -------
+    problems : list of str
+        Empty when GreenInfo is readable and grn_d holds every distance.
+    """
+    path_info = os.path.join(path_func, "GreenInfo%.2f.dat" % event_depth)
+    if not os.path.exists(path_info):
+        return ["%s is missing" % path_info]
+    try:
+        info = read_green_info_spgrn(path_func, event_depth)
+    except (ValueError, IndexError) as exc:
+        return ["%s cannot be read: %s" % (path_info, exc)]
+    n_dist = len(info["dist_list"])
+    # per distance: 3 header values, then 10 records of samples between markers
+    n_each = 3 + (2 + info["samples_num"]) * 10
+    path_grn = os.path.join(path_func, "grn_d%.2f" % event_depth)
+    problems = []
+    problem = check_file_size(path_grn, n_dist * n_each * 4)
+    if problem:
+        problems.append(problem)
+    elif check_values:
+        data = np.fromfile(path_grn, dtype=np.float32).reshape(n_dist, n_each)
+        samples = data[:, 3:].reshape(n_dist, 10, -1)[:, :, 1:-1]
+        if not np.all(np.isfinite(samples)):
+            problems.append("%s contains NaN or infinite values" % path_grn)
+    for name in tables:
+        problem = check_file_size(os.path.join(path_func, name), 8 + 12 * n_dist)
+        problems += [problem] if problem else []
+    if expected_info is not None and (
+        info["dist_list"] != expected_info["dist_list"]
+        or info["samples_num"] != expected_info["samples_num"]
+    ):
+        problems.append(
+            "%s has other distances or samples than green_lib_info.json" % path_info
+        )
+    return problems
 
 
 if __name__ == "__main__":

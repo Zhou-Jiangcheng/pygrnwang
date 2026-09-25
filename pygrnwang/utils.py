@@ -404,6 +404,36 @@ def _fortran_stopped_with_error(stderr_text):
     return False
 
 
+# set in worker processes of run_jobs_parallel; set() when the user stops the run
+_stop_event = None
+
+
+def _communicate(proc, data):
+    """proc.communicate(data), killing proc when the run is interrupted.
+
+    Ctrl+C (KeyboardInterrupt) or a stop request from run_jobs_parallel kills
+    the backend process, so an interrupted run leaves no backend running.
+    """
+    try:
+        while True:
+            try:
+                return proc.communicate(data, timeout=1)
+            except subprocess.TimeoutExpired:
+                data = None  # sent with the first call
+                if _stop_event is not None and _stop_event.is_set():
+                    raise KeyboardInterrupt("the run was stopped")
+    except BaseException:
+        if platform.system() == "Windows":
+            # Scripts\<name>.exe is a launcher that starts Python, which starts
+            # the Fortran executable; kill the whole tree, not only the launcher
+            subprocess.run(
+                ["taskkill", "/F", "/T", "/PID", str(proc.pid)], capture_output=True
+            )
+        proc.kill()
+        proc.communicate()
+        raise
+
+
 def call_exe(path_inp, path_finished, name):
     """Run one backend executable and record whether it succeeded.
 
@@ -442,12 +472,12 @@ def call_exe(path_inp, path_finished, name):
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
         )
-        stdout_bytes, stderr_bytes = proc.communicate(str.encode(path_inp))
     except OSError as exc:
         # e.g. Windows refuses to start a process when the commit limit is reached
         with open(path_failed, "w", encoding="utf-8") as fw:
             fw.write("%s could not run: %s\n" % (path_exe, exc))
         return False
+    stdout_bytes, stderr_bytes = _communicate(proc, str.encode(path_inp))
     stdout_text = stdout_bytes.decode(errors="ignore")
     stderr_text = stderr_bytes.decode(errors="ignore")
     output = stdout_text + stderr_text
@@ -457,6 +487,547 @@ def call_exe(path_inp, path_finished, name):
         if not ok:
             fw.write("\nexit code: %d\n" % proc.returncode)
     return ok
+
+
+def read_failure_log(path_dir, max_chars=300):
+    """Return the error lines of the ``.failed`` log in path_dir, or an empty string."""
+    path_failed = os.path.join(path_dir, ".failed")
+    if not os.path.exists(path_failed):
+        return ""
+    with open(path_failed, "r", encoding="utf-8", errors="ignore") as fr:
+        lines = [" ".join(line.split()) for line in fr if line.strip()]
+    # the error message and exit code, not the banner or the backtrace
+    errors = [
+        line
+        for line in lines
+        if any(key in line for key in ("STOP", "rror", "exit code", "could not run"))
+        and "Backtrace" not in line
+        and not line.startswith("#")
+    ]
+    return " | ".join(errors or lines)[-max_chars:]
+
+
+def _cgroup_free_memory_bytes():
+    # Slurm and containers enforce memory with cgroups; /proc/meminfo shows the node.
+    try:
+        with open("/proc/self/cgroup", "r") as fr:
+            entries = [line.rstrip("\n").split(":", 2) for line in fr]
+    except OSError:
+        return None
+    for entry in entries:
+        if len(entry) != 3:
+            continue
+        _, controllers, path = entry
+        if controllers == "":  # cgroup v2
+            base = "/sys/fs/cgroup" + path
+            limit_name, usage_name = "memory.max", "memory.current"
+        elif "memory" in controllers.split(","):  # cgroup v1
+            base = "/sys/fs/cgroup/memory" + path
+            limit_name, usage_name = "memory.limit_in_bytes", "memory.usage_in_bytes"
+        else:
+            continue
+        try:
+            with open(os.path.join(base, limit_name), "r") as fr:
+                limit = fr.read().strip()
+            with open(os.path.join(base, usage_name), "r") as fr:
+                usage = int(fr.read().strip())
+        except (OSError, ValueError):
+            continue
+        if limit == "max" or int(limit) >= 1 << 60:
+            return None
+        return max(0, int(limit) - usage)
+    return None
+
+
+def available_memory_bytes():
+    """Estimate the memory new backend processes can use now.
+
+    Returns
+    -------
+    available : int or None
+        Bytes, or None when the platform offers no estimate. On Windows this is
+        the smaller of free physical memory and free commit charge. On Linux it
+        is MemAvailable, further limited by a cgroup (Slurm, container) limit.
+    """
+    if platform.system() == "Windows":
+        import ctypes
+
+        class MEMORYSTATUSEX(ctypes.Structure):
+            _fields_ = [
+                ("dwLength", ctypes.c_ulong),
+                ("dwMemoryLoad", ctypes.c_ulong),
+                ("ullTotalPhys", ctypes.c_ulonglong),
+                ("ullAvailPhys", ctypes.c_ulonglong),
+                ("ullTotalPageFile", ctypes.c_ulonglong),
+                ("ullAvailPageFile", ctypes.c_ulonglong),
+                ("ullTotalVirtual", ctypes.c_ulonglong),
+                ("ullAvailVirtual", ctypes.c_ulonglong),
+                ("ullAvailExtendedVirtual", ctypes.c_ulonglong),
+            ]
+
+        stat = MEMORYSTATUSEX()
+        stat.dwLength = ctypes.sizeof(MEMORYSTATUSEX)
+        if not ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(stat)):
+            return None
+        return min(stat.ullAvailPhys, stat.ullAvailPageFile)
+
+    available = None
+    try:
+        with open("/proc/meminfo", "r") as fr:
+            for line in fr:
+                if line.startswith("MemAvailable:"):
+                    available = int(line.split()[1]) * 1024
+                    break
+    except (OSError, ValueError):
+        pass
+    if available is None:
+        try:
+            available = os.sysconf("SC_AVPHYS_PAGES") * os.sysconf("SC_PAGE_SIZE")
+        except (ValueError, OSError, AttributeError):
+            pass
+    cgroup_free = _cgroup_free_memory_bytes()
+    if cgroup_free is not None:
+        available = cgroup_free if available is None else min(available, cgroup_free)
+    return available
+
+
+def warn_if_memory_short(processes, memory_per_job_gb, where=""):
+    """Warn when the backend processes may not fit in the available memory.
+
+    The run goes on: jobs that fail for lack of memory are computed again
+    after the others (see run_until_complete).
+
+    Parameters
+    ----------
+    processes : int
+        Number of backend processes that will run at the same time.
+    memory_per_job_gb : float or None
+        Peak memory of one backend process in GiB; None skips the check.
+    where : str, optional
+        Prefix of the warning, e.g. the node name. Default: "".
+
+    Returns
+    -------
+    None
+    """
+    if not memory_per_job_gb:
+        return
+    available = available_memory_bytes()
+    if available is None:
+        return
+    required = processes * memory_per_job_gb * 2**30
+    if required > available:
+        import warnings
+
+        warnings.warn(
+            "%s%d backend processes need about %.1f GiB (%.1f GiB each) but only "
+            "%.1f GiB is available; jobs that run out of memory will be computed "
+            "again after the others. At most %d processes fit."
+            % (
+                where,
+                processes,
+                required / 2**30,
+                memory_per_job_gb,
+                available / 2**30,
+                int(available / (memory_per_job_gb * 2**30)),
+            ),
+            RuntimeWarning,
+            stacklevel=2,
+        )
+
+
+def _init_worker(stop_event):
+    global _stop_event
+    _stop_event = stop_event
+    # Ctrl+C reaches the main process, which stops the workers through
+    # stop_event; a KeyboardInterrupt inside a worker would only break the pool
+    import signal
+
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
+
+
+def _run_unless_stopped(run_job, task):
+    # the executor hands a few jobs to workers in advance; they must not start
+    # after the user stopped the run
+    if _stop_event.is_set():
+        return []
+    return run_job(task)
+
+
+def _report_failure(problems):
+    from tqdm import tqdm
+
+    tqdm.write("A job failed; continuing with the other jobs:\n  %s" % problems[0])
+
+
+def run_jobs_parallel(run_job, tasks, processes, memory_per_job_gb=None, desc=""):
+    """Run backend jobs in worker processes; a failed job does not stop the others.
+
+    Parameters
+    ----------
+    run_job : callable
+        Module-level function taking one task and returning a list of problem
+        strings; an empty list means the job completed.
+    tasks : list of tuple
+        Picklable, hashable job arguments.
+    processes : int or None
+        Worker count; None uses the CPU count.
+    memory_per_job_gb : float or None, optional
+        Peak memory of one backend process in GiB; a RuntimeWarning is issued
+        when the workers may not fit in the available memory, and the run goes
+        on. None skips the check. Default: None.
+    desc : str, optional
+        Progress-bar label.
+
+    Returns
+    -------
+    failed : dict
+        Task to problem list for every job that did not complete.
+
+    Raises
+    ------
+    KeyboardInterrupt
+        The user pressed Ctrl+C; no new job starts and running backends are killed.
+    """
+    import multiprocessing
+    from concurrent.futures import ProcessPoolExecutor, wait, FIRST_COMPLETED
+    from tqdm import tqdm
+
+    workers = min(processes or os.cpu_count() or 1, len(tasks))
+    if workers == 0:
+        return {}
+    warn_if_memory_short(workers, memory_per_job_gb)
+    print("Running %d jobs with %d worker processes" % (len(tasks), workers))
+    failed = {}
+    stop_event = multiprocessing.Event()
+    # a worker killed by the OS breaks the executor instead of hanging it; its
+    # unfinished jobs then report BrokenProcessPool and count as failed
+    executor = ProcessPoolExecutor(
+        max_workers=workers, initializer=_init_worker, initargs=(stop_event,)
+    )
+    try:
+        futures = {
+            executor.submit(_run_unless_stopped, run_job, task): task for task in tasks
+        }
+        pending = set(futures)
+        with tqdm(total=len(futures), desc=desc) as bar:
+            while pending:
+                # a timed wait, because Ctrl+C cannot interrupt an endless one on Windows
+                done, pending = wait(pending, timeout=1, return_when=FIRST_COMPLETED)
+                for future in done:
+                    bar.update(1)
+                    try:
+                        problems = future.result()
+                    except Exception as exc:
+                        problems = [
+                            "job %s: %s: %s"
+                            % (futures[future], type(exc).__name__, exc)
+                        ]
+                    if problems:
+                        _report_failure(problems)
+                        failed[futures[future]] = problems
+    except KeyboardInterrupt:
+        print("\nInterrupted; stopping the running jobs", flush=True)
+        stop_event.set()
+        executor.shutdown(wait=True, cancel_futures=True)
+        raise
+    executor.shutdown(wait=True)
+    return failed
+
+
+def run_jobs_sequential(run_job, tasks, desc=""):
+    """Run backend jobs one after another; a failed job does not stop the others.
+
+    Returns the task to problem list for every job that did not complete.
+    """
+    from tqdm import tqdm
+
+    failed = {}
+    for task in tqdm(tasks, desc=desc):
+        problems = run_job(task)
+        if problems:
+            _report_failure(problems)
+            failed[task] = problems
+    return failed
+
+
+def run_until_complete(run_pass, tasks, max_retries=2):
+    """Run all jobs, then run the failed ones again until they complete.
+
+    Parameters
+    ----------
+    run_pass : callable
+        Runs a list of tasks and returns the task to problem list of the failed ones.
+    tasks : list of tuple
+        All jobs.
+    max_retries : int, optional
+        Number of extra passes over the jobs that did not complete, for
+        example because they ran out of memory. Default: 2.
+
+    Returns
+    -------
+    problems : list of str
+        Problems of the jobs still failing after the last pass.
+    """
+    failed = run_pass(tasks)
+    for attempt in range(1, max_retries + 1):
+        if not failed:
+            break
+        print(
+            "%d jobs did not complete; computing them again (retry %d/%d)"
+            % (len(failed), attempt, max_retries)
+        )
+        failed = run_pass(list(failed))
+    return sum(failed.values(), [])
+
+
+def run_jobs_mpi(
+    MPI,
+    group_list,
+    run_job,
+    memory_per_job_gb=None,
+    exact_ranks=True,
+    max_retries=2,
+):
+    """Run the prepared job groups on MPI ranks, then recompute failed jobs.
+
+    Parameters
+    ----------
+    MPI : module
+        mpi4py.MPI.
+    group_list : list of list of tuple
+        Job groups; rank r runs task r of every group that has one.
+    run_job : callable
+        Function taking one task and returning a list of problem strings.
+    memory_per_job_gb : float or None, optional
+        Peak memory of one backend process in GiB; one rank per node issues a
+        RuntimeWarning when the ranks of its node may not fit in the available
+        memory, and the run goes on. None skips the check. Default: None.
+    exact_ranks : bool, optional
+        Require exactly as many ranks as tasks in the first group; False
+        accepts more ranks, which then stay idle. Default: True.
+    max_retries : int, optional
+        Number of extra passes over the jobs that did not complete; each pass
+        shares them among all ranks. Default: 2.
+
+    Returns
+    -------
+    rank : int
+        This rank, after every rank finished its jobs.
+    problems : list of str
+        Problems of the jobs still failing after the last pass, on every rank.
+
+    Raises
+    ------
+    ValueError
+        The rank count does not match the prepared group width.
+    """
+    comm = MPI.COMM_WORLD
+    processes_num = comm.Get_size()
+    width = len(group_list[0])
+    if (processes_num != width) if exact_ranks else (processes_num < width):
+        raise ValueError(
+            "processes_num is %d, item num in group is %d. \n"
+            "Pleasse check the process num!" % (processes_num, width)
+        )
+    rank = comm.Get_rank()
+    # every rank runs one backend process at a time, so a node needs memory
+    # for all of its ranks; one rank per node checks before any job starts
+    node_comm = comm.Split_type(MPI.COMM_TYPE_SHARED)
+    if node_comm.Get_rank() == 0:
+        warn_if_memory_short(
+            node_comm.Get_size(), memory_per_job_gb, "%s: " % MPI.Get_processor_name()
+        )
+    node_comm.Free()
+
+    def run(task):
+        problems = run_job(task)
+        if problems:
+            print("rank %d: %s" % (rank, problems[0]), flush=True)
+        return problems
+
+    failed = {}
+    for ind_group in range(len(group_list)):
+        # the last group holds the remainder and may be shorter than processes_num
+        if rank >= len(group_list[ind_group]):
+            continue
+        print("ind_group:%d rank:%d" % (ind_group, rank))
+        problems = run(group_list[ind_group][rank])
+        if problems:
+            failed[group_list[ind_group][rank]] = problems
+    for attempt in range(max_retries + 1):
+        # allgather waits for every rank and gives all of them the same jobs
+        failed_all = {}
+        for part in comm.allgather(failed):
+            failed_all.update(part)
+        if not failed_all or attempt == max_retries:
+            break
+        if rank == 0:
+            print(
+                "%d jobs did not complete; computing them again (retry %d/%d)"
+                % (len(failed_all), attempt + 1, max_retries),
+                flush=True,
+            )
+        failed = {}
+        for ind, task in enumerate(failed_all):
+            if ind % processes_num == rank:
+                problems = run(task)
+                if problems:
+                    failed[task] = problems
+    return rank, sum(failed_all.values(), [])
+
+
+def finish_library(path_green, run_problems, check):
+    """Check a finished library and raise RuntimeError if it is incomplete.
+
+    Parameters
+    ----------
+    path_green : str
+        Library root.
+    run_problems : list of str
+        Problems of the jobs still failing after the retries.
+    check : callable
+        Returns the list of library problems.
+
+    Returns
+    -------
+    None
+    """
+    # a failed job's own message says more than the files it did not write
+    failed_dirs = [
+        problem.split(" failed: ")[0] for problem in run_problems if " failed: " in problem
+    ]
+    problems = run_problems + [
+        problem
+        for problem in check()
+        if not any(problem.startswith(d + os.sep) for d in failed_dirs)
+    ]
+    raise_if_incomplete(list(dict.fromkeys(problems)), path_green)
+    print("Library check passed: %s" % path_green)
+
+
+def run_checked_job(job_dir, check_finished, run, check, stale=()):
+    """Run one backend job unless check_finished finds it complete.
+
+    Parameters
+    ----------
+    job_dir : str
+        Directory holding the job's .finished marker and .failed log.
+    check_finished : bool
+        Skip the job when it has a .finished marker and check() finds no problem.
+    run : callable
+        Runs the executable and returns call_exe's success flag.
+    check : callable
+        Returns the list of problems with the job's output.
+    stale : sequence of str, optional
+        Glob patterns, relative to job_dir, of files derived from an earlier run;
+        they are removed before the job runs so they cannot hide the new output.
+
+    Returns
+    -------
+    problems : list of str
+        Empty when the job completed.
+    """
+    try:
+        if (
+            check_finished
+            and os.path.exists(os.path.join(job_dir, ".finished"))
+            and not check()
+        ):
+            return []
+        import glob
+
+        for pattern in stale:
+            for path in glob.glob(os.path.join(job_dir, pattern)):
+                os.remove(path)
+        if not run():
+            return ["%s failed: %s" % (job_dir, read_failure_log(job_dir))]
+        return check()
+    except Exception as exc:
+        return ["%s failed: %s: %s" % (job_dir, type(exc).__name__, exc)]
+
+
+# every backend reads and writes paths through character*160 variables
+FORTRAN_MAX_PATH = 160
+
+
+def check_path_lengths(paths, limit=FORTRAN_MAX_PATH):
+    """Raise ValueError when a backend would truncate the longest of the paths.
+
+    Parameters
+    ----------
+    paths : iterable of str
+        Paths a backend executable reads or writes.
+    limit : int, optional
+        Longest path the executable can hold. Default: 160.
+
+    Returns
+    -------
+    None
+    """
+    longest = max(paths, key=len)
+    if len(longest) > limit:
+        raise ValueError(
+            "%s has %d characters; the backend executable reads at most %d. "
+            "Use a shorter path_green." % (longest, len(longest), limit)
+        )
+
+
+def check_ascii_table(path, n_rows, n_cols, skip_rows=1):
+    """Return a problem when a text table is missing or incomplete, else None.
+
+    The table must have n_rows rows after skip_rows header lines, the last one
+    with n_cols values; a killed backend leaves fewer or shorter rows.
+    """
+    if not os.path.exists(path):
+        return "%s is missing" % path
+    with open(path, "rb") as fr:
+        lines = fr.read().splitlines()[skip_rows:]
+    while lines and not lines[-1].strip():
+        lines.pop()
+    if len(lines) != n_rows or len(lines[-1].split()) != n_cols:
+        return "%s is incomplete: %d rows of %d values, expected %d rows of %d" % (
+            path,
+            len(lines),
+            len(lines[-1].split()) if lines else 0,
+            n_rows,
+            n_cols,
+        )
+    return None
+
+
+def check_file_size(path, expected, check_values=False):
+    """Return a problem when a float32 file is missing or has the wrong size, else None."""
+    if not os.path.exists(path):
+        return "%s is missing" % path
+    size = os.path.getsize(path)
+    if size != expected:
+        return "%s has %d bytes, expected %d" % (path, size, expected)
+    if check_values and not np.all(np.isfinite(np.fromfile(path, dtype=np.float32))):
+        return "%s contains NaN or infinite values" % path
+    return None
+
+
+def write_bin_atomic(array, path):
+    """Write array.tofile(path) so an interruption never leaves a short file."""
+    array.tofile(path + ".tmp")
+    os.replace(path + ".tmp", path)
+
+
+def raise_if_incomplete(problems, path_green, max_listed=20):
+    """Raise RuntimeError listing library problems; do nothing when there are none."""
+    if not problems:
+        return
+    lines = problems[:max_listed]
+    if len(problems) > max_listed:
+        lines.append("... and %d more" % (len(problems) - max_listed))
+    raise RuntimeError(
+        "The Green's function library at %s is incomplete (%d problems):\n  %s\n"
+        "Fix the cause (reduce processes_num if jobs ran out of memory), then rerun "
+        "the create_grnlib function with check_finished=True to compute only the "
+        "unfinished jobs."
+        % (path_green, len(problems), "\n  ".join(lines))
+    )
 
 
 def read_tpts_table(path_green, event_depth_km, receiver_depth_km, ind):

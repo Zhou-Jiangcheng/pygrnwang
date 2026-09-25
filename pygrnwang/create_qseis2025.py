@@ -4,8 +4,29 @@ import math
 import numpy as np
 import pandas as pd
 
-from .utils import convert_earth_model_nd2inp, call_exe
+from .utils import (
+    convert_earth_model_nd2inp,
+    call_exe,
+    check_ascii_table,
+    check_file_size,
+    write_bin_atomic,
+)
 from .qseis2025inp import s as str_inp
+
+# nrmax in fortran_src_codes/qseis2025_src/qsglobal.h: distances per input file
+QSEIS2025_NRMAX = 101
+# The Fortran arrays are static, so every qseis2025 process commits about
+# 1.3 GiB (measured) whatever the grid size; the margin covers the Python side.
+QSEIS2025_MEMORY_PER_JOB_GB = 1.4
+
+# output files for each of the five output_observables flags
+# (disp/velo, volume, strain, stress, rotation):
+# P-SV components for ex, ss, ds, cl and SH components for ss, ds
+PSV_COMS_QSEIS2025 = [["tz", "tr"], ["tv"], ["ezz", "ezr", "err", "ett"],
+                      ["szz", "szr", "srr", "stt"], ["ot"]]
+SH_COMS_QSEIS2025 = [["tt"], [], ["ezt", "ert"], ["szt", "srt"], ["oz", "or"]]
+PSV_STYPES = ["ex", "ss", "ds", "cl"]
+SH_STYPES = ["ss", "ds"]
 
 
 def create_dir_qseis2025(
@@ -177,51 +198,126 @@ def call_qseis2025(
     return output
 
 
-def convert_pd2bin_qseis2025(path_greenfunc, remove=False):
-    for com in [
-        "tr",
-        "tz",
-        "tv",
-        "ezz",
-        "ezr",
-        "err",
-        "ett",
-        "szz",
-        "szr",
-        "srr",
-        "stt",
-        "ot",
-    ]:
-        time_series_com = []
-        for stype in ["ex", "ss", "ds", "cl"]:
-            path_ascii = os.path.join(path_greenfunc, "%s.%s" % (stype, com))
-            if not os.path.exists(path_ascii):
-                continue
-            stype_com = pd.read_csv(path_ascii, sep="\\s+").to_numpy()
-            time_series_com.append(stype_com[:, 1:])
-            if remove:
-                os.remove(path_ascii)
-        if len(time_series_com) == 4:
-            output_data = np.concatenate(
-                [time_series_com[_] for _ in range(4)], dtype=np.float32
-            )
-            output_data.T.tofile(os.path.join(path_greenfunc, "grn_%s.bin" % com))
+def read_output_observables_qseis2025(path_inp):
+    """Read the five output_observables flags from a generated grn.inp."""
+    with open(path_inp, "r") as fr:
+        lines = fr.readlines()
+    # create_inp_qseis2025 writes the flags on this line
+    flags = lines[181].split() if len(lines) > 181 else []
+    if len(flags) != 5 or any(flag not in ("0", "1") for flag in flags):
+        raise ValueError("Cannot read output_observables from %s" % path_inp)
+    return [int(flag) for flag in flags]
 
-    for com in ["tt", "ezt", "ert", "szt", "srt", "oz", "or"]:
-        time_series_com = []
-        for stype in ["ss", "ds"]:
-            path_ascii = os.path.join(path_greenfunc, "%s.%s" % (stype, com))
-            if not os.path.exists(path_ascii):
-                continue
-            stype_com = pd.read_csv(path_ascii, sep="\\s+").to_numpy()
-            time_series_com.append(stype_com[:, 1:])
-            if remove:
-                os.remove(path_ascii)
-        if len(time_series_com) == 2:
-            output_data = np.concatenate(
-                [time_series_com[_] for _ in range(2)], dtype=np.float32
+
+def qseis2025_output_coms(output_observables):
+    """Return (component, source types) for the files of the selected observables."""
+    coms = []
+    for ind, selected in enumerate(output_observables):
+        if selected:
+            coms += [(com, PSV_STYPES) for com in PSV_COMS_QSEIS2025[ind]]
+            coms += [(com, SH_STYPES) for com in SH_COMS_QSEIS2025[ind]]
+    return coms
+
+
+def check_output_qseis(path_greenfunc, coms, sampling_num, n_dist, check_values=False):
+    """List the problems with the output of one QSEIS job.
+
+    Parameters
+    ----------
+    path_greenfunc : str
+        Job directory.
+    coms : list of tuple
+        (component, source types) of every file the job must write.
+    sampling_num : int
+        Samples per trace.
+    n_dist : int
+        Distances computed by the job.
+    check_values : bool, optional
+        Also read binary files and report NaN or infinite values. Default: False.
+
+    Returns
+    -------
+    problems : list of str
+        Empty when every component exists, as a binary file of the size the
+        readers expect or as complete ASCII files.
+    """
+    problems = []
+    for com, stypes in coms:
+        path_bin = os.path.join(path_greenfunc, "grn_%s.bin" % com)
+        if os.path.exists(path_bin):
+            problem = check_file_size(
+                path_bin, len(stypes) * sampling_num * n_dist * 4, check_values
             )
-            output_data.T.tofile(os.path.join(path_greenfunc, "grn_%s.bin" % com))
+            problems += [problem] if problem else []
+            continue
+        for stype in stypes:
+            # a header line, then one row per sample: time and one value per distance
+            problem = check_ascii_table(
+                os.path.join(path_greenfunc, "%s.%s" % (stype, com)),
+                sampling_num,
+                n_dist + 1,
+            )
+            problems += [problem] if problem else []
+    return problems
+
+
+def check_output_qseis2025(
+    path_greenfunc, output_observables, sampling_num, n_dist, check_values=False
+):
+    """List the problems with the output of one qseis2025 job (see check_output_qseis)."""
+    return check_output_qseis(
+        path_greenfunc,
+        qseis2025_output_coms(output_observables),
+        sampling_num,
+        n_dist,
+        check_values,
+    )
+
+
+def convert_qseis_ascii(path_greenfunc, coms, remove=False):
+    """Convert the ASCII output of one QSEIS job to grn_<component>.bin files.
+
+    Components without any ASCII file are skipped; ASCII files are removed
+    only after their binary file is written.
+    """
+    for com, stypes in coms:
+        paths_ascii = [
+            os.path.join(path_greenfunc, "%s.%s" % (stype, com)) for stype in stypes
+        ]
+        exist = [os.path.exists(path) for path in paths_ascii]
+        if not any(exist):
+            continue
+        if not all(exist):
+            raise ValueError(
+                "Incomplete output in %s: %s missing"
+                % (
+                    path_greenfunc,
+                    ", ".join(
+                        os.path.basename(path)
+                        for path, ok in zip(paths_ascii, exist)
+                        if not ok
+                    ),
+                )
+            )
+        time_series_com = [
+            pd.read_csv(path, sep="\\s+").to_numpy()[:, 1:] for path in paths_ascii
+        ]
+        if len({data.shape for data in time_series_com}) != 1:
+            raise ValueError(
+                "Output files for %s in %s have different sizes; "
+                "the job did not finish" % (com, path_greenfunc)
+            )
+        write_bin_atomic(
+            np.concatenate(time_series_com, dtype=np.float32).T,
+            os.path.join(path_greenfunc, "grn_%s.bin" % com),
+        )
+        if remove:
+            for path in paths_ascii:
+                os.remove(path)
+
+
+def convert_pd2bin_qseis2025(path_greenfunc, remove=False):
+    convert_qseis_ascii(path_greenfunc, qseis2025_output_coms([1] * 5), remove)
 
 
 if __name__ == "__main__":

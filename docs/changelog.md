@@ -2,6 +2,39 @@
 
 ## Unreleased documentation
 
+### Memory checks, retries and library checks for every backend, 25 September 2026
+
+- Every backend run writes `.finished` only when the executable exits with
+  code 0 and without a Fortran `STOP` error message; otherwise its log goes to
+  `.failed`. Previously a process killed for lack of memory, or one that
+  stopped on an input error (gfortran then exits with code 0), was still
+  marked finished and skipped by `check_finished=True`.
+- The parallel and MPI builders of QSEIS06, QSEIS2025, EDGRN2 and EDCMP2 warn
+  before any job starts when the processes running at once (per node for MPI)
+  may need more than the available memory (`memory_per_job_gb`;
+  Slurm/container cgroup limits count). The run goes on; jobs that run out of
+  memory are computed again (below). QSSP2020 and SPGRN accept the same
+  argument; their warning is off by default because their memory depends on
+  the input.
+- A failed job no longer stops or hangs a build. All builders run the
+  remaining jobs, compute the failed ones again up to `max_retries=2` times,
+  check the library and raise `RuntimeError` listing what is still missing.
+  MPI builders share the failed jobs among all ranks. Ctrl+C stops a build at
+  once and kills the running backend processes.
+- New `check_grnlib_qseis06`, `check_grnlib_qseis2025`, `check_grnlib_qssp2020`,
+  `check_grnlib_spgrn2012`, `check_grnlib_spgrn2020`, `check_grnlib_edgrn2`
+  and `check_grnlib_edcmp2` check any library. A job that runs again first
+  deletes its earlier output.
+- Conversions skip incomplete jobs, write binary files atomically and delete
+  ASCII output only after its binary file exists; they used to delete partial
+  output. QSSP2020 conversion now reads strain and rotation files under their
+  real names (the flag order was swapped in `output_type_list`).
+- Preprocessors reject paths longer than the 160 characters the executables
+  read, QSEIS `N_each_group` above 101, and EDGRN grids beyond its limits.
+- SPGRN2012 sequential and MPI builders now write the travel-time tables, as
+  the parallel builder did; SPGRN MPI builders update the metadata from rank 0
+  only, and QSSP MPI builders no longer fail on a short last group.
+
 ### Displacement requested directly from readers, 15 September 2026
 
 - `seek_qseis06` and `seek_qseis2025` now treat custom `wavelet_type=0`

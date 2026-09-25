@@ -4,6 +4,15 @@ import math
 from .edgrn2inp import s as str_inp
 from .utils import convert_earth_model_nd2inp, call_exe
 
+# edgrn2 computes at most nrmax=10001 distances and nzsmax=401 source depths
+# (edgglobal.h), but edcmp2 reads at most NRMAX=10000 distances (edcglobal.h)
+EDGRN2_NRMAX = 10000
+EDGRN2_NZSMAX = 401
+# edgrn2 arrays are static and small: about 10 MiB per process (measured)
+EDGRN2_MEMORY_PER_JOB_GB = 0.05
+# Green's function tables and the number of values in each of their rows
+EDGRN2_TABLES = [("edgrn.ss", 10), ("edgrn.ds", 10), ("edgrn.cl", 7)]
+
 
 def create_inp_edgrn2(
     path_green,
@@ -70,6 +79,38 @@ def create_inp_edgrn2(
     lines = lines + lines_earth + [lines_end]
     with open(os.path.join(path_edgrn_obs_dep, "grn.inp"), "w") as fw:
         fw.writelines(lines)
+
+
+def check_output_edgrn2(path_obs_dep):
+    """List the problems with the Green's function tables of one edgrn2 job.
+
+    Each table has comment lines, a parameter line starting with the numbers
+    of distances and source depths, then one row per distance and source depth.
+    """
+    problems = []
+    for name, n_cols in EDGRN2_TABLES:
+        path = os.path.join(path_obs_dep, name)
+        if not os.path.exists(path):
+            problems.append("%s is missing" % path)
+            continue
+        with open(path, "rb") as fr:
+            lines = [
+                line
+                for line in fr.read().splitlines()
+                if line.strip() and not line.startswith(b"#")
+            ]
+        try:
+            params = lines[0].split()
+            n_rows = int(params[0]) * int(params[3])
+        except (IndexError, ValueError):
+            problems.append("%s has no parameter line" % path)
+            continue
+        rows = lines[1:]
+        if len(rows) != n_rows or len(rows[-1].split()) != n_cols:
+            problems.append(
+                "%s is incomplete: %d rows, expected %d" % (path, len(rows), n_rows)
+            )
+    return problems
 
 
 def call_edgrn2(obs_depth, path_green, check_finished=False):

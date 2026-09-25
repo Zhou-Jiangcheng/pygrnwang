@@ -5,7 +5,14 @@ import pandas as pd
 
 from .geo import d2m
 from .qssp2020inp import s as str_inp
-from .utils import convert_earth_model_nd2inp, call_exe, cal_grid
+from .utils import (
+    convert_earth_model_nd2inp,
+    call_exe,
+    cal_grid,
+    check_ascii_table,
+    check_file_size,
+    write_bin_atomic,
+)
 
 mt_com_list = ["mrr", "mtt", "mpp", "mrt", "mrp", "mtp"]
 # the order of the eleven output_observables flags read by qssp2020 (qpgetinp.f)
@@ -22,6 +29,8 @@ output_type_list = [
     "gravitation",
     "gravimeter",
 ]
+# spectra written by a "spec" job for each source depth (qpgetinp.f)
+spec_prefix_list = ["U", "V", "W", "E", "F", "G", "P", "Q"]
 
 
 def create_dir_qssp2020(event_depth, receiver_depth, path_green):
@@ -238,42 +247,77 @@ def call_qssp2020(
     return output
 
 
+def _component_suffixes(output_type):
+    if output_type == "gravimeter":
+        return [""]
+    if output_type in ["disp", "velo", "acce", "rota", "rota_rate", "gravitation"]:
+        return ["_e", "_n", "_z"]
+    if output_type in ["stress", "stress_rate", "strain", "strain_rate"]:
+        return ["_ee", "_en", "_ez", "_nn", "_nz", "_zz"]
+    raise ValueError("output_type wrong")
+
+
+def output_names_qssp2020(output_observables):
+    """Return the file stems (e.g. "_disp_e") of the selected observables."""
+    return [
+        "_%s%s" % (output_type_list[ind], suffix)
+        for ind, selected in enumerate(output_observables)
+        if selected
+        for suffix in _component_suffixes(output_type_list[ind])
+    ]
+
+
+def check_spec_qssp2020(path_green, event_depth, receiver_depth):
+    """List the spectral files a "spec" job did not write."""
+    path_spec = os.path.join(
+        path_green, "GreenSpec", "%.2f" % event_depth, "%.2f" % receiver_depth
+    )
+    paths = [
+        os.path.join(path_spec, "%s_Green_%.2fkm" % (prefix, event_depth))
+        for prefix in spec_prefix_list
+    ]
+    return ["%s is missing" % path for path in paths if not os.path.exists(path)]
+
+
+def check_func_qssp2020(path_func, output_observables, sampling_num, n_dist,
+                        check_values=False):
+    """List the problems with the time-domain output of one moment-tensor job.
+
+    Every selected component must exist as a float32 .bin file of the size the
+    readers expect, or as a complete .dat file: a header line, then one row per
+    sample with the time and one value per distance.
+    """
+    problems = []
+    for name in output_names_qssp2020(output_observables):
+        path_bin = os.path.join(path_func, name + ".bin")
+        if os.path.exists(path_bin):
+            problem = check_file_size(path_bin, n_dist * sampling_num * 4, check_values)
+        else:
+            problem = check_ascii_table(
+                os.path.join(path_func, name + ".dat"), sampling_num, n_dist + 1
+            )
+        problems += [problem] if problem else []
+    return problems
+
+
 def convert_pd2bin_qssp2020(path_green, event_depth, receiver_depth, output_type_ind):
-    if output_type_list[output_type_ind] == "gravimeter":
-        enz_list = [""]
-    elif output_type_list[output_type_ind] in [
-        "disp",
-        "velo",
-        "acce",
-        "rota",
-        "rota_rate",
-        "gravitation",
-    ]:
-        enz_list = ["_e", "_n", "_z"]
-    elif output_type_list[output_type_ind] in [
-        "stress",
-        "stress_rate",
-        "strain",
-        "strain_rate",
-    ]:
-        enz_list = ["_ee", "_en", "_ez", "_nn", "_nz", "_zz"]
-    else:
-        raise ValueError("output_type wrong")
-    for k in range(6):
-        for l in range(len(enz_list)):
+    for mt_com in mt_com_list:
+        for suffix in _component_suffixes(output_type_list[output_type_ind]):
             path_dat = str(
                 os.path.join(
                     path_green,
                     "GreenFunc",
                     "%.2f" % event_depth,
                     "%.2f" % receiver_depth,
-                    mt_com_list[k],
-                    "_%s%s.dat" % (output_type_list[output_type_ind], enz_list[l]),
+                    mt_com,
+                    "_%s%s.dat" % (output_type_list[output_type_ind], suffix),
                 )
             )
+            if not os.path.exists(path_dat) and os.path.exists(path_dat[:-4] + ".bin"):
+                continue  # converted before and the .dat file removed
             dat = pd.read_csv(path_dat, sep="\\s+").to_numpy()
             dat = np.array(dat, dtype=np.float32)[:, 1:].T
-            dat.tofile(path_dat[:-4] + ".bin")
+            write_bin_atomic(dat, path_dat[:-4] + ".bin")
 
 
 if __name__ == "__main__":

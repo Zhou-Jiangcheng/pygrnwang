@@ -4,7 +4,13 @@ import numpy as np
 import pandas as pd
 
 from .edcmp2inp import s as str_inp
-from .utils import call_exe, cal_grid
+from .utils import (
+    call_exe,
+    cal_grid,
+    check_ascii_table,
+    check_file_size,
+    write_bin_atomic,
+)
 
 fm_base_list = (
     (315.0, 90.0, 0.0),  # [1,0,0,-1,0,0] m1
@@ -17,6 +23,13 @@ fm_base_list = (
     (0.0, 0.0, 90.0),  # [0,0,0,0,1,0] med
 )
 output_name_list = ("disp", "strain", "stress", "tilt")
+# values per receiver of each output
+output_cha_num = {"disp": 3, "strain": 6, "stress": 6, "tilt": 2}
+# NRECMAX in fortran_src_codes/edcmp2.0_src/edcglobal.h: receivers per job
+EDCMP2_NRECMAX = 500000
+# The Fortran arrays are static, so every edcmp2 process commits about
+# 0.93 GiB (measured) whatever the grid size; the margin covers the Python side.
+EDCMP2_MEMORY_PER_JOB_GB = 1.0
 
 
 def create_inp_edcmp2(
@@ -134,9 +147,42 @@ def call_edcmp2(event_depth, obs_depth, mt_ind, path_green, check_finished=False
     return output
 
 
+def check_output_edcmp2(path_sub_dir, output_observables, n_dist, check_values=False):
+    """List the problems with the output of one edcmp2 job.
+
+    Every selected output must exist as <output>.bin with one float32 row per
+    receiver, or as hs.<output> with three header lines, then one row per
+    receiver with its x, y and values.
+    """
+    problems = []
+    for ind, selected in enumerate(output_observables):
+        if not selected:
+            continue
+        output_name = output_name_list[ind]
+        cha_num = output_cha_num[output_name]
+        path_bin = os.path.join(path_sub_dir, "%s.bin" % output_name)
+        if os.path.exists(path_bin):
+            problem = check_file_size(path_bin, n_dist * cha_num * 4, check_values)
+        else:
+            problem = check_ascii_table(
+                os.path.join(path_sub_dir, "hs.%s" % output_name),
+                n_dist,
+                2 + cha_num,
+                skip_rows=3,
+            )
+        problems += [problem] if problem else []
+    return problems
+
+
 def convert_edcmp2(path_sub_dir, output_type_ind, remove=False):
     output_name = output_name_list[output_type_ind]
+    path_bin = os.path.join(path_sub_dir, "%s.bin" % output_name)
     fname_df = str(os.path.join(path_sub_dir, "hs.%s" % output_name))
+    if not os.path.exists(fname_df) and os.path.exists(path_bin):
+        # converted before and the ASCII file removed
+        return np.fromfile(path_bin, dtype=np.float32).reshape(
+            -1, output_cha_num[output_name]
+        )
     df = pd.read_csv(
         fname_df,
         skiprows=3,
@@ -144,7 +190,7 @@ def convert_edcmp2(path_sub_dir, output_type_ind, remove=False):
         header=None,
     )
     values_raw = np.asarray(df.to_numpy()[:, 2:], dtype=np.float32)
-    values_raw.tofile(os.path.join(path_sub_dir, "%s.bin" % output_name))
+    write_bin_atomic(values_raw, path_bin)
     if remove:
         os.remove(fname_df)
     return values_raw

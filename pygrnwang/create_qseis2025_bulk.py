@@ -1,23 +1,96 @@
 import os
+import math
 import pickle
 import json
 import datetime
-from multiprocessing import Pool
 
 from tqdm import tqdm
 
 from .create_qseis2025 import (
+    QSEIS2025_NRMAX,
+    QSEIS2025_MEMORY_PER_JOB_GB,
     create_dir_qseis2025,
     create_inp_qseis2025,
     call_qseis2025,
+    check_output_qseis2025,
     convert_pd2bin_qseis2025,
+    read_output_observables_qseis2025,
 )
 from .pytaup import create_tpts_table
-from .utils import group, convert_earth_model_nd2nd_without_Q, cal_grid
+from .utils import (
+    group,
+    convert_earth_model_nd2nd_without_Q,
+    cal_grid,
+    check_path_lengths,
+    run_checked_job,
+    run_jobs_sequential,
+    run_jobs_parallel,
+    run_jobs_mpi,
+    run_until_complete,
+    finish_library,
+)
 
 
-def _call_qseis2025_star(args):
-    return call_qseis2025(*args)
+def _load_green_info(path_green):
+    with open(
+        os.path.join(path_green, "green_lib_info.json"), "r", encoding="utf-8"
+    ) as fr:
+        return json.load(fr)
+
+
+def _job_dir(path_green, event_depth, receiver_depth, n_group):
+    return str(
+        os.path.join(
+            path_green, "%.2f" % event_depth, "%.2f" % receiver_depth, "%d_0" % n_group
+        )
+    )
+
+
+def _check_job(path_green, green_info, event_depth, receiver_depth, n_group,
+               check_values=False):
+    sub_sub_dir = _job_dir(path_green, event_depth, receiver_depth, n_group)
+    path_inp = os.path.join(sub_sub_dir, "grn.inp")
+    if not os.path.exists(path_inp):
+        return ["%s is missing" % path_inp]
+    try:
+        output_observables = read_output_observables_qseis2025(path_inp)
+    except (OSError, ValueError):
+        return ["%s cannot be read" % path_inp]
+    N_each_group = green_info["N_each_group"]
+    return check_output_qseis2025(
+        sub_sub_dir,
+        output_observables,
+        green_info["sampling_num"],
+        min(N_each_group, green_info["N_dist"] - n_group * N_each_group),
+        check_values,
+    )
+
+
+def _run_job(task):
+    """Run one job unless check_finished finds it complete; return its problems."""
+    event_depth, receiver_depth, n_group, path_green, check_finished = task
+    green_info = _load_green_info(path_green)
+    return run_checked_job(
+        _job_dir(path_green, event_depth, receiver_depth, n_group),
+        check_finished,
+        lambda: call_qseis2025(event_depth, receiver_depth, n_group, path_green),
+        lambda: _check_job(path_green, green_info, event_depth, receiver_depth, n_group),
+        # outputs of an earlier run would pass the check if this run fails
+        stale=["grn_*.bin*", "ex.*", "ss.*", "ds.*", "cl.*"],
+    )
+
+
+def _tasks(path_green, check_finished):
+    with open(os.path.join(path_green, "group_list.pkl"), "rb") as fr:
+        group_list = pickle.load(fr)
+    return [[tuple(job + [path_green, check_finished]) for job in grp] for grp in group_list]
+
+
+def _finish(path_green, run_problems, convert_pd2bin, remove_pd):
+    """Convert the jobs, check the whole library and raise if incomplete."""
+    if convert_pd2bin:
+        convert_pd2bin_qseis2025_all(path_green, remove_pd)
+    finish_library(path_green, run_problems, lambda: check_grnlib_qseis2025(path_green))
 
 
 def _get_mpi():
@@ -71,7 +144,7 @@ def pre_process_qseis2025(
     delta_dist : float
         Positive regular distance increment in km. The last grid point can exceed the requested maximum by less than one increment.
     N_each_group : int
-        Positive maximum number of distances in each backend input file.
+        Positive maximum number of distances in each backend input file; at most 101, the distance limit (nrmax) of the bundled qseis2025 build.
     time_window : float
         Output time-window duration in seconds.
     sampling_interval : float
@@ -125,11 +198,26 @@ def pre_process_qseis2025(
     ------
     OSError
         Required files are missing or output paths cannot be read or written.
+    ValueError
+        N_each_group exceeds the distance limit of the qseis2025 executable, or a job input path is longer than the 160 characters it can read.
 
     Notes
     -----
     See the qseis2025 tutorial for a complete prepare, run and read workflow. Preprocessing writes inputs and travel-time/model metadata; run the matching create_grnlib function to calculate Green functions. free_surface=0 includes the free surface; 1 removes it; 2 removes it with amplitude correction for surface receivers.
     """
+    if N_each_group > QSEIS2025_NRMAX:
+        # qseis2025 would stop with "nr > nrmax" and write no Green's functions
+        raise ValueError(
+            "N_each_group=%d exceeds %d, the number of distances qseis2025 can "
+            "compute in one job" % (N_each_group, QSEIS2025_NRMAX)
+        )
+    N_dist = len(cal_grid(dist_range[0], dist_range[1], delta_dist))
+    n_group_last = math.ceil(N_dist / N_each_group) - 1
+    check_path_lengths(
+        os.path.join(_job_dir(path_green, event_dep, receiver_dep, n_group_last), "grn.inp")
+        for event_dep in event_depth_list
+        for receiver_dep in receiver_depth_list
+    )
     print("Preprocessing")
     os.makedirs(path_green, exist_ok=True)
 
@@ -233,7 +321,7 @@ def pre_process_qseis2025(
 
 
 def create_grnlib_qseis2025_sequential(
-    path_green, check_finished=False, convert_pd2bin=True, remove_pd=True
+    path_green, check_finished=False, convert_pd2bin=True, remove_pd=True, max_retries=2
 ):
     """Compute the prepared qseis2025 library sequentially.
 
@@ -242,11 +330,13 @@ def create_grnlib_qseis2025_sequential(
     path_green : str
         Absolute library root containing green_lib_info.json and backend subdirectories.
     check_finished : bool, optional
-        Reuse outputs marked finished. Markers do not verify that inputs are unchanged. Default: False.
+        Reuse jobs marked finished whose output is complete; recompute the others. Markers do not verify that inputs are unchanged. Default: False.
     convert_pd2bin : bool, optional
         Convert completed ASCII waveforms to the compact float32 reader format. Default: True.
     remove_pd : bool, optional
         Delete original ASCII output; retain it while validating a new calculation. Default: True.
+    max_retries : int, optional
+        Extra passes over the jobs that did not complete, for example because they ran out of memory; each pass recomputes only those jobs, with the same worker count. Default: 2.
 
     Returns
     -------
@@ -257,24 +347,28 @@ def create_grnlib_qseis2025_sequential(
     ------
     OSError
         Required files are missing or output paths cannot be read or written.
+    RuntimeError
+        Jobs still fail after the retries, or the finished library is incomplete (see check_grnlib_qseis2025).
 
     Notes
     -----
-    See the qseis2025 tutorial for a complete prepare, run and read workflow. Prepare jobs first. Backend runners can change the process working directory; use absolute paths and restore the caller directory if needed. Check output files and logs after execution.
+    See the qseis2025 tutorial for a complete prepare, run and read workflow. Prepare jobs first. Backend runners can change the process working directory; use absolute paths and restore the caller directory if needed. A failed job does not stop the others: afterwards the jobs that did not complete are computed again, up to max_retries times, and the library is checked. Ctrl+C stops the run at once and kills the running backends. After an error, rerun with check_finished=True to compute only unfinished jobs.
     """
-    with open(os.path.join(path_green, "group_list.pkl"), "rb") as fr:
-        group_list = pickle.load(fr)
-    for item in tqdm(group_list, desc="Computing dynamic stress"):
-        for i in range(len(item)):
-            # print("computing " + str(item[i]))
-            item[i] = item[i] + [path_green, check_finished]
-            call_qseis2025(*item[i])
-    if convert_pd2bin:
-        convert_pd2bin_qseis2025_all(path_green, remove_pd)
+    problems = run_until_complete(
+        lambda tasks: run_jobs_sequential(_run_job, tasks, desc="Computing dynamic stress"),
+        sum(_tasks(path_green, check_finished), []),
+        max_retries,
+    )
+    _finish(path_green, problems, convert_pd2bin, remove_pd)
 
 
 def create_grnlib_qseis2025_parallel(
-    path_green, check_finished=False, convert_pd2bin=True, remove_pd=True
+    path_green,
+    check_finished=False,
+    convert_pd2bin=True,
+    remove_pd=True,
+    memory_per_job_gb=QSEIS2025_MEMORY_PER_JOB_GB,
+    max_retries=2,
 ):
     """Compute the prepared qseis2025 library with local worker processes.
 
@@ -283,11 +377,15 @@ def create_grnlib_qseis2025_parallel(
     path_green : str
         Absolute library root containing green_lib_info.json and backend subdirectories.
     check_finished : bool, optional
-        Reuse outputs marked finished. Markers do not verify that inputs are unchanged. Default: False.
+        Reuse jobs marked finished whose output is complete; recompute the others. Markers do not verify that inputs are unchanged. Default: False.
     convert_pd2bin : bool, optional
         Convert completed ASCII waveforms to the compact float32 reader format. Default: True.
     remove_pd : bool, optional
         Delete original ASCII output; retain it while validating a new calculation. Default: True.
+    memory_per_job_gb : float or None, optional
+        Peak memory of one qseis2025 process in GiB. A RuntimeWarning is issued when min(processes_num, number of jobs) such processes may not fit in the currently available memory (including Slurm/container cgroup limits); the run goes on and jobs that run out of memory are computed again; None skips the warning. Default: 1.4, the measured commit of the bundled executable.
+    max_retries : int, optional
+        Extra passes over the jobs that did not complete, for example because they ran out of memory; each pass recomputes only those jobs, with the same worker count. Default: 2.
 
     Returns
     -------
@@ -298,37 +396,22 @@ def create_grnlib_qseis2025_parallel(
     ------
     OSError
         Required files are missing or output paths cannot be read or written.
+    RuntimeError
+        Jobs still fail after the retries, or the finished library is incomplete (see check_grnlib_qseis2025).
 
     Notes
     -----
-    See the qseis2025 tutorial for a complete prepare, run and read workflow. Prepare jobs first. Backend runners can change the process working directory; use absolute paths and restore the caller directory if needed. Check output files and logs after execution. On Windows call under an if __name__ == "__main__" guard.
+    See the qseis2025 tutorial for a complete prepare, run and read workflow. Prepare jobs first. Backend runners can change the process working directory; use absolute paths and restore the caller directory if needed. A job fails when the executable cannot start, exits with an error (for example after being killed for lack of memory) or leaves incomplete output files; it never gets a .finished marker. A failed job does not stop the others: afterwards the jobs that did not complete are computed again, up to max_retries times, and the library is checked. Ctrl+C stops the run at once and kills the running backends. After an error, rerun with check_finished=True to compute only unfinished jobs. On Windows call under an if __name__ == "__main__" guard.
     """
-    with open(os.path.join(path_green, "group_list.pkl"), "rb") as fr:
-        group_list = pickle.load(fr)
-    tasks = []
-    for grp in group_list:
-        for item in grp:
-            tasks.append(tuple(item + [path_green, check_finished]))
-
-    processes = None
-    try:
-        with open(
-            os.path.join(path_green, "green_lib_info.json"), "r", encoding="utf-8"
-        ) as fr:
-            processes = json.load(fr).get("processes_num", None)
-    except Exception:
-        pass
-
-    with Pool(processes=processes) as pool:
-        for _ in tqdm(
-            pool.imap_unordered(_call_qseis2025_star, tasks, chunksize=1),
-            total=len(tasks),
-            desc="Compute QSEIS2025 Green's library",
-        ):
-            pass
-
-    if convert_pd2bin:
-        convert_pd2bin_qseis2025_all(path_green, remove_pd)
+    processes = _load_green_info(path_green).get("processes_num", None)
+    problems = run_until_complete(
+        lambda tasks: run_jobs_parallel(
+            _run_job, tasks, processes, memory_per_job_gb, desc="Compute QSEIS2025 Green's library"
+        ),
+        sum(_tasks(path_green, check_finished), []),
+        max_retries,
+    )
+    _finish(path_green, problems, convert_pd2bin, remove_pd)
 
 
 def convert_pd2bin_qseis2025_all(path_green, remove=False):
@@ -353,28 +436,73 @@ def convert_pd2bin_qseis2025_all(path_green, remove=False):
 
     Notes
     -----
-    See the qseis2025 tutorial for a complete prepare, run and read workflow. Conversion is a storage operation; it does not resample or change physical units.
+    See the qseis2025 tutorial for a complete prepare, run and read workflow. Conversion is a storage operation; it does not resample or change physical units. Jobs with incomplete output are skipped and keep their files, so they can be inspected and recomputed.
     """
     print("Converting ascii files to bytes files")
-    with open(os.path.join(path_green, "green_lib_info.json"), "r") as fr:
-        green_info = json.load(fr)
-    event_depth_list = green_info["event_depth_list"]
-    receiver_depth_list = green_info["receiver_depth_list"]
-    for event_dep in event_depth_list:
-        for receiver_dep in receiver_depth_list:
-            sub_dir = str(
-                os.path.join(path_green, "%.2f" % event_dep, "%.2f" % receiver_dep)
-            )
-            sub_sub_dirs = os.listdir(sub_dir)
-            for sub_sub_dir in sub_sub_dirs:
-                if "_table.bin" not in sub_sub_dir:
-                    convert_pd2bin_qseis2025(
-                        os.path.join(sub_dir, sub_sub_dir), remove=remove
+    green_info = _load_green_info(path_green)
+    for event_dep in green_info["event_depth_list"]:
+        for receiver_dep in green_info["receiver_depth_list"]:
+            for n_group in range(green_info["N_dist_group"]):
+                if _check_job(path_green, green_info, event_dep, receiver_dep, n_group):
+                    continue
+                convert_pd2bin_qseis2025(
+                    _job_dir(path_green, event_dep, receiver_dep, n_group),
+                    remove=remove,
+                )
+
+
+def check_grnlib_qseis2025(path_green, check_values=False):
+    """Check that a qseis2025 library holds every file the readers need.
+
+    Parameters
+    ----------
+    path_green : str
+        Absolute library root containing green_lib_info.json and backend subdirectories.
+    check_values : bool, optional
+        Also read every binary Green's function file and report NaN or infinite values; this reads the whole library. Default: False.
+
+    Returns
+    -------
+    problems : list of str
+        One line per missing or incomplete file; empty when the library is complete.
+
+    Raises
+    ------
+    OSError
+        green_lib_info.json cannot be read.
+
+    Notes
+    -----
+    For every source depth, receiver depth and distance group, each observable selected in the job's grn.inp must exist as a float32 binary file of the size the readers expect, or as complete ASCII files with one row per sample and one column per distance. The P and S travel-time tables must hold one value per distance. Rerun the create_grnlib function with check_finished=True to recompute only incomplete jobs.
+    """
+    green_info = _load_green_info(path_green)
+    problems = []
+    for event_dep in green_info["event_depth_list"]:
+        for receiver_dep in green_info["receiver_depth_list"]:
+            sub_dir = os.path.join(path_green, "%.2f" % event_dep, "%.2f" % receiver_dep)
+            for name in ["tp_table.bin", "ts_table.bin"]:
+                path_table = os.path.join(sub_dir, name)
+                if not os.path.exists(path_table):
+                    problems.append("%s is missing" % path_table)
+                elif os.path.getsize(path_table) != 4 * green_info["N_dist"]:
+                    problems.append(
+                        "%s has %d bytes, expected %d"
+                        % (path_table, os.path.getsize(path_table), 4 * green_info["N_dist"])
                     )
+            for n_group in range(green_info["N_dist_group"]):
+                problems += _check_job(
+                    path_green, green_info, event_dep, receiver_dep, n_group, check_values
+                )
+    return problems
 
 
 def create_grnlib_qseis2025_parallel_multi_nodes(
-    path_green, check_finished=False, convert_pd2bin=True, remove_pd=True
+    path_green,
+    check_finished=False,
+    convert_pd2bin=True,
+    remove_pd=True,
+    memory_per_job_gb=QSEIS2025_MEMORY_PER_JOB_GB,
+    max_retries=2,
 ):
     """Compute the prepared qseis2025 library with MPI.
 
@@ -383,11 +511,15 @@ def create_grnlib_qseis2025_parallel_multi_nodes(
     path_green : str
         Absolute library root containing green_lib_info.json and backend subdirectories.
     check_finished : bool, optional
-        Reuse outputs marked finished. Markers do not verify that inputs are unchanged. Default: False.
+        Reuse jobs marked finished whose output is complete; recompute the others. Markers do not verify that inputs are unchanged. Default: False.
     convert_pd2bin : bool, optional
         Convert completed ASCII waveforms to the compact float32 reader format. Default: True.
     remove_pd : bool, optional
         Delete original ASCII output; retain it while validating a new calculation. Default: True.
+    memory_per_job_gb : float or None, optional
+        Peak memory of one qseis2025 process in GiB. A RuntimeWarning is issued when the ranks on a node may not fit in its available memory (including Slurm/container cgroup limits); the run goes on and jobs that run out of memory are computed again; None skips the warning. Default: 1.4, the measured commit of the bundled executable.
+    max_retries : int, optional
+        Extra passes over the jobs that did not complete, for example because they ran out of memory; each pass recomputes only those jobs, with the same worker count. Default: 2.
 
     Returns
     -------
@@ -399,43 +531,22 @@ def create_grnlib_qseis2025_parallel_multi_nodes(
     OSError
         Required files are missing or output paths cannot be read or written.
     RuntimeError
-        mpi4py is unavailable.
+        mpi4py is unavailable, or (on rank 0) jobs still fail after the retries or the finished library is incomplete.
     ValueError
         MPI rank count does not match the prepared group width.
 
     Notes
     -----
-    See the qseis2025 tutorial for a complete prepare, run and read workflow. Prepare jobs first. Backend runners can change the process working directory; use absolute paths and restore the caller directory if needed. Check output files and logs after execution.
+    See the qseis2025 tutorial for a complete prepare, run and read workflow. Prepare jobs first. Backend runners can change the process working directory; use absolute paths and restore the caller directory if needed. A failed job does not stop the others: after all ranks finish, the jobs that did not complete are shared among the ranks and computed again, up to max_retries times. Rank 0 checks the library after all ranks finish; after an error, rerun with check_finished=True to compute only unfinished jobs.
     """
     s = datetime.datetime.now()
     MPI = _get_mpi()
-    with open(os.path.join(path_green, "group_list.pkl"), "rb") as fr:
-        group_list = pickle.load(fr)
-    comm = MPI.COMM_WORLD
-    processes_num = comm.Get_size()
-    if processes_num != len(group_list[0]):
-        raise ValueError(
-            "processes_num is %d, item num in group is %d. \n"
-            "Pleasse check the process num!" % (processes_num, len(group_list[0]))
-        )
-    rank = comm.Get_rank()
-    for ind_group in range(len(group_list)):
-        # the last group holds the remainder and may be shorter than processes_num
-        if rank >= len(group_list[ind_group]):
-            continue
-        print("ind_group:%d rank:%d" % (ind_group, rank))
-        call_qseis2025(
-            event_depth=group_list[ind_group][rank][0],
-            receiver_depth=group_list[ind_group][rank][1],
-            n_group=group_list[ind_group][rank][2],
-            path_green=path_green,
-            check_finished=check_finished,
-        )
-    if convert_pd2bin:
-        # every rank writes the same .bin files, let one rank do it after all are done
-        comm.Barrier()
-        if rank == 0:
-            convert_pd2bin_qseis2025_all(path_green, remove_pd)
+    rank, problems = run_jobs_mpi(
+        MPI, _tasks(path_green, check_finished), _run_job, memory_per_job_gb,
+        max_retries=max_retries,
+    )
+    if rank == 0:
+        _finish(path_green, problems, convert_pd2bin, remove_pd)
     e = datetime.datetime.now()
     print("run time:" + str(e - s))
 

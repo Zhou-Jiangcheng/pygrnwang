@@ -3,7 +3,6 @@ import glob
 import pickle
 import json
 import datetime
-from multiprocessing import Pool
 
 import numpy as np
 from tqdm import tqdm
@@ -13,14 +12,137 @@ from .create_qssp2020 import (
     create_inp_qssp2020,
     create_dir_qssp2020,
     call_qssp2020,
+    check_spec_qssp2020,
+    check_func_qssp2020,
     convert_pd2bin_qssp2020,
 )
-from .utils import group, convert_earth_model_nd2nd_without_Q, cal_grid
+from .utils import (
+    group,
+    convert_earth_model_nd2nd_without_Q,
+    cal_grid,
+    check_path_lengths,
+    check_file_size,
+    run_checked_job,
+    run_jobs_sequential,
+    run_jobs_parallel,
+    run_jobs_mpi,
+    run_until_complete,
+    finish_library,
+    raise_if_incomplete,
+)
 from .pytaup import taup_create_npz_file, create_tpts_table
 
 
-def _call_qssp2020_star(args):
-    return call_qssp2020(*args)
+def _load_green_info(path_green):
+    with open(
+        os.path.join(path_green, "green_lib_info.json"), "r", encoding="utf-8"
+    ) as fr:
+        return json.load(fr)
+
+
+def _job_dir(path_green, event_depth, receiver_depth, mt_com):
+    if mt_com == "spec":
+        return str(
+            os.path.join(
+                path_green, "GreenSpec", "%.2f" % event_depth, "%.2f" % receiver_depth
+            )
+        )
+    return str(
+        os.path.join(
+            path_green,
+            "GreenFunc",
+            "%.2f" % event_depth,
+            "%.2f" % receiver_depth,
+            mt_com,
+        )
+    )
+
+
+def _check_job(path_green, green_info, event_depth, receiver_depth, mt_com,
+               check_values=False):
+    if mt_com == "spec":
+        return check_spec_qssp2020(path_green, event_depth, receiver_depth)
+    dist_range = green_info["grn_dist_range"]
+    return check_func_qssp2020(
+        _job_dir(path_green, event_depth, receiver_depth, mt_com),
+        green_info["output_observables"],
+        green_info["sampling_num"],
+        len(cal_grid(dist_range[0], dist_range[1], green_info["grn_delta_dist"])),
+        check_values,
+    )
+
+
+def _spectra_problem(path_green, event_depth, receiver_depth, mt_com):
+    """Return why a time-domain job cannot use its spectra, or None."""
+    path_spec = _job_dir(path_green, event_depth, receiver_depth, "spec")
+    if check_spec_qssp2020(path_green, event_depth, receiver_depth) or os.path.exists(
+        os.path.join(path_spec, ".failed")
+    ):
+        return "%s failed: the spectra in %s are incomplete" % (
+            _job_dir(path_green, event_depth, receiver_depth, mt_com),
+            path_spec,
+        )
+    return None
+
+
+def _run_job(task):
+    """Run one job unless check_finished finds it complete; return its problems."""
+    event_depth, receiver_depth, mt_com, path_green, check_finished = task
+    if mt_com != "spec":
+        problem = _spectra_problem(path_green, event_depth, receiver_depth, mt_com)
+        if problem:
+            return [problem]
+    green_info = _load_green_info(path_green)
+    return run_checked_job(
+        _job_dir(path_green, event_depth, receiver_depth, mt_com),
+        check_finished,
+        lambda: call_qssp2020(event_depth, receiver_depth, mt_com, path_green),
+        lambda: _check_job(path_green, green_info, event_depth, receiver_depth, mt_com),
+        # outputs of an earlier run would pass the check if this run fails
+        stale=["?_Green_*"] if mt_com == "spec" else ["_*.bin*", "_*.dat"],
+    )
+
+
+def _tasks(path_green, stage, check_finished):
+    with open(os.path.join(path_green, "group_list_%s.pkl" % stage), "rb") as fr:
+        group_list = pickle.load(fr)
+    return [[tuple(job + [path_green, check_finished]) for job in grp] for grp in group_list]
+
+
+def _run_stages(path_green, cal_spec, check_finished, max_retries, run_pass):
+    """Run the spectral, then the time-domain jobs, recomputing failed ones.
+
+    run_pass(tasks, desc) runs jobs and returns the failed ones. Time-domain
+    jobs whose spectra are incomplete are not run. Returns the problems of the
+    jobs still failing.
+    """
+    problems = []
+    if cal_spec:
+        problems += run_until_complete(
+            lambda tasks: run_pass(tasks, "in the transformed domain"),
+            sum(_tasks(path_green, "spec", check_finished), []),
+            max_retries,
+        )
+    func_tasks = []
+    for task in sum(_tasks(path_green, "func", check_finished), []):
+        problem = _spectra_problem(path_green, *task[:3])
+        if problem:
+            problems.append(problem)
+        else:
+            func_tasks.append(task)
+    problems += run_until_complete(
+        lambda tasks: run_pass(tasks, "in the time domain"), func_tasks, max_retries
+    )
+    return problems
+
+
+def _finish(path_green, run_problems, convert_pd2bin, remove_pd):
+    """Convert the jobs, check the whole library and raise if incomplete."""
+    if convert_pd2bin:
+        convert_pd2bin_qssp2020_all(path_green)
+    if remove_pd:
+        remove_dat_files(path_green)
+    finish_library(path_green, run_problems, lambda: check_grnlib_qssp2020(path_green))
 
 
 def _get_mpi():
@@ -292,11 +414,26 @@ def pre_process_qssp2020(
     ------
     OSError
         Required files are missing or output paths cannot be read or written.
+    ValueError
+        An input, spectrum or output path is longer than the 160 characters qssp2020 can hold.
 
     Notes
     -----
     See the qssp2020 tutorial for a complete prepare, run and read workflow. Preprocessing writes inputs and travel-time/model metadata; run the matching create_grnlib function to calculate Green functions. A first computation must include both spectral and time-domain stages. See the :doc:`QSSP2020 tutorial </backends/qssp2020>` for harmonic-cutoff convergence and comparison settings.
     """
+    paths = []
+    for event_dep in event_depth_list:
+        for receiver_dep in receiver_depth_list:
+            path_spec = _job_dir(path_green, event_dep, receiver_dep, "spec")
+            path_func = _job_dir(path_green, event_dep, receiver_dep, "mrr")
+            paths += [
+                os.path.join(path_spec, "spec.inp"),
+                os.path.join(path_spec, "U_Green_%.2fkm" % event_dep),
+                os.path.join(path_func, "mrr.inp"),
+                # the longest output file name
+                os.path.join(path_func, "_stress_rate_ee.dat"),
+            ]
+    check_path_lengths(paths)
     print("Preprocessing")
     pre_process_spec(
         processes_num,
@@ -417,7 +554,7 @@ def pre_process_qssp2020(
 
 
 def create_grnlib_qssp2020_sequential(
-    path_green, cal_spec=True, check_finished=False, convert_pd2bin=True, remove_pd=True
+    path_green, cal_spec=True, check_finished=False, convert_pd2bin=True, remove_pd=True, max_retries=2
 ):
     """Compute the prepared qssp2020 library sequentially.
 
@@ -428,11 +565,13 @@ def create_grnlib_qssp2020_sequential(
     cal_spec : bool, optional
         Compute spectra before time-domain synthesis. Keep True for a new QSSP library; False requires compatible existing spectra. Default: True.
     check_finished : bool, optional
-        Reuse outputs marked finished. Markers do not verify that inputs are unchanged. Default: False.
+        Reuse jobs marked finished whose output is complete; recompute the others. Markers do not verify that inputs are unchanged. Default: False.
     convert_pd2bin : bool, optional
         Convert completed ASCII waveforms to the compact float32 reader format. Default: True.
     remove_pd : bool, optional
         Delete original ASCII output; retain it while validating a new calculation. Default: True.
+    max_retries : int, optional
+        Extra passes over the jobs that did not complete, for example because they ran out of memory; each pass recomputes only those jobs, with the same worker count. Default: 2.
 
     Returns
     -------
@@ -443,39 +582,33 @@ def create_grnlib_qssp2020_sequential(
     ------
     OSError
         Required files are missing or output paths cannot be read or written.
+    RuntimeError
+        Jobs still fail after the retries, or the finished library is incomplete (see check_grnlib_qssp2020).
 
     Notes
     -----
-    See the qssp2020 tutorial for a complete prepare, run and read workflow. Prepare jobs first. Backend runners can change the process working directory; use absolute paths and restore the caller directory if needed. Check output files and logs after execution.
+    See the qssp2020 tutorial for a complete prepare, run and read workflow. Prepare jobs first. Backend runners can change the process working directory; use absolute paths and restore the caller directory if needed. A failed job does not stop the others: afterwards the jobs that did not complete are computed again, up to max_retries times, and the library is checked. Ctrl+C stops the run at once and kills the running backends. After an error, rerun with check_finished=True to compute only unfinished jobs.
     """
-    if cal_spec:
-        with open(os.path.join(path_green, "group_list_spec.pkl"), "rb") as fr:
-            group_list_spec = pickle.load(fr)
-        for item in tqdm(
-            group_list_spec,
-            desc="Compute the Green's function library in the transformed domain.",
-        ):
-            for i in range(len(item)):
-                item[i] = item[i] + [path_green, check_finished]
-                call_qssp2020(*item[i])
-
-    with open(os.path.join(path_green, "group_list_func.pkl"), "rb") as fr:
-        group_list_func = pickle.load(fr)
-    for item in tqdm(
-        group_list_func, desc="Compute the Green's function library in the time domain."
-    ):
-        for i in range(len(item)):
-            item[i] = item[i] + [path_green, check_finished]
-            call_qssp2020(*item[i])
-
-    if convert_pd2bin:
-        convert_pd2bin_qssp2020_all(path_green)
-    if remove_pd:
-        remove_dat_files(path_green)
+    problems = _run_stages(
+        path_green,
+        cal_spec,
+        check_finished,
+        max_retries,
+        lambda tasks, desc: run_jobs_sequential(
+            _run_job, tasks, desc="Compute the Green's function library %s." % desc
+        ),
+    )
+    _finish(path_green, problems, convert_pd2bin, remove_pd)
 
 
 def create_grnlib_qssp2020_parallel(
-    path_green, cal_spec=True, check_finished=False, convert_pd2bin=True, remove_pd=True
+    path_green,
+    cal_spec=True,
+    check_finished=False,
+    convert_pd2bin=True,
+    remove_pd=True,
+    memory_per_job_gb=None,
+    max_retries=2,
 ):
     """Compute the prepared qssp2020 library with local worker processes.
 
@@ -486,80 +619,15 @@ def create_grnlib_qssp2020_parallel(
     cal_spec : bool, optional
         Compute spectra before time-domain synthesis. Keep True for a new QSSP library; False requires compatible existing spectra. Default: True.
     check_finished : bool, optional
-        Reuse outputs marked finished. Markers do not verify that inputs are unchanged. Default: False.
+        Reuse jobs marked finished whose output is complete; recompute the others. Markers do not verify that inputs are unchanged. Default: False.
     convert_pd2bin : bool, optional
         Convert completed ASCII waveforms to the compact float32 reader format. Default: True.
     remove_pd : bool, optional
         Delete original ASCII output; retain it while validating a new calculation. Default: True.
-
-    Returns
-    -------
-    None
-        Writes backend inputs, metadata or output files to the library.
-
-    Raises
-    ------
-    OSError
-        Required files are missing or output paths cannot be read or written.
-
-    Notes
-    -----
-    See the qssp2020 tutorial for a complete prepare, run and read workflow. Prepare jobs first. Backend runners can change the process working directory; use absolute paths and restore the caller directory if needed. Check output files and logs after execution. On Windows call under an if __name__ == "__main__" guard.
-    """
-    tasks = []
-
-    if cal_spec:
-        with open(os.path.join(path_green, "group_list_spec.pkl"), "rb") as fr:
-            group_list_spec = pickle.load(fr)
-        for grp in group_list_spec:
-            for item in grp:
-                tasks.append(tuple(item + [path_green, check_finished]))
-
-    processes = None
-    try:
-        with open(os.path.join(path_green, "green_lib_info.json"), "r") as fr:
-            processes = json.load(fr).get("processes_num", None)
-    except Exception:
-        pass
-
-    with Pool(processes=processes) as pool:
-        for _ in tqdm(
-            pool.imap_unordered(_call_qssp2020_star, tasks, chunksize=1),
-            total=len(tasks),
-            desc="Compute QSSP2020 Green's library in the transformed domain.",
-        ):
-            pass
-
-    tasks = []
-    with open(os.path.join(path_green, "group_list_func.pkl"), "rb") as fr:
-        group_list_func = pickle.load(fr)
-    for grp in group_list_func:
-        for item in grp:
-            tasks.append(tuple(item + [path_green, check_finished]))
-
-    with Pool(processes=processes) as pool:
-        for _ in tqdm(
-            pool.imap_unordered(_call_qssp2020_star, tasks, chunksize=1),
-            total=len(tasks),
-            desc="Compute QSSP2020 Green's function library in the time domain.",
-        ):
-            pass
-
-    if convert_pd2bin:
-        convert_pd2bin_qssp2020_all(path_green)
-    if remove_pd:
-        remove_dat_files(path_green)
-
-
-def create_grnlib_qssp2020_spec_parallel_multi_nodes(path_green, check_finished=False):
-    """Compute the prepared qssp2020 library with MPI.
-
-    Parameters
-    ----------
-    path_green : str
-        Absolute library root containing green_lib_info.json and backend subdirectories.
-    check_finished : bool, optional
-        Reuse outputs marked finished. Markers do not verify that inputs are unchanged. Default: False.
+    memory_per_job_gb : float or None, optional
+        Peak memory of one qssp2020 process in GiB, for the larger of the spectral and time-domain stages. A RuntimeWarning is issued when min(processes_num, number of a stage's jobs) such processes may not fit in the currently available memory (including Slurm/container cgroup limits); the run goes on and jobs that run out of memory are computed again. qssp2020 allocates its arrays from the input, so there is no fixed value; None skips the warning. Default: None.
+    max_retries : int, optional
+        Extra passes over the jobs that did not complete, for example because they ran out of memory; each pass recomputes only those jobs, with the same worker count. Default: 2.
 
     Returns
     -------
@@ -571,53 +639,82 @@ def create_grnlib_qssp2020_spec_parallel_multi_nodes(path_green, check_finished=
     OSError
         Required files are missing or output paths cannot be read or written.
     RuntimeError
-        mpi4py is unavailable.
-    ValueError
-        MPI rank count does not match the prepared group width.
+        Jobs still fail after the retries, or the finished library is incomplete (see check_grnlib_qssp2020).
 
     Notes
     -----
-    See the qssp2020 tutorial for a complete prepare, run and read workflow. Prepare jobs first. Backend runners can change the process working directory; use absolute paths and restore the caller directory if needed. Check output files and logs after execution.
+    See the qssp2020 tutorial for a complete prepare, run and read workflow. Prepare jobs first. Backend runners can change the process working directory; use absolute paths and restore the caller directory if needed. A job fails when the executable cannot start, exits with an error (for example after being killed or refused memory) or leaves incomplete output files; it never gets a .finished marker. A failed job does not stop the others: afterwards the jobs that did not complete are computed again, up to max_retries times, and the library is checked. Ctrl+C stops the run at once and kills the running backends. After an error, rerun with check_finished=True to compute only unfinished jobs. On Windows call under an if __name__ == "__main__" guard.
+    """
+    processes = _load_green_info(path_green).get("processes_num", None)
+    problems = _run_stages(
+        path_green,
+        cal_spec,
+        check_finished,
+        max_retries,
+        lambda tasks, desc: run_jobs_parallel(
+            _run_job,
+            tasks,
+            processes,
+            memory_per_job_gb,
+            desc="Compute QSSP2020 Green's library %s." % desc,
+        ),
+    )
+    _finish(path_green, problems, convert_pd2bin, remove_pd)
+
+
+def create_grnlib_qssp2020_spec_parallel_multi_nodes(
+    path_green, check_finished=False, memory_per_job_gb=None, max_retries=2
+):
+    """Compute the prepared qssp2020 library with MPI.
+
+    Parameters
+    ----------
+    path_green : str
+        Absolute library root containing green_lib_info.json and backend subdirectories.
+    check_finished : bool, optional
+        Reuse jobs marked finished whose output is complete; recompute the others. Markers do not verify that inputs are unchanged. Default: False.
+    memory_per_job_gb : float or None, optional
+        Peak memory of one qssp2020 spectral process in GiB. A RuntimeWarning is issued when the ranks on a node may not fit in its available memory (including Slurm/container cgroup limits); the run goes on and jobs that run out of memory are computed again. qssp2020 allocates its arrays from the input, so there is no fixed value; None skips the warning. Default: None.
+    max_retries : int, optional
+        Extra passes over the jobs that did not complete, for example because they ran out of memory; each pass recomputes only those jobs, with the same worker count. Default: 2.
+
+    Returns
+    -------
+    None
+        Writes backend inputs, metadata or output files to the library.
+
+    Raises
+    ------
+    OSError
+        Required files are missing or output paths cannot be read or written.
+    RuntimeError
+        mpi4py is unavailable, or (on rank 0) spectral jobs still fail after the retries.
+    ValueError
+        There are fewer MPI ranks than the prepared group width.
+
+    Notes
+    -----
+    See the qssp2020 tutorial for a complete prepare, run and read workflow. Prepare jobs first. Backend runners can change the process working directory; use absolute paths and restore the caller directory if needed. This computes the spectral stage only; run create_grnlib_qssp2020_func_parallel_multi_nodes afterwards. Ranks beyond the group width stay idle. A failed job does not stop the others: after all ranks finish, the jobs that did not complete are shared among the ranks and computed again, up to max_retries times. After an error, rerun with check_finished=True to compute only unfinished jobs.
     """
     s = datetime.datetime.now()
     MPI = _get_mpi()
-    with open(os.path.join(path_green, "group_list_spec.pkl"), "rb") as fr:
-        group_list_spec = pickle.load(fr)
-    N_all = 0
-    for ind_group in range(len(group_list_spec)):
-        N_all = N_all + len(group_list_spec[ind_group])
-    for ind_group in range(len(group_list_spec)):
-        comm = MPI.COMM_WORLD
-        processes_num = comm.Get_size()
-        rank = comm.Get_rank()
-        if processes_num < len(group_list_spec[0]):
-            raise ValueError(
-                "processes_num is %d, item num in group is %d. \n"
-                "Pleasse check the process num!"
-                % (processes_num, len(group_list_spec[0]))
-            )
-        print(
-            "computing spec lib ind_group:%d rank:%d event_depth:%.2f receiver_depth:%.2f"
-            % (
-                ind_group,
-                rank,
-                group_list_spec[ind_group][rank][0],
-                group_list_spec[ind_group][rank][1],
-            )
-        )
-        if ind_group * len(group_list_spec[0]) + rank < N_all:
-            call_qssp2020(
-                event_depth=group_list_spec[ind_group][rank][0],
-                receiver_depth=group_list_spec[ind_group][rank][1],
-                mt_com=group_list_spec[ind_group][rank][2],
-                path_green=path_green,
-                check_finished=check_finished,
-            )
+    rank, problems = run_jobs_mpi(
+        MPI,
+        _tasks(path_green, "spec", check_finished),
+        _run_job,
+        memory_per_job_gb,
+        exact_ranks=False,
+        max_retries=max_retries,
+    )
+    if rank == 0:
+        raise_if_incomplete(problems, path_green)
     e = datetime.datetime.now()
     print("run time:" + str(e - s))
 
 
-def create_grnlib_qssp2020_func_parallel_multi_nodes(path_green, check_finished=False):
+def create_grnlib_qssp2020_func_parallel_multi_nodes(
+    path_green, check_finished=False, memory_per_job_gb=None, max_retries=2
+):
     """Compute the prepared qssp2020 library with MPI.
 
     Parameters
@@ -625,7 +722,11 @@ def create_grnlib_qssp2020_func_parallel_multi_nodes(path_green, check_finished=
     path_green : str
         Absolute library root containing green_lib_info.json and backend subdirectories.
     check_finished : bool, optional
-        Reuse outputs marked finished. Markers do not verify that inputs are unchanged. Default: False.
+        Reuse jobs marked finished whose output is complete; recompute the others. Markers do not verify that inputs are unchanged. Default: False.
+    memory_per_job_gb : float or None, optional
+        Peak memory of one qssp2020 time-domain process in GiB. A RuntimeWarning is issued when the ranks on a node may not fit in its available memory (including Slurm/container cgroup limits); the run goes on and jobs that run out of memory are computed again. qssp2020 allocates its arrays from the input, so there is no fixed value; None skips the warning. Default: None.
+    max_retries : int, optional
+        Extra passes over the jobs that did not complete, for example because they ran out of memory; each pass recomputes only those jobs, with the same worker count. Default: 2.
 
     Returns
     -------
@@ -637,49 +738,26 @@ def create_grnlib_qssp2020_func_parallel_multi_nodes(path_green, check_finished=
     OSError
         Required files are missing or output paths cannot be read or written.
     RuntimeError
-        mpi4py is unavailable.
+        mpi4py is unavailable, or (on rank 0) jobs still fail after the retries or the finished library is incomplete.
     ValueError
-        MPI rank count does not match the prepared group width.
+        There are fewer MPI ranks than the prepared group width.
 
     Notes
     -----
-    See the qssp2020 tutorial for a complete prepare, run and read workflow. Prepare jobs first. Backend runners can change the process working directory; use absolute paths and restore the caller directory if needed. Check output files and logs after execution.
+    See the qssp2020 tutorial for a complete prepare, run and read workflow. Prepare jobs first. Backend runners can change the process working directory; use absolute paths and restore the caller directory if needed. Run it after the spectral stage has finished. The output stays in ASCII; convert it with convert_pd2bin_qssp2020_all. Ranks beyond the group width stay idle. A failed job does not stop the others: after all ranks finish, the jobs that did not complete are shared among the ranks and computed again, up to max_retries times. Rank 0 checks the library after all ranks finish; after an error, rerun with check_finished=True to compute only unfinished jobs.
     """
     s = datetime.datetime.now()
     MPI = _get_mpi()
-    with open(os.path.join(path_green, "group_list_func.pkl"), "rb") as fr:
-        group_list_spec = pickle.load(fr)
-    N_all = 0
-    for ind_group in range(len(group_list_spec)):
-        N_all = N_all + len(group_list_spec[ind_group])
-    for ind_group in range(len(group_list_spec)):
-        comm = MPI.COMM_WORLD
-        processes_num = comm.Get_size()
-        rank = comm.Get_rank()
-        if processes_num < len(group_list_spec[0]):
-            raise ValueError(
-                "processes_num is %d, item num in group is %d. \n"
-                "Pleasse check the process num!"
-                % (processes_num, len(group_list_spec[0]))
-            )
-        print(
-            "computing time lib ind_group:%d rank:%d event_depth:%.2f receiver_depth:%.2f mt_com:%s"
-            % (
-                ind_group,
-                rank,
-                group_list_spec[ind_group][rank][0],
-                group_list_spec[ind_group][rank][1],
-                group_list_spec[ind_group][rank][2],
-            )
-        )
-        if ind_group * len(group_list_spec[0]) + rank < N_all:
-            call_qssp2020(
-                event_depth=group_list_spec[ind_group][rank][0],
-                receiver_depth=group_list_spec[ind_group][rank][1],
-                mt_com=group_list_spec[ind_group][rank][2],
-                path_green=path_green,
-                check_finished=check_finished,
-            )
+    rank, problems = run_jobs_mpi(
+        MPI,
+        _tasks(path_green, "func", check_finished),
+        _run_job,
+        memory_per_job_gb,
+        exact_ranks=False,
+        max_retries=max_retries,
+    )
+    if rank == 0:
+        _finish(path_green, problems, False, False)
     e = datetime.datetime.now()
     print("run time:" + str(e - s))
 
@@ -704,22 +782,21 @@ def convert_pd2bin_qssp2020_all(path_green):
 
     Notes
     -----
-    See the qssp2020 tutorial for a complete prepare, run and read workflow. Conversion is a storage operation; it does not resample or change physical units.
+    See the qssp2020 tutorial for a complete prepare, run and read workflow. Conversion is a storage operation; it does not resample or change physical units. Source/receiver depth pairs with incomplete output are skipped and keep their files, so they can be inspected and recomputed.
     """
     print("converting ascii files to byte files")
-    with open(os.path.join(path_green, "green_lib_info.json"), "r") as fr:
-        green_info = json.load(fr)
-    event_dep_list = green_info["event_depth_list"]
-    receiver_dep_list = green_info["receiver_depth_list"]
+    green_info = _load_green_info(path_green)
     output_observables = np.nonzero(np.array(green_info["output_observables"]))[0]
-    for i in range(len(event_dep_list)):
-        for j in range(len(receiver_dep_list)):
+    for event_dep in green_info["event_depth_list"]:
+        for receiver_dep in green_info["receiver_depth_list"]:
+            if any(
+                _check_job(path_green, green_info, event_dep, receiver_dep, mt_com)
+                for mt_com in mt_com_list
+            ):
+                continue
             for output_type_ind in output_observables:
                 convert_pd2bin_qssp2020(
-                    path_green,
-                    event_dep_list[i],
-                    receiver_dep_list[j],
-                    int(output_type_ind),
+                    path_green, event_dep, receiver_dep, int(output_type_ind)
                 )
 
 
@@ -728,7 +805,52 @@ def remove_dat_files(path_green):
     path_func = os.path.join(path_green, "GreenFunc")
     for root, dirs, files in os.walk(path_func):
         for file in glob.glob(os.path.join(root, "*.dat")):
-            os.remove(file)
+            # keep output that was not converted
+            if os.path.exists(file[:-4] + ".bin"):
+                os.remove(file)
+
+
+def check_grnlib_qssp2020(path_green, check_values=False):
+    """Check that a qssp2020 library holds every file the readers need.
+
+    Parameters
+    ----------
+    path_green : str
+        Absolute library root containing green_lib_info.json and backend subdirectories.
+    check_values : bool, optional
+        Also read every binary Green's function file and report NaN or infinite values; this reads the whole library. Default: False.
+
+    Returns
+    -------
+    problems : list of str
+        One line per missing or incomplete file; empty when the library is complete.
+
+    Raises
+    ------
+    OSError
+        green_lib_info.json cannot be read.
+
+    Notes
+    -----
+    For every source depth, receiver depth and moment-tensor component, each observable selected by output_observables must exist as a float32 .bin file of the size the readers expect, or as a complete .dat file with one row per sample and one column per distance. The P and S travel-time tables must hold one value per distance. Spectra under GreenSpec are not checked. Rerun the create_grnlib function with check_finished=True to recompute only incomplete jobs.
+    """
+    green_info = _load_green_info(path_green)
+    dist_range = green_info["grn_dist_range"]
+    n_dist = len(cal_grid(dist_range[0], dist_range[1], green_info["grn_delta_dist"]))
+    problems = []
+    for event_dep in green_info["event_depth_list"]:
+        for receiver_dep in green_info["receiver_depth_list"]:
+            sub_dir = os.path.join(
+                path_green, "GreenFunc", "%.2f" % event_dep, "%.2f" % receiver_dep
+            )
+            for name in ["tp_table.bin", "ts_table.bin"]:
+                problem = check_file_size(os.path.join(sub_dir, name), 4 * n_dist)
+                problems += [problem] if problem else []
+            for mt_com in mt_com_list:
+                problems += _check_job(
+                    path_green, green_info, event_dep, receiver_dep, mt_com, check_values
+                )
+    return problems
 
 
 if __name__ == "__main__":
