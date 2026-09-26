@@ -175,6 +175,7 @@ cython_debug/
 
 # test
 test*/
+!tests/
 
 # fortran
 *.mod
