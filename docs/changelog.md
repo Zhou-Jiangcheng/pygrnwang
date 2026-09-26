@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### QSEIS2025 library check with custom wavelets, 26 September 2026
+
+- The QSEIS2025 library check reads the `output_observables` flags from the
+  `OUTPUT FILES FOR GREEN'S FUNCTIONS` section of `grn.inp` instead of a fixed
+  line. In 3.0.1, custom `wavelet_type=0` samples inserted into `grn.inp`
+  moved the flags down, so a finished library was reported as unreadable, its
+  jobs were computed twice more and the build raised `RuntimeError`.
+
 ## 3.0.1
 
 ### Memory checks, retries and library checks for every backend, 25 September 2026

@@ -202,8 +202,16 @@ def read_output_observables_qseis2025(path_inp):
     """Read the five output_observables flags from a generated grn.inp."""
     with open(path_inp, "r") as fr:
         lines = fr.readlines()
-    # create_inp_qseis2025 writes the flags on this line
-    flags = lines[181].split() if len(lines) > 181 else []
+    # Locate the flags by section, not line number: custom wavelet samples
+    # (wavelet_type=0) are inserted above this section and shift it down.
+    headings = [i for i, line in enumerate(lines)
+                if "OUTPUT FILES FOR GREEN'S FUNCTIONS" in line]
+    data = []
+    if len(headings) == 1:
+        data = [line.split("#", 1)[0].strip() for line in lines[headings[0] + 1:]]
+        data = [line for line in data if line]
+    # source-type switches, file names, then the output_observables flags
+    flags = data[2].split() if len(data) > 2 else []
     if len(flags) != 5 or any(flag not in ("0", "1") for flag in flags):
         raise ValueError("Cannot read output_observables from %s" % path_inp)
     return [int(flag) for flag in flags]
