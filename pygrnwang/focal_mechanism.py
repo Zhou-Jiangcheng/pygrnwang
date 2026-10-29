@@ -265,74 +265,33 @@ def mt2plane(mt):
         if n_in[2] > 0:
             n_in = -n_in
             d_in = -d_in
-        delta = np.arccos(-n_in[2])
+        sin_delta = np.hypot(n_in[0], n_in[1])
+        cos_delta = -n_in[2]
+        delta = np.arctan2(sin_delta, cos_delta)
         if np.abs(delta - 0) <= threshold:
             delta = 0
         if np.abs(delta - np.pi / 2) <= threshold:
             delta = np.pi / 2
 
-        if n_in[1] == 0:
-            if delta == 0:
-                warnings.warn("n is vertical. Strike is set as 0.")
-                phi = 0
-            elif delta == np.pi / 2:
+        if delta == 0:
+            warnings.warn("n is vertical. Strike is set as 0.")
+            phi = 0
+        else:
+            phi = np.arctan2(-n_in[0], n_in[1]) % (2 * np.pi)
+            if n_in[1] == 0 and delta == np.pi / 2:
                 warnings.warn(
                     "n is horizontal. The part directed by n is set as the hanging wall of the fault."
                 )
-                if n_in[0] > 0:
-                    phi = np.pi * 3 / 2
-                else:
-                    phi = np.pi / 2
-            else:
-                if n_in[0] > 0:
-                    phi = np.pi * 3 / 2
-                else:
-                    phi = np.pi / 2
-        else:
-            if delta == np.pi / 2:
-                # warnings.warn(
-                #     "n is horizontal. The part directed by n is set as the hanging wall of the fault."
-                # )
-                if n_in[0] == 0:
-                    if n_in[1] == 1:
-                        phi = 0
-                    elif n_in[1] == -1:
-                        phi = np.pi
-                    else:
-                        raise ValueError(
-                            "n is horizontal,n[0] is 0, but n[1] is not 1 or -1."
-                        )
-                else:
-                    phi = np.arctan(-n_in[0] / n_in[1])
-            else:
-                phi = np.arctan(-n_in[0] / n_in[1])
-        if (n_in[0] <= 0) and (n_in[1] > 0):
-            pass
-        elif (n_in[0] <= 0) and (n_in[1] < 0):
-            phi = phi + np.pi
-        elif (n_in[0] > 0) and (n_in[1] < 0):
-            phi = phi + np.pi
-        elif (n_in[0] > 0) and (n_in[1] > 0):
-            phi = phi + 2 * np.pi
 
-        cos_lambda = d_in[0] * np.cos(phi) + d_in[1] * np.sin(phi)
-        sin_lambda_cos_delta = d_in[0] * np.sin(phi) - d_in[1] * np.cos(phi)
-        if cos_lambda > 1:
-            lambda_ = np.pi / 2
-        elif cos_lambda < -1:
-            lambda_ = -np.pi / 2
-        else:
-            lambda_ = np.arccos(cos_lambda)
-        if sin_lambda_cos_delta < 0:
-            lambda_ = -lambda_
-        # elif np.abs(sin_lambda_cos_delta) <= threshold:
-        #     if d_in[0] != 0:
-        #         lambda_ = np.arctan(d_in[1] / d_in[0])
-        #     else:
-        #         if np.abs(d_in[1] - 1) <= threshold:
-        #             lambda_ = 0
-        #         else:
-        #             lambda_ = np.arccos(-d_in[1])
+        # Project slip onto strike and up-dip directions. atan2 preserves
+        # vertical-fault rake signs and handles cos(rake) just beyond +/-1.
+        cos_phi, sin_phi = np.cos(phi), np.sin(phi)
+        cos_lambda = d_in[0] * cos_phi + d_in[1] * sin_phi
+        sin_lambda = (
+            cos_delta * (d_in[0] * sin_phi - d_in[1] * cos_phi)
+            - sin_delta * d_in[2]
+        )
+        lambda_ = np.arctan2(sin_lambda, cos_lambda)
 
         pl = np.array([phi, delta, lambda_])
         pl = pl * 180 / np.pi
